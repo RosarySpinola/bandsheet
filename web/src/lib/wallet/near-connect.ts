@@ -3,13 +3,14 @@ import { ApiError } from "@/lib/api"
 import { CONTRACT } from "@/lib/chain"
 import { getNonce, nonceBytes, statementText, type Purpose, type SignedClaim } from "./auth-api"
 import { EVM_WALLET, evmPersonalSign, evmStatement } from "./evm"
+import { TX_RPCS } from "@/lib/rpc"
 
 /**
  * NEAR Connect (@hot-labs/near-connect) on testnet. Wallet code runs in sandboxed iframes loaded from the shared
  * manifest; every testnet wallet in it is offered. NEAR wallets sign NEP-413. The Ethereum Wallets executor has no
  * signMessage, so after it signs in (its 0x account) the same Ethereum wallet signs the statement with personal_sign.
  */
-const RPCS = ["https://test.rpc.fastnear.com", "https://near-testnet.drpc.org"]
+const RPCS = TX_RPCS
 
 let connector: Promise<NearConnector> | null = null
 

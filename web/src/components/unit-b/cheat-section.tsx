@@ -9,10 +9,11 @@ import { extras, rejectionText } from "@/lib/dkim"
 import { int } from "@/lib/format"
 import { CtaLink, Shimmer, TxLink } from "@/components/unit"
 import { ForgedLine } from "@/components/unit/submit/dkim-card"
+import { READ_RPCS } from "@/lib/rpc"
 
 const OUTSIDER_TX = "7eo7pKcCMJLtCy9fX3NT6gGkZAmkRwfK6mYut4ZGHPfb"
 const OUTSIDER = "bs-guest-3f36b7.testnet"
-const RPCS = ["https://test.rpc.fastnear.com", "https://archival-rpc.testnet.near.org"]
+const RPCS = READ_RPCS
 
 const TxStatus = z.object({ result: z.object({ status: z.record(z.string(), z.unknown()) }) })
 

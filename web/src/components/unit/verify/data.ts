@@ -2,6 +2,7 @@ import { z } from "zod"
 import { useQuery } from "@tanstack/react-query"
 import { ApiError } from "@/lib/api"
 import { CONTRACT, explorer, txHashOf } from "@/lib/chain"
+import { rpcPost } from "@/lib/rpc"
 
 const AccountView = z.object({ result: z.object({ code_hash: z.string() }) })
 
@@ -10,16 +11,14 @@ export function useCodeHash(account: string = CONTRACT) {
   return useQuery({
     queryKey: ["chain", "code_hash", account],
     queryFn: async () => {
-      const res = await fetch("https://test.rpc.fastnear.com", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+      const res = await rpcPost(
+        JSON.stringify({
           jsonrpc: "2.0",
           id: "bandsheet",
           method: "query",
           params: { request_type: "view_account", finality: "final", account_id: account },
         }),
-      })
+      )
       const p = AccountView.safeParse(await res.json().catch(() => null))
       if (!p.success) throw new ApiError("NEAR testnet did not answer.", "CHAIN_READ", res.status)
       return p.data.result.code_hash

@@ -135,7 +135,7 @@ describe("demo member", () => {
     const b = await (await app.request("/api/demo/invite")).json();
     expect(b).toMatchObject({ account_id: UNIT, contract_id: UNIT, network: "testnet", submit_method: "submit", slot: "ab".repeat(32) });
     expect(b.private_key).toMatch(/^ed25519:/);
-    expect(b.rpc_urls[0]).toContain("fastnear");
+    expect(b.rpc_urls[0]).toContain("drpc");
     const none = setup({}, { demoInvite: undefined });
     const r = await none.app.request("/api/demo/invite");
     expect([r.status, (await r.json()).code]).toEqual([503, "DEMO_NOT_CONFIGURED"]);
@@ -184,7 +184,7 @@ describe("rate limiting", () => {
 describe("RPC provider", () => {
   it("fails over across testnet endpoints and refuses mainnet", () => {
     const p = makeProvider() as unknown as { providers: { connection: { url: string } }[] };
-    expect(p.providers.map((x) => x.connection.url)).toEqual(["https://test.rpc.fastnear.com", "https://archival-rpc.testnet.near.org", "https://near-testnet.drpc.org"]);
+    expect(p.providers.map((x) => x.connection.url)).toEqual(["https://near-testnet.drpc.org", "https://test.rpc.fastnear.com"]);
     expect(() => makeProvider(["https://rpc.mainnet.near.org"])).toThrow(/non-testnet/);
     expect(() => makeProvider(["https://rpc.near.org"])).toThrow(/non-testnet/);
   });

@@ -12,8 +12,8 @@ export const STATE_FILE = join(ROOT, "scripts/deployed.json");
 export const EXPLORER = "https://testnet.nearblocks.io";
 export const SPUTNIK_FACTORY = "sputnik-v2.testnet";
 
-export const RPC = "https://rpc.testnet.fastnear.com";
-const RPC_ALT = "https://archival-rpc.testnet.near.org"; // second opinion when FastNEAR returns 429
+export const RPC = "https://near-testnet.drpc.org"; // 14 Nov: FastNEAR 429s this machine
+const RPC_ALT = "https://archival-rpc.testnet.fastnear.com"; // second opinion (separate quota) when the first returns 429
 
 // FastNEAR rate-limits bursts: space RPC calls out and retry on 429 (HTTP or JSON-RPC code -429).
 const realFetch = globalThis.fetch;

@@ -3,21 +3,21 @@ import { z } from "zod";
 import { slotIdFromNearPublicKey } from "./slot";
 import { type Ciphertext, CiphertextSchema } from "./schemas";
 
-export const TESTNET_RPC = "https://test.rpc.fastnear.com";
-/** Tried in order; each endpoint retries with exponential backoff before the next is used. */
-export const TESTNET_RPCS: readonly string[] = [
-  TESTNET_RPC,
-  "https://archival-rpc.testnet.near.org",
-  // Added 14 Nov: the two above throttle or answer "deprecated" under load; this one stayed reachable.
-  "https://near-testnet.drpc.org",
-];
+export const TESTNET_RPC = "https://near-testnet.drpc.org";
+/**
+ * Tried in order. 14 Nov 2026: FastNEAR answered 429 to busy client IPs and rpc.testnet.near.org is deprecated, so
+ * dRPC leads and FastNEAR follows. Each endpoint gets a short retry before the next one is used.
+ */
+export const TESTNET_RPCS: readonly string[] = [TESTNET_RPC, "https://test.rpc.fastnear.com"];
 
 /** Testnet provider with endpoint failover and per-endpoint backoff (the public RPCs rate-limit hard). */
 export function makeProvider(urls: readonly string[] = TESTNET_RPCS): Provider {
   for (const u of urls) {
     if (/mainnet/i.test(u) || /^https:\/\/(rpc|archival-rpc)\.near\.org/i.test(u)) throw new Error("refusing non-testnet RPC");
   }
-  const mk = (url: string): Provider => new JsonRpcProvider({ url }, { retries: 4, wait: 600, backoff: 1.8 });
+  // With a fallback list, fail over fast on 429s instead of backing off on the throttled endpoint.
+  const retry = urls.length > 1 ? { retries: 1, wait: 400, backoff: 1.5 } : { retries: 4, wait: 600, backoff: 1.8 };
+  const mk = (url: string): Provider => new JsonRpcProvider({ url }, retry);
   const list = urls.map(mk);
   return list.length === 1 ? list[0]! : new FailoverRpcProvider(list);
 }
@@ -90,7 +90,7 @@ export async function submitEntry(
   opts: SubmitOptions = {},
 ): Promise<{ result: unknown; txHash?: string }> {
   const body = CiphertextSchema.parse(ciphertext);
-  const provider = opts.provider ?? makeProvider([invite.rpcUrl]);
+  const provider = opts.provider ?? makeProvider([...new Set([...TESTNET_RPCS, invite.rpcUrl])]);
   const account = new Account(invite.accountId, provider, invite.privateKey);
   const out = await account.callFunctionRaw({
     contractId: invite.contractId,

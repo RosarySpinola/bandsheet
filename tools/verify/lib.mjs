@@ -1,7 +1,7 @@
 // Shared helpers for the Bandsheet verifier: JSON-RPC with fallback and backoff, hashing, base58.
 import { createHash } from "node:crypto";
 
-export const RPCS = ["https://test.rpc.fastnear.com", "https://archival-rpc.testnet.near.org"];
+export const RPCS = ["https://near-testnet.drpc.org", "https://archival-rpc.testnet.fastnear.com", "https://test.rpc.fastnear.com"];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const sha256Hex = (buf) => createHash("sha256").update(buf).digest("hex");
 

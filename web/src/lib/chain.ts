@@ -2,6 +2,7 @@ import { z } from "zod"
 import { useQuery } from "@tanstack/react-query"
 import { ReleaseRecordSchema, type ReleaseRecord, type Cell } from "@bandsheet/core"
 import { ApiError, api, getReleasesApi } from "./api"
+import { READ_RPCS } from "./rpc"
 
 /* ---------- constants ---------- */
 
@@ -9,8 +10,8 @@ export const NETWORK = "testnet"
 export const CONTRACT = "bandsheet-3f36b7.testnet"
 export const DAO = "harbour-chapel.sputnik-v2.testnet"
 export const OUTLAYER_PROJECT = "bandsheet-enclave.testnet/bandsheet-enclave"
-/** Public testnet RPCs, tried in order. Both rate-limit, so callers cache hard. */
-const RPCS = ["https://test.rpc.fastnear.com", "https://archival-rpc.testnet.near.org"]
+/** Public testnet RPCs, tried in order (lib/rpc). They rate-limit, so callers cache hard. */
+const RPCS = READ_RPCS
 
 export const explorer = {
   tx: (hash: string) => `https://testnet.nearblocks.io/txns/${hash}`,

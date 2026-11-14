@@ -33,7 +33,7 @@ export function makeInvite(name: string): Invite {
   const kp = KeyPair.fromRandom("ed25519");
   const public_key = kp.getPublicKey().toString();
   const inv: Invite = {
-    account_id: unit, contract_id: unit, network: "testnet", rpc_url: "https://rpc.testnet.fastnear.com", name,
+    account_id: unit, contract_id: unit, network: "testnet", rpc_url: "https://near-testnet.drpc.org", name,
     public_key, private_key: kp.toString() as KeyPairString, slot: slotIdFromNearPublicKey(public_key),
   };
   mkdirSync(INVITES, { recursive: true });
