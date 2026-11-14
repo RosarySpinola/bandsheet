@@ -72,3 +72,39 @@
   50% { transform: rotate(var(--r1)) scaleY(1.04); }
 }
 .shard { transform-origin: 100% 0%; animation: shard-sway var(--dur, 9s) var(--ease) infinite; }
+
+/* ---- Landing rebuild (additive; app pages keep the rules above) ---- */
+.gl-h3 {
+  font-weight: 600;
+  font-size: calc(var(--gl) * 2);
+  line-height: calc(var(--gl) * 2.6);
+  color: var(--ink);
+}
+.gl-halves { display: grid; grid-template-columns: 1fr 1fr; column-gap: calc(var(--gl) * 2.25); }
+
+/* Inside the landing shell (.lp): Greenlock's 2.25 side gutter, full-bleed bands, phone type sizes. */
+.lp .gl-container { padding-inline: calc(var(--gl) * 2.25); }
+.lp .gl-section { padding-inline: 0; }
+.lp .gl-h1 { letter-spacing: -0.012em; }
+
+@media (max-width: 991px) {
+  .gl-h3 { font-size: calc(var(--gl) * 1.5); line-height: calc(var(--gl) * 2); }
+  .gl-halves { grid-template-columns: 1fr; row-gap: calc(var(--gl) * 2); }
+  .lp .gl-container { padding-inline: 1rem; }
+  .lp .gl-h1 { line-height: calc(var(--gl) * 3.1); }
+}
+@media (max-width: 479px) {
+  .lp .gl-h1 { font-size: calc(var(--gl) * 3.4); line-height: calc(var(--gl) * 3.4); }
+  .lp .gl-h2 { font-size: calc(var(--gl) * 2.1); line-height: calc(var(--gl) * 2.8); }
+  .lp .gl-body1 { font-size: calc(var(--gl) * 1.35); line-height: calc(var(--gl) * 2.1); }
+  .lp .gl-body3 { font-size: calc(var(--gl) * 1.2); line-height: calc(var(--gl) * 1.8); }
+  .lp .gl-cta { font-size: calc(var(--gl) * 2.1); line-height: calc(var(--gl) * 2.9); }
+}
+
+/* Greenlock arrow nudge on card links: x +.375rem, y -.3rem in 500ms. */
+.gl-nudge { transition: transform 500ms var(--ease); }
+.group:hover .gl-nudge { transform: translate(calc(var(--gl) * 0.375), calc(var(--gl) * -0.3)); }
+
+/* Screen frame crossfade (Greenlock product media card). */
+.gl-frame img { transition: opacity 500ms var(--ease), transform 500ms var(--ease); }
+@keyframes gl-fill { from { width: 0; } to { width: 100%; } }
