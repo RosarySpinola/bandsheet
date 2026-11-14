@@ -9,16 +9,24 @@ import { type Ciphertext, type Entry, EntrySchema } from "./schemas";
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
+/* Runtime-neutral (browser + Node): no Buffer. */
 export function toB64(b: Uint8Array): string {
-  return Buffer.from(b).toString("base64");
+  let s = "";
+  for (const x of b) s += String.fromCharCode(x);
+  return btoa(s);
 }
 export function fromB64(s: string): Uint8Array {
-  return new Uint8Array(Buffer.from(s, "base64"));
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
 }
 export function fromHex(s: string): Uint8Array {
   const h = s.replace(/^0x/i, "");
   if (h.length % 2 !== 0 || /[^0-9a-f]/i.test(h)) throw new Error("invalid hex");
-  return new Uint8Array(Buffer.from(h, "hex"));
+  const out = new Uint8Array(h.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(h.slice(i * 2, i * 2 + 2), 16);
+  return out;
 }
 
 function deriveKey(shared: Uint8Array): Uint8Array {
