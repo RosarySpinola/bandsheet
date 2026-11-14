@@ -25,7 +25,7 @@ are about to be requested everywhere.
 
 | Layer | Sponsor tech | What it actually does |
 |---|---|---|
-| Reading | **NEAR AI Cloud** | A member's payslip is read by a NEAR-hosted vision model inside a TEE. Before sending, the server verifies a fresh-nonce attestation (Intel TDX quote, NVIDIA GPU evidence, signer binding). Afterwards it verifies the signed response. Nothing is stored. |
+| Reading | **NEAR AI Cloud** | A member's payslip is read by a NEAR-hosted vision model inside a TEE. Before sending, the server verifies a fresh-nonce attestation (Intel TDX quote via DCAP, signer and nonce binding, RTMR3 event-log replay; NVIDIA GPU evidence is decoded and checked for the nonce). Afterwards it verifies the signed response. Nothing is stored. |
 | Sealing | **OutLayer** (Intel TDX) | The member's browser encrypts the confirmed entry (X25519 + HKDF-SHA256 + ChaCha20-Poly1305) to a key that was generated inside the enclave and is locked to one engine build. |
 | Deciding | **OutLayer** | The release engine treats every published cell as a sum query over members. It solves the attacker's equations first (exact rank over two primes), withholds any cell that would isolate a member, and suppresses complements too. |
 | Asking | **Sputnik DAO** | A release can only be requested by a passed DAO proposal (2 of 3 council seats). |
@@ -115,6 +115,7 @@ Do this, see that:
 - The audit is exact for k ≤ 3 (the default). For larger k it still catches any single member
   being solved, but not every small group.
 - Means are integer-rounded EUR and treated as exact.
+- NVIDIA GPU attestation tokens are decoded and checked, but their signatures are not yet verified against NVIDIA's JWKS.
 - OutLayer's TDX quote is captured and linked; the contract stores the input/output hashes rather
   than verifying the quote on chain.
 - All code in this repository was written during the hackathon window (from 1 Nov 2026).
