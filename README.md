@@ -31,6 +31,7 @@ are about to be requested everywhere.
 | Deciding | **OutLayer** | The release engine treats every published cell as a sum query over members. It solves the attacker's equations first (exact rank over two primes), withholds any cell that would isolate a member, and suppresses complements too. |
 | Asking | **Sputnik DAO** | A release can only be requested by a passed DAO proposal (2 of 3 council seats). The same DAO trusts DKIM issuers, turns `require_dkim` on and adopts a new engine build. |
 | Membership | **NEAR access keys** | Each member holds a function-call key that can only call `submit`, so submitting is gas-free. A resubmission replaces the earlier entry, so the count doesn't change. Outside accounts are refused. |
+| Sign-in | **NEAR Auth**, **NEAR Connect**, **NEP-413** | A member can join with their own NEAR account (email/passkey/Google through NEAR Auth, or any testnet wallet through NEAR Connect). The account signs a statement naming the browser-made member key; the server verifies it and registers the key. Council seats can vote from their own wallets. |
 | Record | **NEAR Protocol** | Every release and every refusal is written to the contract with its witness, input/output hashes, rejection counts and OutLayer request. |
 
 Beyond NEAR:
@@ -41,6 +42,41 @@ Beyond NEAR:
 | Eurostat SES (`earn_ses_monthly`) | `/api/context`: median monthly earnings for ISCO-08 Professionals (OC2), latest year 2018 (Malta €2,189), as a dated outside reference for a band. |
 | MCP | `mcp/`: six read-only tools so an AI assistant can read bands, explain a refusal and verify a release. |
 | EU Directive 2023/970, Art. 7 | `/unit/stand` drafts the member's pay-information letter under Article 7, as transposed into Maltese law; Article 7(4) gives the employer a reasonable period, at most two months, to reply. |
+
+## Sign in with NEAR (NEAR Auth, NEAR Connect, NEP-413)
+
+A member can join with their own NEAR account instead of an invite. The browser makes the member's `submit`-only key
+locally, as before; the account signs one statement that names that key; the server checks it and the committee key
+registers the member key with `add_members`. **Which account owns which slot is kept only in the server's D1 database
+(`AUTH_DB`), never on chain**, because on chain it would deanonymise every entry.
+
+| Route | What signs | How the server checks it |
+|---|---|---|
+| **NEAR Connect** (`@hot-labs/near-connect`, testnet) | The wallet's NEP-413 `signMessage` over `Bandsheet join: <member ed25519 key>`, recipient `bandsheet-3f36b7.testnet`, a server-issued single-use 32-byte nonce | Re-encodes the Borsh payload itself (tag 2^31+413, message, nonce, recipient, no callback), verifies the ed25519 signature, then `view_access_key` must return `FullAccess` for that key on that account |
+| **NEAR Auth** (FastAuth, `@fast-auth-near/javascript-provider`, testnet shared client; email, passkey or Google) | The published SDK (javascript-provider 1.4.1) signs transactions but has **no NEP-413 message signing**, so the account signs a *statement transaction*: one FunctionCall `bandsheet_join` to the unit with args `{message, nonce}`, access-key nonce 0 and an all-zero block hash, so it can never execute. The server relays the approved request to `fast-auth.testnet` `sign` (owner pays the gas; only the exact statement bytes it issued are relayed) and gets the MPC signature | Re-encodes the transaction, verifies the ed25519 signature over its sha256. A new NEAR Auth user's implicit account does not exist yet, so, as the NEAR Auth docs prescribe, it is accepted only while `view_account` says `UNKNOWN_ACCOUNT` and the id is the hex of that same key |
+
+Rules enforced in code (`server/src/routes/auth.ts`, `server/src/auth/`): the nonce is consumed atomically before
+verification (replays get `NONCE_USED`, late ones `NONCE_EXPIRED`); a join nonce cannot be spent on an entry; one active
+member key per account (re-joining revokes the old key with `revoke_member` first); 5 joins a minute per IP; zod on every
+body; errors are `{error, code}`. After submitting, a signed-in member can also sign `Bandsheet entry: <sha256 of the
+ciphertext JSON>`; the server checks that hash is one of the contract's stored entries and that the account's slot sent
+it, then records (account, slot, hash, time) in D1. The gas-free submit itself is unchanged.
+
+`/unit/vote` adds **Connect wallet** (NEAR Connect): the seat list is read from the DAO's `get_policy` council role; a
+seat holder gets Approve and Reject on open proposals, signed as `act_proposal` by their own wallet and read back from the
+chain; any other account sees "this account holds no seat". The demo's server-held seat buttons stay as they were.
+
+Tested live on the preview (`server/scripts/auth-live.ts`, 9/9, plus the UI): NEAR Connect join through the NEAR CLI
+executor as `bs-guest-3f36b7.testnet` ([add_members](https://testnet.nearblocks.io/txns/DoXMnkMTGVCkUYAVGWgReybiy6yA2KgD7p2SiZQVXG1K)),
+a gas-free submit with that key ([submit](https://testnet.nearblocks.io/txns/3BHmJ7zexY5XzHJjDJzkXNJVMWeWJM1XL9qAZPfYPWXJ))
+and its entry binding; NEAR Auth with a passkey (CDP virtual authenticator) from `localhost:3000`
+([MPC sign](https://testnet.nearblocks.io/txns/DXN837PH64yG66Q9JhXDLHG4ezMVJnepiVLUCqNicFS3),
+[add_members](https://testnet.nearblocks.io/txns/HspVCBQtxJx6N9oSFjY8LvoTPvGEieZF5pqaSTyMUVYy),
+[submit](https://testnet.nearblocks.io/txns/2yAguBa2AW76j8Ypehjqii5GTB4wKCr2gc1h8mu1xQbx)) and its entry binding;
+re-join revoking the old key ([revoke](https://testnet.nearblocks.io/txns/B3bDxMzFGv7atQREv3BFVGeRhwuQHUGJvyexKYfDN9Qx));
+refusals for a wrong recipient, a replayed nonce and a key that is not on the account. Every test key was revoked
+afterwards, so the chapel still has 38 members and 38 entries. Not tested: a real third-party wallet (Meteor, Intear,
+Nightly, Ledger) signing in, Google login, and a wallet vote (no proposal is open, and opening one would change the DAO).
 
 ## Measured result
 
@@ -152,7 +188,8 @@ Do this, see that (routes: `/`, `/pricing`, `/unit`, `/unit/join`, `/unit/submit
 | `tools/verify/` | `pnpm verify`: 19 read-only checks of chain, attestations and the live site |
 | `fixtures/dkim/` | Fictional employer `harbourcourier.example`, signed payslip emails and negatives; keys generated by us |
 | `scripts/` | Testnet setup, member keys, DAO proposals, the seeded demo (`demo-log.json` lists every tx) |
-| `deploy/` | Cloudflare Pages deploy (`DEPLOY.md`) |
+| `deploy/` | Cloudflare Pages deploy (`DEPLOY.md`), sign-in schema (`migrations-auth/`), preview deploy (`preview-wallet.sh`) |
+| `web/src/lib/wallet/` | NEAR Auth and NEAR Connect clients, sign-in API calls, entry binding |
 | [`JUDGES.md`](JUDGES.md) | The 90-second path, the 5-minute path, track fit |
 | [`THREAT_MODEL.md`](THREAT_MODEL.md) | Assets, actors, attacks, residual risks |
 
@@ -163,6 +200,11 @@ Do this, see that (routes: `/`, `/pricing`, `/unit`, `/unit/join`, `/unit/submit
   policy, not DNS. The DKIM `x=` expiry is not enforced and `l=` signatures are rejected. DKIM proves the email came
   from the key holder, not that payroll was right.
 - The committee is still the trusted registrar of member keys; a malicious majority could register fake members.
+- NEAR Auth's shared testnet login accepts only `http://localhost:3000` as its callback, so on the deployed site the NEAR Auth
+  button is disabled with that explanation; a deployed domain needs its own client in the NEAR Auth tenant
+  (`VITE_NEAR_AUTH_CLIENT_ID`). The published FastAuth SDK has no NEP-413 signing yet, hence the statement transaction.
+- Sign-in opens membership to any NEAR account (one active key per account, but no roster or allow-list check yet): it
+  proves control of an account, not employment or personhood, so one person with several accounts could join several times.
 - The audit is exact for k ≤ 3 (the default). For larger k it still catches any single member
   being solved, but not every small group.
 - Means are integer-rounded EUR and treated as exact. Statistical inference from many overlapping releases is out of scope.
