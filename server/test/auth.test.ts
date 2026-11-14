@@ -15,6 +15,8 @@ import { UNIT, chainCfg, config, mockChain } from "./helpers";
 
 const OWNER = { accountId: "c0ffee".repeat(10) + "abcd", privateKey: KeyPair.fromRandom("ed25519").toString() };
 const WALLET = "maria-lopes.testnet";
+/** As the contract stores it: the submitted JSON text, key order kept. */
+const STORED_ENTRY = '{"epk":"a","nonce":"b","ct":"c"}';
 
 /** Mock chain: the unit's member list plus owner calls (add_members, revoke_member) and NEAR Auth `sign`. */
 function authChain(mpcSign?: (payload: Uint8Array) => Uint8Array) {
@@ -26,6 +28,7 @@ function authChain(mpcSign?: (payload: Uint8Array) => Uint8Array) {
     ...base.chain,
     async view<T>(contract: string, method: string, args: Record<string, unknown> = {}) {
       if (method === "is_member") return members.has(String(args.slot)) as T;
+      if (method === "get_entries") return [STORED_ENTRY] as T;
       return base.chain.view<T>(contract, method, args);
     },
     async send(signer, receiver, method, args, o) {
@@ -208,10 +211,10 @@ describe("NEAR Auth path (statement transaction signed through fast-auth.testnet
 describe("POST /api/auth/entry (bind a submission to the signed-in account)", () => {
   const kp = KeyPair.fromRandom("ed25519");
   const full = { [WALLET]: "full_access" as KeyStatus };
-  const ct = sha256(new TextEncoder().encode('{"epk":"a","nonce":"b","ct":"c"}'));
+  const ct = sha256(new TextEncoder().encode(STORED_ENTRY));
   const ctHex = Buffer.from(ct).toString("hex");
 
-  it("records (account, slot, ciphertext hash, time) and refuses an entry from another slot", async () => {
+  it("records (account, slot, ciphertext hash, time); refuses another slot and a hash the contract does not hold", async () => {
     const s = setup(full);
     const mk = memberKey();
     const jn = await s.nonce();
@@ -224,6 +227,10 @@ describe("POST /api/auth/entry (bind a submission to the signed-in account)", ()
     const en2 = await s.nonce("entry");
     const r2 = await s.post("entry", { ...(await walletSign(kp, WALLET, `Bandsheet entry: ${ctHex}`, en2)), ct_sha256: ctHex, slot: "cd".repeat(32), method: "near-connect" });
     expect(r2).toMatchObject({ status: 409, body: { code: "SLOT_MISMATCH" } });
+    const other = "ef".repeat(32);
+    const en3 = await s.nonce("entry");
+    const r3 = await s.post("entry", { ...(await walletSign(kp, WALLET, `Bandsheet entry: ${other}`, en3)), ct_sha256: other, slot, method: "near-connect" });
+    expect(r3).toMatchObject({ status: 404, body: { code: "ENTRY_NOT_ON_CHAIN" } });
   });
 
   it("a join nonce cannot be spent on an entry", async () => {

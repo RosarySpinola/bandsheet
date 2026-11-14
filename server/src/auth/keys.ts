@@ -9,11 +9,15 @@ export interface KeyLookup {
 }
 
 interface RpcReply {
-  result?: { permission?: unknown };
+  /** nearcore still answers a missing access key with a *result* carrying `error` (seen 14 Nov 2026), not a JSON-RPC error. */
+  result?: { permission?: unknown; error?: string; amount?: string };
   error?: { cause?: { name?: string }; data?: string; message?: string };
 }
 
-const causeOf = (r: RpcReply): string => `${r.error?.cause?.name ?? ""} ${r.error?.data ?? ""} ${r.error?.message ?? ""}`;
+const causeOf = (r: RpcReply): string =>
+  `${r.error?.cause?.name ?? ""} ${r.error?.data ?? ""} ${r.error?.message ?? ""} ${r.result?.error ?? ""}`;
+/** A real answer: the key's permission, or the account's state. */
+const answered = (r: RpcReply): boolean => Boolean(r.result && !r.result.error);
 
 /**
  * view_access_key over JSON-RPC with failover across the testnet endpoints. UNKNOWN_ACCESS_KEY and UNKNOWN_ACCOUNT
@@ -34,7 +38,7 @@ export function createKeyLookup(urls: readonly string[] = TESTNET_RPCS, fetchFn:
             signal: AbortSignal.timeout(10_000),
           });
           const body = (await res.json().catch(() => ({}))) as RpcReply;
-          if (body.result) return body;
+          if (answered(body)) return body;
           const cause = causeOf(body);
           if (/UNKNOWN_ACCESS_KEY|UNKNOWN_ACCOUNT|does not exist/i.test(cause)) return body;
           last = cause.trim() || `HTTP ${res.status}`;
@@ -50,12 +54,17 @@ export function createKeyLookup(urls: readonly string[] = TESTNET_RPCS, fetchFn:
   return {
     async status(accountId, publicKey) {
       const r = await query({ request_type: "view_access_key", account_id: accountId, public_key: publicKey });
-      if (r.result) return r.result.permission === "FullAccess" ? "full_access" : "function_call";
+      if (answered(r)) {
+        const p = r.result!.permission;
+        if (p === "FullAccess") return "full_access";
+        if (p && typeof p === "object" && "FunctionCall" in p) return "function_call";
+        throw new Error("unexpected access key permission");
+      }
       const cause = causeOf(r);
-      if (/UNKNOWN_ACCOUNT/i.test(cause) || /account .* does not exist/i.test(cause)) return "no_such_account";
-      // UNKNOWN_ACCESS_KEY: confirm the account exists, so an implicit account that was never funded is told apart.
+      if (/UNKNOWN_ACCOUNT/i.test(cause) || /account \S+ does not exist/i.test(cause)) return "no_such_account";
+      // Missing key: confirm the account exists, so an implicit account that was never funded is told apart.
       const acct = await query({ request_type: "view_account", account_id: accountId });
-      return acct.result ? "no_such_key" : "no_such_account";
+      return answered(acct) ? "no_such_key" : "no_such_account";
     },
   };
 }

@@ -15,3 +15,11 @@ BANDSHEET_COUNCIL = "bs-c1-3f36b7.testnet,bs-c2-3f36b7.testnet,bs-c3-3f36b7.test
 binding = "DB"
 database_name = "bandsheet-spend"
 database_id = "4f812a9f-1645-421e-b281-e65fff1d8640"
+
+# Sign-in state (nonces, account -> slot, entry bindings), kept apart from the spend ledger. Schema: deploy/migrations-auth.
+# Needs the secret OWNER_KEY_JSON (committee key that registers member keys). Without this binding /api/auth answers 503.
+[[d1_databases]]
+binding = "AUTH_DB"
+database_name = "bandsheet-auth"
+database_id = "38875647-9c13-42c1-91b3-893f68b43cc1"
+migrations_dir = "../deploy/migrations-auth"

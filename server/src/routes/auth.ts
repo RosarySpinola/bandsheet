@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { Signer } from "../chain/port";
@@ -142,6 +142,13 @@ export function authRoutes(deps: Deps): Hono {
     const m = await a.store.getMember(who.account_id);
     if (!m) throw new AppError(404, "this account has not joined with a member key", "NOT_JOINED");
     if (m.slot !== b.slot) throw new AppError(409, "this entry was sent from a different member key than this account's", "SLOT_MISMATCH");
+    // The hash must be one of the sealed entries the contract holds (get_entries returns the stored ciphertext text).
+    const stored = await chain.view<string[]>(cfg.unit, "get_entries", { from: 0, limit: 200 }).catch(() => {
+      throw new AppError(502, "could not read the entries from NEAR testnet", "CHAIN_READ");
+    });
+    if (!stored.some((t) => createHash("sha256").update(t).digest("hex") === b.ct_sha256)) {
+      throw new AppError(404, "no entry with this hash is on the contract yet; try again in a few seconds", "ENTRY_NOT_ON_CHAIN");
+    }
     const signed_at = now(a);
     await a.store.addBinding({ account_id: who.account_id, slot: m.slot, ct_sha256: b.ct_sha256, method: b.method, signed_at });
     return c.json({ account_id: who.account_id, slot: m.slot, ct_sha256: b.ct_sha256, signed_at: new Date(signed_at).toISOString() });
