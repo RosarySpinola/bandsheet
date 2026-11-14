@@ -31,6 +31,8 @@ export interface Proposal {
   status: string;
   query: { group_by?: string[] } | null;
   description: string;
+  /** Absent on older API versions, where every proposal was a release. */
+  kind?: string;
 }
 export interface UnitInfo {
   unit: string;
@@ -91,7 +93,7 @@ export function createApi(base: string = process.env.BANDSHEET_API || DEFAULT_AP
   return {
     releases: async () => (await get<{ releases: Release[] }>("/releases")).releases,
     unit: () => get<UnitInfo>("/unit"),
-    proposals: async () => (await get<{ proposals: Proposal[] }>("/dao/proposals")).proposals,
+    proposals: async () => (await get<{ proposals: Proposal[] }>("/dao/proposals")).proposals.filter((p) => !p.kind || p.kind === "release"),
     naive: (g) => get<NaiveDemo>(`/demo/naive?group_by=${encodeURIComponent(g)}`),
     context: (country, isco = "OC2") => get<WageContext>(`/context?country=${encodeURIComponent(country)}&isco=${encodeURIComponent(isco)}`),
   };

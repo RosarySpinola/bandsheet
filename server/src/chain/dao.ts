@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { GENDERS, GRADES, GROUP_FIELDS, SITES } from "@bandsheet/core";
 import { z } from "zod";
 import { AppError } from "../errors";
@@ -45,17 +46,61 @@ interface FnCallKind {
   FunctionCall: { receiver_id: string; actions: { method_name: string; args: string }[] };
 }
 
-/** Decode a request_release proposal's query, or undefined when the proposal is something else. */
-export function releaseQueryOf(kind: unknown, unit: string): unknown | undefined {
+export type ProposalKind = "release" | "trust_employer" | "require_dkim" | "engine" | "other";
+
+interface Decoded {
+  kind: ProposalKind;
+  summary: string;
+  query: unknown;
+}
+
+const fingerprint = (spkiB64: string): string => createHash("sha256").update(Buffer.from(spkiB64, "base64")).digest("hex").slice(0, 8);
+
+/**
+ * Decode a DAO proposal that calls the unit contract: a request_release, or a governance call
+ * (add_issuer, remove_issuer, set_require_dkim, set_engine). Anything not targeting the unit returns undefined.
+ */
+export function decodeProposal(kind: unknown, unit: string, description = ""): Decoded | undefined {
   const fc = (kind as FnCallKind | undefined)?.FunctionCall;
   const act = fc?.actions?.[0];
-  if (!fc || fc.receiver_id !== unit || act?.method_name !== "request_release") return undefined;
+  if (!fc || fc.receiver_id !== unit || !act) return undefined;
+  let args: Record<string, unknown> = {};
   try {
-    const args = JSON.parse(Buffer.from(act.args, "base64").toString("utf8")) as { query?: string };
-    return typeof args.query === "string" ? JSON.parse(args.query) : null;
+    args = JSON.parse(Buffer.from(act.args, "base64").toString("utf8")) as Record<string, unknown>;
   } catch {
-    return null;
+    // undecodable args: fall through to "other" below
   }
+  const str = (k: string): string => (typeof args[k] === "string" ? (args[k] as string) : "");
+  switch (act.method_name) {
+    case "request_release": {
+      let query: unknown = null;
+      try {
+        query = typeof args.query === "string" ? JSON.parse(args.query) : null;
+      } catch {
+        query = null;
+      }
+      return { kind: "release", summary: description, query };
+    }
+    case "add_issuer": {
+      const id = `${str("selector")}._domainkey.${str("domain")}`;
+      const fp = str("rsa_pubkey_spki_b64") ? `, key ${fingerprint(str("rsa_pubkey_spki_b64"))}` : "";
+      return { kind: "trust_employer", summary: `Trust ${id}${fp}`, query: null };
+    }
+    case "remove_issuer":
+      return { kind: "trust_employer", summary: `Stop trusting ${str("selector")}._domainkey.${str("domain")}`, query: null };
+    case "set_require_dkim":
+      return { kind: "require_dkim", summary: `Require employer-signed payslips: ${args.on === true ? "on" : "off"}`, query: null };
+    case "set_engine":
+      return { kind: "engine", summary: `Adopt engine ${str("wasm_sha256").slice(0, 8)}\u2026`, query: null };
+    default:
+      return { kind: "other", summary: `${act.method_name}${description ? `: ${description}` : ""}`, query: null };
+  }
+}
+
+/** Decode a request_release proposal's query, or undefined when the proposal is something else. */
+export function releaseQueryOf(kind: unknown, unit: string): unknown | undefined {
+  const d = decodeProposal(kind, unit);
+  return d?.kind === "release" ? d.query : undefined;
 }
 
 export interface ProposalView {
@@ -67,8 +112,11 @@ export interface ProposalView {
   votes: Record<string, string>;
   vote_counts: Record<string, number[]>;
   submission_time: string | null;
+  kind: ProposalKind;
+  summary: string;
 }
 
+/** The chapel's proposals that call the unit contract (releases and governance), newest first. */
 export async function listReleaseProposals(chain: ChainPort, cfg: ChainConfig, limit = 50): Promise<ProposalView[]> {
   const last = await chain.view<number>(cfg.dao, "get_last_proposal_id");
   if (!last) return [];
@@ -76,17 +124,19 @@ export async function listReleaseProposals(chain: ChainPort, cfg: ChainConfig, l
   const raw = await chain.view<RawProposal[]>(cfg.dao, "get_proposals", { from_index: from, limit: last - from });
   return raw
     .map((p): ProposalView | undefined => {
-      const query = releaseQueryOf(p.kind, cfg.unit);
-      if (query === undefined) return undefined;
+      const d = decodeProposal(p.kind, cfg.unit, p.description);
+      if (!d) return undefined;
       return {
         id: p.id,
         description: p.description,
         proposer: p.proposer,
         status: p.status,
-        query,
+        query: d.query,
         votes: p.votes ?? {},
         vote_counts: p.vote_counts ?? {},
         submission_time: p.submission_time ? new Date(Number(BigInt(p.submission_time) / 1_000_000n)).toISOString() : null,
+        kind: d.kind,
+        summary: d.summary,
       };
     })
     .filter((p): p is ProposalView => p !== undefined)
