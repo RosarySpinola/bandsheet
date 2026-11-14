@@ -54,6 +54,22 @@ export function latestBands(releases: readonly ReleaseRecord[]): { release_id: n
   return newest === undefined ? undefined : { release_id: newest, cells: [...seen.values()] };
 }
 
+/**
+ * Where a grade's public band comes from: the newest release that published the grade-only cell, and the
+ * newer releases that withheld it (for example #2 and #3 withholding Senior because #1 already published it).
+ */
+export function bandSource(releases: readonly ReleaseRecord[], grade: string): { release_id: number; withheld_in: number[] } | undefined {
+  const withheld: number[] = [];
+  const isGrade = (key: Record<string, unknown>) => Object.keys(key).length === 1 && key.grade === grade;
+  for (let i = releases.length - 1; i >= 0; i--) {
+    const r = releases[i]!;
+    if (r.status !== "released" && r.status !== "partially_released") continue;
+    if (r.cells.some((c) => isGrade(c.key))) return { release_id: r.id, withheld_in: withheld.reverse() };
+    if (r.suppressed.some((s) => isGrade(s.key))) withheld.push(r.id);
+  }
+  return undefined;
+}
+
 export function releasesRoutes(deps: Deps): Hono {
   const app = new Hono();
   app.get("/", async (c) => {

@@ -12,6 +12,7 @@ import { EmptyState, ErrorState, Shimmer } from "@/components/unit/states"
 import { VerifiedPanel } from "@/components/unit/verified-panel"
 import { PositionCard } from "@/components/unit/stand/position"
 import { Letter } from "@/components/unit/stand/letter"
+import { bandSource, bandSourceText } from "@/components/unit/stand/band-source"
 
 const GRADES = ["Junior", "Reporter", "Senior", "Editor", "Chief"].map((g) => ({ value: g, label: g }))
 
@@ -27,6 +28,7 @@ export default function Stand() {
   const parsed = StandRequestSchema.safeParse({ gross_annual_eur: Number(gross), grade, country: "MT" })
   const grossOk = gross !== "" && Number(gross) >= 1000
   const latest = releases.data?.latest
+  const source = grade && releases.data ? bandSource(releases.data.releases, grade) : undefined
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,10 +71,18 @@ export default function Stand() {
               the server or this browser.
             </p>
           </div>
-          <p className="border-t border-border pt-4 text-[0.875rem] leading-relaxed text-muted-foreground">
-            Asking as slot <code className="font-mono text-ink">{member.slot.slice(0, 10)}…</code>
-            {latest ? `, against the latest safe bands up to release #${latest.release_id}.` : "."}
-          </p>
+          <div className="flex flex-col gap-2 border-t border-border pt-4 text-[0.875rem] leading-relaxed text-muted-foreground">
+            <p>
+              Asking as slot <code className="font-mono text-ink">{member.slot.slice(0, 10)}…</code>.
+            </p>
+            {latest && (
+              <p>
+                {grade && source !== undefined
+                  ? bandSourceText(source, grade, latest.release_id)
+                  : `Each grade's band is the newest one the engine could publish safely, from releases #1 to #${latest.release_id}.`}
+              </p>
+            )}
+          </div>
         </form>
 
         <div aria-live="polite">
@@ -94,7 +104,11 @@ export default function Stand() {
           ) : ask.data ? (
             <div className="flex flex-col gap-12">
               {ask.data.position ? (
-                <PositionCard p={ask.data.position} context={context.data} />
+                <PositionCard
+                  p={ask.data.position}
+                  context={context.data}
+                  origin={releases.data ? bandSourceText(bandSource(releases.data.releases, ask.data.position.grade), ask.data.position.grade, latest?.release_id) : undefined}
+                />
               ) : (
                 <EmptyState
                   title={`No safe band for ${grade} yet`}

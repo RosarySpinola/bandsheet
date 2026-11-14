@@ -7,9 +7,11 @@ import { cn } from "@/lib/utils"
 const WORD = { below: "below", near: "about level with", above: "above" } as const
 
 /** Delta, percentage and a small band bar: band mean as an ink tick, the member as a lavender marker. */
-export function PositionCard({ p, context }: { p: Position; context?: WageContext }) {
+export function PositionCard({ p, context, origin }: { p: Position; context?: WageContext; origin?: string }) {
   /** Eurostat gives a monthly median; x12 to sit on the same annual scale (no bonuses). */
   const median = context ? Math.round(context.median_monthly_eur * 12) : null
+  /** One country's survey median, never an EU-wide figure. */
+  const label = context ? (context.label ?? `${context.country_name} median · ${context.isco_label} · Eurostat SES ${context.year}`) : ""
   const vals = [p.your_eur, p.band_mean_eur, ...(median ? [median] : [])]
   const lo = Math.min(...vals) * 0.8
   const hi = Math.max(...vals) * 1.15
@@ -34,14 +36,14 @@ export function PositionCard({ p, context }: { p: Position; context?: WageContex
           />
           <Marker pct={pct(p.band_mean_eur)} label={`Band mean ${eur(p.band_mean_eur)}`} tone="ink" />
           <Marker pct={pct(p.your_eur)} label={`You ${eur(p.your_eur)}`} tone="lav" />
-          {median && context && <Marker pct={pct(median)} label={`EU median ${eur(median)}`} tone="gray" />}
+          {median && context && <Marker pct={pct(median)} label={`${context.country_name} median ${eur(median)}`} tone="gray" />}
         </div>
       </div>
+      {origin && <p className="-mt-2 text-[0.9375rem] leading-relaxed text-foreground">{origin}</p>}
       {median && context && (
         <div className="flex flex-col gap-2 border-l-2 border-[var(--gray-350)] pl-4">
           <p className="text-[0.9375rem] font-medium text-ink">
-            EU median, {context.isco_label.toLowerCase()} (Eurostat SES {context.year}, {context.country_name}): {eur(context.median_monthly_eur)} a
-            month, about {eur(median)} a year
+            {label}: {eur(context.median_monthly_eur)} a month, about {eur(median)} a year
           </p>
           <p className="text-[0.875rem] leading-relaxed text-muted-foreground">
             A broad category: every professional in {context.country_name}, not newsroom pay, and {context.year} is the latest survey year

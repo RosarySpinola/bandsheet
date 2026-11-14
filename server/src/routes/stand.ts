@@ -5,7 +5,7 @@ import type { Deps } from "../deps";
 import { AppError } from "../errors";
 import { parseModelJson } from "../json";
 import { type Letter, isAcceptableLetter, replyDeadline, templateLetter } from "../letter";
-import { latestBands, readReleases } from "./releases";
+import { bandSource, latestBands, readReleases } from "./releases";
 
 export const StandRequestSchema = z.object({
   gross_annual_eur: z.number().int().min(1).max(10_000_000),
@@ -52,7 +52,10 @@ const SYSTEM = [
   '"letter" ({subject, body}) a polite Article 7 pay-information request under Directive (EU) 2023/970 asking the employer for',
   "the member's individual pay level, the average pay levels broken down by sex for workers doing the same work or work of equal",
   "value, and the criteria used to set pay, asking for a reply within facts.reply_deadline and citing facts.law. Use bracketed",
-  "placeholders for name, employer, job title, date. Do NOT put the member's pay figure in the letter. Never invent legal text beyond Article 7.",
+  "placeholders for name, employer, job title, date. Do NOT put the member's pay figure in the letter. Never invent legal text beyond Article 7:",
+  "cite no national statute, legal notice, regulation number or deadline other than facts.reply_deadline.",
+  "If facts.band_release_id is set, the band comes from that release; facts.band_withheld_in lists newer releases that withheld it",
+  "because publishing it again would have exposed a colleague. Do not call it the latest release when it is not.",
 ].join(" ");
 
 function fallbackAnswer(p: Position | undefined): string {
@@ -72,11 +75,14 @@ export function standRoutes(deps: Deps): Hono {
 
     let cells = req.bands;
     let releaseId: string | number | undefined;
+    let source: ReturnType<typeof bandSource>;
     if (!cells) {
-      const latest = latestBands((await readReleases(deps)).releases);
+      const { releases } = await readReleases(deps);
+      const latest = latestBands(releases);
       if (!latest) throw new AppError(422, "no released bands yet", "NO_RELEASED_BANDS");
       cells = latest.cells;
       releaseId = latest.release_id;
+      source = bandSource(releases, req.grade);
     }
     const position = positionFor(req.grade, req.gross_annual_eur, cells);
     const facts = {
@@ -85,6 +91,8 @@ export function standRoutes(deps: Deps): Hono {
       released_bands: cells.filter((x) => x.key.grade === req.grade),
       reply_deadline: replyDeadline(req.country).text,
       law: replyDeadline(req.country).law,
+      band_release_id: source?.release_id ?? null,
+      band_withheld_in: source?.withheld_in ?? [],
     };
     const content = JSON.stringify(facts);
     const chat = await deps.chat({
@@ -98,18 +106,21 @@ export function standRoutes(deps: Deps): Hono {
 
     let answer = fallbackAnswer(position);
     let letter: Letter = templateLetter(req.grade, req.country);
-    let source: "model" | "fallback" = "fallback";
+    let letterSource: "model" | "fallback" = "fallback";
     try {
       const out = parseModelJson(chat.content, ModelOut);
       answer = out.answer;
       if (isAcceptableLetter(out.letter)) {
         letter = out.letter;
-        source = "model";
+        letterSource = "model";
       }
     } catch {
       // keep deterministic fallbacks; the UI shows `source`
     }
-    return c.json({ position: position ?? null, answer, letter, source, release_id: releaseId ?? null, verified: chat.verified });
+    return c.json({
+      position: position ?? null, answer, letter, source: letterSource, release_id: releaseId ?? null,
+      band_release_id: source?.release_id ?? null, band_withheld_in: source?.withheld_in ?? [], verified: chat.verified,
+    });
   });
   return app;
 }

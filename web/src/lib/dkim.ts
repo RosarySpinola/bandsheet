@@ -100,6 +100,8 @@ export const ContextSchema = z.object({
   country_name: z.string(),
   isco08: z.string(),
   isco_label: z.string(),
+  /** e.g. "Malta median · Professionals · Eurostat SES 2018" (one country, never "EU median"). */
+  label: z.string().optional(),
   year: z.number(),
   unit: z.string(),
   median_monthly_eur: z.number(),

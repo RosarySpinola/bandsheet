@@ -69,6 +69,8 @@ export interface WageContext {
   country_name: string;
   isco08: string;
   isco_label: string;
+  /** What to call this figure in a UI: one country's median, never an EU-wide one. e.g. "Malta median · Professionals · Eurostat SES 2018". */
+  label: string;
   indicator: string;
   dataset: string;
   year: number;
@@ -102,7 +104,8 @@ export function summarise(code: CountryCode, isco: string, raw: JsonStat, hash: 
     country_name: c.name,
     isco08: isco,
     isco_label: label,
-    indicator: "Median gross monthly earnings",
+    label: `${c.name} median · ${label} · Eurostat SES ${latest.year}`,
+    indicator: `Median gross monthly earnings in ${c.name}`,
     dataset: DATASET,
     year: latest.year,
     unit: "EUR per month",

@@ -40,7 +40,7 @@ Beyond NEAR:
 | DKIM, RFC 6376 | Payslip authenticity. Rust verifier in `enclave/dkim/`; fixtures signed by an independent Node signer and cross-checked with dkimpy (`enclave/scripts/dkim-crosscheck.py`). |
 | Eurostat SES (`earn_ses_monthly`) | `/api/context`: median monthly earnings for ISCO-08 Professionals (OC2), latest year 2018 (Malta €2,189), as a dated outside reference for a band. |
 | MCP | `mcp/`: six read-only tools so an AI assistant can read bands, explain a refusal and verify a release. |
-| EU Directive 2023/970, Art. 7 | `/unit/stand` drafts the member's pay-information letter (Malta: Legal Notice 173 of 2026, reply within 8 days). |
+| EU Directive 2023/970, Art. 7 | `/unit/stand` drafts the member's pay-information letter under Article 7, as transposed into Maltese law; Article 7(4) gives the employer a reasonable period, at most two months, to reply. |
 
 ## Measured result
 

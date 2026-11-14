@@ -140,8 +140,10 @@ describe("POST /api/stand", () => {
     const body = await (await post(app, { gross_annual_eur: 44000, grade: "Reporter" })).json();
     expect(body.release_id).toBe(2);
     expect(body.position.band_mean_eur).toBe(43000);
+    expect(body.band_release_id).toBe(2);
     const senior = await (await post(app, { gross_annual_eur: 70000, grade: "Senior" })).json();
     expect(senior.position.band_mean_eur).toBe(62400); // suppressed in #2, last published value from #1
+    expect([senior.release_id, senior.band_release_id, senior.band_withheld_in]).toEqual([2, 1, [2]]);
     expect(view).toHaveBeenCalledWith("bandsheet-test.testnet", "get_releases", {});
   });
   it("validates input", async () => {

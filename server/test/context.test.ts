@@ -52,6 +52,8 @@ describe("getWageContext", () => {
     expect(c.source_url).toContain("ec.europa.eu/eurostat");
     expect(c.snapshot_sha256).toBe(createHash("sha256").update(JSON.stringify(snap.entries["MT|OC2"]!.raw)).digest("hex"));
     expect(c.caveat).toContain("2018");
+    expect(c.label).toBe("Malta median · Professionals · Eurostat SES 2018");
+    expect(JSON.stringify(c)).not.toMatch(/EU median/i);
   });
   it("maps GR to Eurostat's EL", async () => {
     const f = vi.fn(liveFetch("GR"));
@@ -109,11 +111,20 @@ describe("GET /api/demo/naive", () => {
 });
 
 describe("Article 7 letter deadline", () => {
-  it("says eight days and cites Malta's Legal Notice 173 of 2026 by default; two months elsewhere", async () => {
+  it("cites only the Directive, with Article 7(4)'s two months, and names Maltese law generically", async () => {
     const { templateLetter } = await import("../src/letter");
-    expect(templateLetter("Senior").body).toMatch(/within eight days/);
-    expect(templateLetter("Senior").body).toContain("Legal Notice 173 of 2026");
-    expect(templateLetter("Senior", "DE").body).toMatch(/within two months/);
+    const mt = templateLetter("Senior").body;
+    expect(mt).toContain("Article 7 of Directive (EU) 2023/970 (the Pay Transparency Directive), as transposed into Maltese law.");
+    expect(mt).toContain("within a reasonable period, and in any event within two months of this request");
+    expect(mt).not.toMatch(/legal notice|173|eight days|8 days/i);
+    expect(templateLetter("Senior", "DE").body).toContain("as transposed into German law");
     expect(templateLetter("Senior", "DE").body).not.toContain("Malta");
+  });
+  it("rejects a model letter that cites a legal notice or an eight-day deadline", async () => {
+    const { isAcceptableLetter, templateLetter } = await import("../src/letter");
+    const ok = templateLetter("Senior");
+    expect(isAcceptableLetter(ok)).toBe(true);
+    expect(isAcceptableLetter({ ...ok, body: `${ok.body}\nUnder Legal Notice 173 of 2026.` })).toBe(false);
+    expect(isAcceptableLetter({ ...ok, body: ok.body.replace("two months", "8 days") })).toBe(false);
   });
 });
