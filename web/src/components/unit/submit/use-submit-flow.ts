@@ -7,6 +7,8 @@ import type { Policy } from "@/lib/chain"
 import { checkKey, nearLib } from "../key-check"
 import type { Member } from "../session"
 import { isEml } from "../dropzone"
+import { useIdentity } from "@/lib/wallet/identity"
+import { walletSignedSubmit, type SignedSubmitStage } from "@/lib/wallet/signed-submit"
 
 async function fileB64(f: File): Promise<string> {
   const bytes = new Uint8Array(await f.arrayBuffer())
@@ -17,7 +19,7 @@ async function fileB64(f: File): Promise<string> {
 
 export type Step = 1 | 2 | 3 | 4 | 5
 export type Fields = { gross_annual_eur: string; grade?: Entry["grade"]; gender?: Entry["gender"]; site?: Entry["site"] }
-export type Receipt = { tx: string | null; via: "browser" | "server"; count: number | null; before: number | null }
+export type Receipt = { tx: string | null; via: "browser" | "server" | "wallet"; count: number | null; before: number | null; account?: string }
 export type SampleKind = "email" | "forged" | "image"
 export type Async<T> = { status: "idle" | "busy" | "done" | "error"; data?: T; error?: unknown }
 
@@ -38,6 +40,10 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   /** The raw payroll email (base64) when an .eml was used; sealed with the entry for the enclave's DKIM check. */
   const [emlB64, setEmlB64] = useState<string | null>(null)
   const [sample, setSample] = useState<SampleKind | null>(null)
+  /** A member who joined with a NEAR Connect wallet: their wallet must sign each entry before it is posted. */
+  const who = useIdentity()
+  const wallet = who?.method === "near-connect" && member !== null && who.slot === member.slot ? who : null
+  const [stage, setStage] = useState<SignedSubmitStage | null>(null)
 
   const go = useCallback((s: Step) => {
     setStep(s)
@@ -121,6 +127,20 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     const before = policy?.entries ?? null
     setSend({ status: "busy" })
     const { invite: inv, demo } = invite.data
+    if (wallet) {
+      try {
+        const r = await walletSignedSubmit(inv, sealed, wallet, setStage)
+        setSend({ status: "done", data: { tx: r.tx.hash, via: "wallet", count: r.entry_count, before, account: r.account_id } })
+      } catch (error) {
+        setSend({ status: "error", error })
+        return
+      } finally {
+        setStage(null)
+      }
+      void qc.invalidateQueries({ queryKey: ["chain", "policy"] })
+      go(5)
+      return
+    }
     try {
       const near = await nearLib()
       const out = (await near.submitEntry(inv, sealed)) as { result: unknown; txHash?: string }
@@ -143,7 +163,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     }
     void qc.invalidateQueries({ queryKey: ["chain", "policy"] })
     go(5)
-  }, [sealed, invite, policy, qc, go])
+  }, [sealed, invite, policy, qc, go, wallet])
 
   /** Step 3 -> 2: forget the read payslip (and anything sealed from it) and show an empty upload step. Gender and site stay. */
   const anotherPayslip = useCallback(() => {
@@ -171,7 +191,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   return {
     step, reached, go, invite, resetInvite,
     file, extract, runExtract, trySample, fields, setFields, emlB64, sample,
-    sealed, seal, send, sendSealed, restart, anotherPayslip,
+    sealed, seal, send, sendSealed, restart, anotherPayslip, wallet, stage,
   }
 }
 

@@ -98,6 +98,13 @@ export function StepUpload({ flow }: { flow: SubmitFlow }) {
           >
             Or use a payslip image (read, but not counted while the chapel requires signed emails)
           </button>
+          <a
+            href="/samples/payroll-email-noor-haddad.eml"
+            download="payroll-email-noor-haddad.eml"
+            className="wipe w-fit text-[0.9375rem] text-muted-foreground transition-colors duration-[400ms] hover:text-ink"
+          >
+            Download the sample payroll email (.eml) to upload it yourself
+          </a>
         </div>
       )}
 

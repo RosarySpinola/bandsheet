@@ -60,24 +60,22 @@ export default function Join() {
               Join your chapel
             </h1>
             <p className="text-[1.0625rem] leading-relaxed text-foreground">
-              Join with your NEAR account, or open a member key. It lets you add your pay privately and ask where you stand. It cannot
-              read anyone's figures, yours included.
+              Join with your own NEAR wallet. Membership lets you add your pay privately and ask where you stand. It cannot read anyone's
+              figures, yours included.
             </p>
           </div>
 
           <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <p className="text-[0.8125rem] font-medium tracking-[0.02em] text-muted-foreground uppercase">For judges and AI screeners</p>
-              <SquareButton onClick={() => open("demo")} disabled={busy} className="w-full">
+            <SignInOptions onEnter={() => navigate(next)} />
+            <div className="flex flex-col gap-2.5 border-l-2 border-border pl-4">
+              <p className="text-[0.8125rem] font-medium tracking-[0.02em] text-muted-foreground uppercase">Judge demo: no wallet</p>
+              <p className="text-[0.875rem] leading-relaxed text-muted-foreground">
+                A ready-made demo member, so judges and AI screeners can try every step without a wallet.
+              </p>
+              <SquareButton variant="line" onClick={() => open("demo")} disabled={busy} className="min-h-11 w-full sm:w-fit">
                 {busy && state.source === "demo" ? "Opening the demo member's key…" : "Try as a demo member (no sign-in)"}
               </SquareButton>
             </div>
-            <div className="flex items-center gap-4 text-[0.875rem] text-muted-foreground">
-              <span className="h-px flex-1 bg-border" />
-              or
-              <span className="h-px flex-1 bg-border" />
-            </div>
-            <SignInOptions onEnter={() => navigate(next)} />
             <div className="flex items-center gap-4 text-[0.875rem] text-muted-foreground">
               <span className="h-px flex-1 bg-border" />
               or open your own invite
@@ -85,7 +83,7 @@ export default function Join() {
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="invite" className="text-[0.9375rem] font-medium text-ink">
-                Invite JSON
+                Invite (posting key JSON)
               </label>
               <textarea
                 id="invite"
@@ -148,8 +146,8 @@ export default function Join() {
         </main>
 
         <p className="max-w-[30rem] text-[0.8125rem] leading-relaxed text-muted-foreground">
-          A synthetic demo on NEAR testnet. Your key is kept in this tab's session storage and is gone when you close it. It can only call{" "}
-          <code className="font-mono">submit</code> on the chapel's contract. No real pay data, no mainnet, no payments.
+          A synthetic demo on NEAR testnet. Your posting key is kept in this tab's session storage and is gone when you close it. It can only
+          call <code className="font-mono">submit</code> on the chapel's contract and holds no funds. No real pay data, no mainnet, no payments.
         </p>
       </div>
       <JoinVisual />

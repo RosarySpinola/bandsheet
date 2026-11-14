@@ -1,4 +1,4 @@
-import { Account, FailoverRpcProvider, JsonRpcProvider, KeyPair, type KeyPairString, type Provider, teraToGas } from "near-api-js";
+import { Account, FailoverRpcProvider, JsonRpcProvider, KeyPair, type KeyPairString, type Provider, actions, teraToGas } from "near-api-js";
 import { z } from "zod";
 import { slotIdFromNearPublicKey } from "./slot";
 import { type Ciphertext, CiphertextSchema } from "./schemas";
@@ -114,6 +114,28 @@ export async function submitEntry(
     }
   }
   return { result, txHash: out.transaction?.hash ?? out.transaction_outcome?.id };
+}
+
+/**
+ * Sign `submit(ciphertext)` with the posting key but do not send it. A wallet member's server broadcasts these exact
+ * bytes only after it has verified the wallet's signature over sha256(ctText). ctText is the ciphertext JSON as the
+ * contract will store it.
+ */
+export async function signSubmitTx(
+  invite: Invite,
+  ciphertext: Ciphertext,
+  opts: SubmitOptions = {},
+): Promise<{ signedTxB64: string; ctText: string }> {
+  const body = CiphertextSchema.parse(ciphertext);
+  const provider = opts.provider ?? makeProvider([invite.rpcUrl]);
+  const account = new Account(invite.accountId, provider, invite.privateKey);
+  const signed = await account.createSignedTransaction({
+    receiverId: invite.contractId,
+    actions: [actions.functionCall(opts.method ?? "submit", { ciphertext: body }, teraToGas(opts.gasTeras ?? 30), 0n)],
+  });
+  let bin = "";
+  for (const b of signed.encode()) bin += String.fromCharCode(b);
+  return { signedTxB64: btoa(bin), ctText: JSON.stringify(body) };
 }
 
 /** Read-only contract view call over NEAR RPC (no key needed). */

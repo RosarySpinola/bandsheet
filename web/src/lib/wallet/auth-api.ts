@@ -32,8 +32,15 @@ const JoinResponse = z.object({
 })
 export type JoinResult = z.infer<typeof JoinResponse>
 
-const EntryResponse = z.object({ account_id: z.string(), slot: z.string(), ct_sha256: z.string(), signed_at: z.string() })
-export type EntryBinding = z.infer<typeof EntryResponse>
+const EntryResponse = z.object({
+  account_id: z.string(),
+  slot: z.string(),
+  ct_sha256: z.string(),
+  signed_at: z.string(),
+  tx: TxOut,
+  entry_count: z.number().nullable(),
+})
+export type WalletEntry = z.infer<typeof EntryResponse>
 
 export const statementText = (purpose: Purpose, subject: string) =>
   purpose === "join" ? `Bandsheet join: ${subject}` : `Bandsheet entry: ${subject}`
@@ -54,8 +61,9 @@ export const relayNearAuth = (body: {
 export const joinWithAccount = (claim: SignedClaim, memberPublicKey: string, method: Method) =>
   api("/auth/join", JoinResponse, postJson({ ...claim, member_public_key: memberPublicKey, method }))
 
-export const bindEntry = (claim: SignedClaim, ctSha256: string, slot: string, method: Method) =>
-  api("/auth/entry", EntryResponse, postJson({ ...claim, ct_sha256: ctSha256, slot, method }))
+/** The wallet's claim over the entry hash plus the posting key's signed, unsent submit; the server posts it only if the claim verifies. */
+export const postWalletEntry = (claim: SignedClaim, signedTxB64: string, method: Method) =>
+  api("/auth/entry", EntryResponse, postJson({ ...claim, signed_tx: signedTxB64, method }))
 
 export const nonceBytes = (nonce: string): Uint8Array => {
   const b64 = nonce.replace(/-/g, "+").replace(/_/g, "/")

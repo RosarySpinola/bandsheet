@@ -7,7 +7,7 @@ import { HashValue } from "../copy-button"
 import { AccountLink, CtaButton, CtaLink, ExtLink, SquareButton, TxLink } from "../links"
 import { ErrorState } from "../states"
 import type { SubmitFlow } from "./use-submit-flow"
-import { BindEntry } from "@/lib/wallet/bind-entry"
+import { shortAccount } from "@/lib/wallet/identity"
 
 /** Step 4: show the sealed envelope, then sign `submit` with the member key. */
 export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }) {
@@ -52,16 +52,25 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
 
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
         <SquareButton onClick={flow.sendSealed} disabled={s.status === "busy"} aria-busy={s.status === "busy"}>
-          {s.status === "busy" ? "Signing and sending…" : "Sign and send to NEAR"}
+          {s.status !== "busy"
+            ? flow.wallet ? "Sign with your wallet and post" : "Sign and send to NEAR"
+            : flow.stage === "wallet" ? "Approve in your wallet…" : flow.stage === "posting" ? "Posting…" : "Signing and sending…"}
         </SquareButton>
         <CtaButton onClick={() => flow.go(3)} disabled={s.status === "busy"}>
           Change the fields
         </CtaButton>
       </div>
-      <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
-        Your member key signs a call to <code className="font-mono">submit</code> on <AccountLink id={CONTRACT} className="text-[0.9375rem]" />.
-        The chapel's account pays the gas, so you need no tokens.
-      </p>
+      {flow.wallet ? (
+        <p className="border-l-2 border-ink bg-band px-5 py-4 text-[0.9375rem] leading-relaxed text-foreground">
+          Your wallet ({shortAccount(flow.wallet.account_id)}) signs; the chapel's posting key posts it, so your account never appears next to your entry
+          on chain. Bandsheet checks your wallet's signature before anything is posted; if you decline, nothing is posted.
+        </p>
+      ) : (
+        <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
+          Your posting key signs a call to <code className="font-mono">submit</code> on <AccountLink id={CONTRACT} className="text-[0.9375rem]" />.
+          The chapel's account pays the gas, so you need no tokens.
+        </p>
+      )}
     </div>
   )
 }
@@ -87,13 +96,16 @@ export function StepDone({ flow }: { flow: SubmitFlow }) {
         <Fact label="Transaction">
           {r.tx ? <TxLink tx={r.tx} /> : <ExtLink href={explorer.account(CONTRACT)}>Signed in your browser · see the contract</ExtLink>}
         </Fact>
-        <Fact label="Signed by">{r.via === "browser" ? "Your member key, in this browser" : "The demo member key, on the Bandsheet server"}</Fact>
+        <Fact label="Signed by">
+          {r.via === "wallet"
+            ? `Your wallet (${shortAccount(r.account ?? "")}); posted by the chapel's posting key`
+            : r.via === "browser" ? "Your posting key, in this browser" : "The demo member key, on the Bandsheet server"}
+        </Fact>
         <Fact label="Entries">{r.count !== null ? int(r.count) : "—"}</Fact>
         <Fact label="Your slot">
           {flow.invite.status === "done" && flow.invite.data ? <HashValue value={flow.invite.data.invite.slot} head={12} tail={6} /> : "—"}
         </Fact>
       </dl>
-      <BindEntry ciphertext={flow.sealed} slot={flow.invite.status === "done" ? flow.invite.data?.invite.slot : undefined} />
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
         <CtaLink to="/unit/stand" size="lg">
           See where you stand
