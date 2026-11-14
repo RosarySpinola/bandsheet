@@ -20,6 +20,14 @@ export function NavGlyph({ kind, className }: { kind: NavItem["kind"]; className
         <path d="M21.5 33 H26.5 V38 H21.5 Z" fill="var(--ink)" />
       </svg>
     )
+  if (kind === "pricing")
+    return (
+      <svg viewBox="0 0 48 48" className={cn("size-12 shrink-0", className)} aria-hidden="true">
+        <path d="M6 12 H28 V36 H6 Z" fill="var(--purple-200)" />
+        <path d="M28 12 L42 24 L28 36 Z" fill="var(--purple-300)" />
+        <path d="M12 21 H18 V27 H12 Z" fill="var(--ink)" />
+      </svg>
+    )
   if (kind !== "overview") return <Glyph kind={kind} className={className} />
   return (
     <svg viewBox="0 0 48 48" className={cn("size-12 shrink-0", className)} aria-hidden="true">
