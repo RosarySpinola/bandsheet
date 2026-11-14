@@ -1,4 +1,4 @@
-// Pushes the three Pages secrets from local gitignored files. Values go to wrangler's stdin only; never printed.
+// Pushes the Pages secrets from local gitignored files. Values go to wrangler's stdin only; never printed.
 // Usage: node deploy/put-secrets.mjs   (CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID must be in the environment)
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -19,6 +19,8 @@ const secrets = {
   NEARAI_API_KEY: key,
   COUNCIL_KEYS_JSON: JSON.stringify(council),
   DEMO_INVITE_JSON: JSON.stringify(json("keys/invites/demo-member.json")),
+  // Registrar key: a function-call key on the committee account limited to add_members / revoke_member.
+  OWNER_KEY_JSON: (({ account_id, private_key }) => JSON.stringify({ account_id, private_key }))(json("keys/registrar.json")),
 };
 for (const [name, value] of Object.entries(secrets)) {
   const r = spawnSync("wrangler", ["pages", "secret", "put", name, "--project-name", project], { input: value, encoding: "utf8" });

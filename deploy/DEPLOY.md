@@ -33,15 +33,18 @@ Secrets (names only; set with `wrangler pages secret put`, via `deploy/put-secre
 
 Database `bandsheet-auth` (id `38875647-9c13-42c1-91b3-893f68b43cc1`), bound as `AUTH_DB` in `web/wrangler.toml`; schema
 `deploy/migrations-auth/0001_auth.sql` (`auth_nonces`, `auth_members`, `entry_bindings`). It needs the secret
-`OWNER_KEY_JSON` (`{account_id, private_key}` of the committee account in `keys/owner/`), which registers member keys
-and relays NEAR Auth `sign` calls. Without the binding `/api/auth/*` answers 503 `AUTH_NOT_CONFIGURED`.
+`OWNER_KEY_JSON`: the committee account's **registrar key** (`keys/registrar.json`, made by `scripts/registrar-key.ts`), a
+function-call key that can call only `add_members` and `revoke_member` on the union contract. The hosted server never holds
+the committee's full-access key, so a server compromise cannot repoint the DAO, the policy or OutLayer. (The NEAR Auth
+`sign` relay needs a key that can call `fast-auth.testnet`; it is only reachable from localhost:3000, where the dev server
+uses the full key from `keys/owner/`.) Without the binding `/api/auth/*` answers 503 `AUTH_NOT_CONFIGURED`.
 
 Preview (never production): `deploy/preview-wallet.sh --setup` applies the migration and sets the **preview**
 environment's `OWNER_KEY_JSON`, `DEMO_INVITE_JSON`, `COUNCIL_KEYS_JSON` from `keys/` (values never printed; set
 `BANDSHEET_KEYS_DIR` when running from another checkout), then deploys branch `wallet` to
 https://wallet.bandsheet.pages.dev. The preview has no `NEARAI_API_KEY`, so payslips are entered by hand there.
 Before a production deploy of this branch: apply the migration (already applied to `bandsheet-auth`) and
-`wrangler pages secret put OWNER_KEY_JSON --project-name bandsheet` for production.
+`node deploy/put-secrets.mjs` (sets `OWNER_KEY_JSON` from `keys/registrar.json` with the other secrets).
 
 ## Spend ledger (D1)
 
