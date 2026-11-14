@@ -1,0 +1,103 @@
+import { Lock } from "lucide-react"
+import { plainError } from "@/lib/api"
+import { CONTRACT, explorer, type Policy } from "@/lib/chain"
+import { int, shortHash } from "@/lib/format"
+import { Fact } from "../page-header"
+import { HashValue } from "../copy-button"
+import { AccountLink, CtaButton, CtaLink, ExtLink, SquareButton, TxLink } from "../links"
+import { ErrorState } from "../states"
+import type { SubmitFlow } from "./use-submit-flow"
+
+/** Step 4: show the sealed envelope, then sign `submit` with the member key. */
+export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }) {
+  const c = flow.sealed
+  const s = flow.send
+  if (!c) return null
+  const refused = s.status === "error" && plainError(s.error).code === "NOT_MEMBER"
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6 bg-ink p-6 text-white md:p-10">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 place-items-center bg-lav-mid text-ink">
+            <Lock className="size-5" />
+          </span>
+          <p className="text-[1.125rem] font-semibold">Sealed in this browser</p>
+        </div>
+        <p className="max-w-[38rem] text-[1rem] leading-relaxed text-white/80">
+          Your entry is encrypted to the engine's public key{" "}
+          <code className="font-mono text-lav-mid">{shortHash(policy?.policy.enclave_pubkey, 10, 4)}</code>, read from the contract
+          policy. Only the sealed OutLayer engine holds the matching private key. The contract, the chapel and this server see only the
+          envelope below.
+        </p>
+        <dl className="grid grid-cols-1 gap-4 font-mono text-[0.8125rem] sm:grid-cols-3">
+          {(["epk", "nonce", "ct"] as const).map((k) => (
+            <div key={k} className="flex min-w-0 flex-col gap-1">
+              <dt className="text-white/55">{k === "ct" ? `ciphertext · ${c.ct.length} chars` : k === "epk" ? "ephemeral key" : "nonce"}</dt>
+              <dd className="truncate text-white" title={c[k]}>
+                {c[k]}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
+      {s.status === "error" &&
+        (refused ? (
+          <ErrorState error={s.error} tone="alarm" title="Refused by the contract. This key is not a member." />
+        ) : (
+          <ErrorState error={s.error} onRetry={flow.sendSealed} />
+        ))}
+
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+        <SquareButton onClick={flow.sendSealed} disabled={s.status === "busy"} aria-busy={s.status === "busy"}>
+          {s.status === "busy" ? "Signing and sending…" : "Sign and send to NEAR"}
+        </SquareButton>
+        <CtaButton onClick={() => flow.go(3)} disabled={s.status === "busy"}>
+          Change the fields
+        </CtaButton>
+      </div>
+      <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
+        Your member key signs a call to <code className="font-mono">submit</code> on <AccountLink id={CONTRACT} className="text-[0.9375rem]" />.
+        The chapel's account pays the gas, so you need no tokens.
+      </p>
+    </div>
+  )
+}
+
+/** Step 5: receipt with the transaction and what happened to the entry count. */
+export function StepDone({ flow }: { flow: SubmitFlow }) {
+  const r = flow.send.status === "done" ? flow.send.data : undefined
+  if (!r) return null
+  const same = r.count !== null && r.before !== null && r.count === r.before
+  return (
+    <div className="flex flex-col gap-10">
+      <div className="flex flex-col gap-4">
+        <p className="font-serif text-[2.25rem] leading-tight text-ink md:text-[2.75rem]">Your entry is filed.</p>
+        <p className="max-w-[38rem] text-[1.0625rem] leading-relaxed text-foreground">
+          Resubmitting replaces your entry; the count stays the same.
+          {r.count !== null &&
+            (same
+              ? ` The unit still holds ${int(r.count)} entries, because your slot already had one and this replaced it.`
+              : ` The unit now holds ${int(r.count)} entries.`)}
+        </p>
+      </div>
+      <dl className="grid grid-cols-1 gap-6 bg-band p-6 sm:grid-cols-2 md:p-8">
+        <Fact label="Transaction">
+          {r.tx ? <TxLink tx={r.tx} /> : <ExtLink href={explorer.account(CONTRACT)}>Signed in your browser · see the contract</ExtLink>}
+        </Fact>
+        <Fact label="Signed by">{r.via === "browser" ? "Your member key, in this browser" : "The demo member key, on the Bandsheet server"}</Fact>
+        <Fact label="Entries">{r.count !== null ? int(r.count) : "—"}</Fact>
+        <Fact label="Your slot">
+          {flow.invite.status === "done" && flow.invite.data ? <HashValue value={flow.invite.data.invite.slot} head={12} tail={6} /> : "—"}
+        </Fact>
+      </dl>
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+        <CtaLink to="/unit/stand" size="lg">
+          See where you stand
+        </CtaLink>
+        <CtaButton onClick={flow.restart}>Submit again</CtaButton>
+      </div>
+    </div>
+  )
+}
