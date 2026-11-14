@@ -43,7 +43,10 @@ export function DkimItems({ start }: { start: number }) {
             }
             proves="The employer keys whose DKIM signatures the engine accepts. Only the chapel's DAO can add one, by vote. A payslip signed by any other key, or edited after signing, is refused inside the enclave and never counted."
             command={`near view ${CONTRACT} get_issuers '{}' --networkId testnet\n# fingerprint: echo '<rsa_pubkey_spki_b64>' | base64 -d | shasum -a 256`}
-            links={trustTx ? [{ href: explorer.tx(trustTx), label: "DAO vote that trusted this key" }] : []}
+            links={[
+              { href: "/unit/vote#p2", label: "Proposal #2 on the chapel vote", internal: true },
+              ...(trustTx ? [{ href: explorer.tx(trustTx), label: "DAO vote that trusted this key" }] : []),
+            ]}
           />
       <VerifyItem
         n={start + 1}

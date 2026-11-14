@@ -80,8 +80,13 @@ export const useEvaluation = () =>
 
 /* ---------- Sputnik DAO release proposals ---------- */
 
+export type ProposalKind = "release" | "trust_employer" | "require_dkim" | "engine" | "other"
+
 export type DaoProposal = {
   id: number
+  kind: ProposalKind
+  /** decoded one-line summary for governance proposals; release proposals fall back to the query */
+  summary: string | null
   description: string
   proposer: string
   status: string
@@ -90,8 +95,12 @@ export type DaoProposal = {
   submission_time: string | null
 }
 
+const KindSchema = z.enum(["release", "trust_employer", "require_dkim", "engine", "other"]).catch("other")
+
 const DaoProposalSchema = z.object({
   id: z.number(),
+  kind: KindSchema.optional(),
+  summary: z.string().nullable().optional(),
   description: z.string(),
   proposer: z.string(),
   status: z.string(),
@@ -102,6 +111,19 @@ const DaoProposalSchema = z.object({
 const ProposalsResponse = z.object({ proposals: z.array(DaoProposalSchema) })
 
 type RawProposal = { id: number; proposer: string; description: string; status: string; kind: unknown; votes?: Record<string, string>; submission_time?: string }
+
+const METHOD_KIND: Record<string, ProposalKind> = {
+  request_release: "release",
+  add_issuer: "trust_employer",
+  set_require_dkim: "require_dkim",
+  set_engine: "engine",
+}
+
+function decodeKind(kind: unknown): ProposalKind {
+  const fc = (kind as { FunctionCall?: { receiver_id: string; actions: { method_name: string }[] } })?.FunctionCall
+  const m = fc?.receiver_id === CONTRACT ? fc.actions?.[0]?.method_name : undefined
+  return (m && METHOD_KIND[m]) || "other"
+}
 
 function decodeQuery(kind: unknown): QueryLike | undefined {
   const fc = (kind as { FunctionCall?: { receiver_id: string; actions: { method_name: string; args: string }[] } })?.FunctionCall
@@ -117,15 +139,15 @@ function decodeQuery(kind: unknown): QueryLike | undefined {
 
 async function proposalsFromChain(): Promise<DaoProposal[]> {
   const raw = await view<RawProposal[]>(DAO, "get_proposals", { from_index: 0, limit: 100 })
-  return raw.flatMap((p) => {
-    const query = decodeQuery(p.kind)
-    if (query === undefined) return []
+  return raw.map((p) => {
+    const kind = decodeKind(p.kind)
+    const query = kind === "release" ? (decodeQuery(p.kind) ?? null) : null
     const ts = p.submission_time ? new Date(Number(BigInt(p.submission_time) / 1_000_000n)).toISOString() : null
-    return [{ id: p.id, description: p.description, proposer: p.proposer, status: p.status, query, votes: p.votes ?? {}, submission_time: ts }]
+    return { id: p.id, kind, summary: kind === "release" ? null : p.description, description: p.description, proposer: p.proposer, status: p.status, query, votes: p.votes ?? {}, submission_time: ts }
   })
 }
 
-/** Release proposals on the chapel's DAO, newest first. Server route first, chain view as fallback. */
+/** Every proposal on the chapel's DAO (releases and governance), newest first. Server route first, chain view as fallback. */
 export function useDaoProposals(opts: { poll?: number | false; frozen?: boolean } = {}) {
   return useQuery({
     queryKey: ["dao", "release-proposals"],
@@ -136,7 +158,13 @@ export function useDaoProposals(opts: { poll?: number | false; frozen?: boolean 
     queryFn: async (): Promise<DaoProposal[]> => {
       let list: DaoProposal[]
       try {
-        list = (await api("/dao/proposals", ProposalsResponse)).proposals.map((p) => ({ ...p, query: p.query as QueryLike }))
+        list = (await api("/dao/proposals", ProposalsResponse)).proposals.map((p) => ({
+          ...p,
+          // older servers listed release proposals only, without a kind
+          kind: p.kind ?? (p.query ? "release" : "other"),
+          summary: p.summary ?? null,
+          query: p.query as QueryLike,
+        }))
       } catch (err) {
         if (err instanceof ApiError && err.status === 429) throw err
         list = await proposalsFromChain()

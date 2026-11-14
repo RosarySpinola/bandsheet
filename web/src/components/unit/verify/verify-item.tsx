@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { CopyButton } from "../copy-button"
-import { ExtLink } from "../links"
+import { CtaLink, ExtLink } from "../links"
 import { PassMark } from "../verified-panel"
 import { Reveal } from "@/components/gl/reveal"
 
@@ -13,7 +13,7 @@ type VerifyItemProps = {
   value: ReactNode
   proves: ReactNode
   command?: string
-  links?: { href: string; label: string }[]
+  links?: { href: string; label: string; internal?: boolean }[]
   check?: Check
   /** anchor id, e.g. for /unit/verify#trusted-employers */
   id?: string
@@ -49,11 +49,17 @@ export function VerifyItem({ n, title, value, proves, command, links, check, id 
         )}
         {links && links.length > 0 && (
           <div className="flex flex-wrap gap-x-6 gap-y-2">
-            {links.map((l) => (
-              <ExtLink key={l.href} href={l.href} className="text-[0.9375rem]">
-                {l.label}
-              </ExtLink>
-            ))}
+            {links.map((l) =>
+              l.internal ? (
+                <CtaLink key={l.href} to={l.href} className="text-[0.9375rem]">
+                  {l.label}
+                </CtaLink>
+              ) : (
+                <ExtLink key={l.href} href={l.href} className="text-[0.9375rem]">
+                  {l.label}
+                </ExtLink>
+              ),
+            )}
           </div>
         )}
       </div>

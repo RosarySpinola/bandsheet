@@ -16,6 +16,21 @@ export type VoteState = {
 
 const NEEDED = 2
 
+const KIND_LABEL: Record<string, string> = {
+  release: "Ask for a release",
+  trust_employer: "Trust an employer",
+  require_dkim: "Require signed payslips",
+  engine: "Adopt an engine build",
+  other: "Other chapel business",
+}
+
+/** Where an approved governance change can be checked. */
+const GOVERNANCE_DONE: Record<string, { text: string; to: string; cta: string }> = {
+  trust_employer: { text: "Approved. The employer's key is now on the contract's trusted list.", to: "/unit/verify#trusted-employers", cta: "See the trusted employers" },
+  require_dkim: { text: "Approved. The engine now counts only employer-signed payslips.", to: "/unit/verify#trusted-employers", cta: "See it on Verify" },
+  engine: { text: "Approved. The contract now runs releases on this engine build.", to: "/unit/verify", cta: "See the engine versions" },
+}
+
 function Seat({ n, account, vote, open, busy, disabled, onVote }: {
   n: 1 | 2 | 3
   account: string
@@ -81,17 +96,24 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
   const errHere = vote.error?.proposal_id === p.id ? vote.error.err : null
   const txHere = vote.lastTx?.proposal_id === p.id ? vote.lastTx : null
   const when = p.submission_time ? relative(new Date(p.submission_time)) : null
+  const isRelease = p.kind === "release"
+  const done = GOVERNANCE_DONE[p.kind]
 
   return (
-    <article className="flex flex-col gap-6 border-t-2 border-ink pt-6">
+    <article id={`p${p.id}`} className="flex scroll-mt-8 flex-col gap-6 border-t-2 border-ink pt-6">
       <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
         <div className="flex min-w-0 flex-col gap-2">
           <p className="flex flex-wrap items-center gap-x-3 text-[0.875rem] text-muted-foreground">
             <span className="gl-num text-[0.9375rem] text-ink">Proposal #{p.id}</span>
+            <span className={cn("px-1.5 py-0.5 text-[0.75rem] font-semibold", isRelease ? "bg-band text-ink" : "bg-lav-mid text-indigo")}>
+              {KIND_LABEL[p.kind] ?? KIND_LABEL.other}
+            </span>
             {when && <span>opened {when}</span>}
           </p>
-          <h3 className="font-serif text-[1.625rem] leading-tight text-ink md:text-[1.875rem]">{describeQuery(p.query)}</h3>
-          {p.description && <p className="text-[0.9375rem] text-muted-foreground">“{p.description}”</p>}
+          <h3 className={cn("font-serif leading-tight break-words text-ink", isRelease ? "text-[1.625rem] md:text-[1.875rem]" : "text-[1.375rem] md:text-[1.5rem]")}>
+            {isRelease ? describeQuery(p.query) : (p.summary ?? p.description)}
+          </h3>
+          {p.description && p.description !== p.summary && <p className="text-[0.9375rem] text-muted-foreground">“{p.description}”</p>}
         </div>
         <StatusTag status={p.status} />
       </header>
@@ -136,7 +158,18 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
       </div>
 
       <footer className="flex flex-wrap items-center gap-x-6 gap-y-2 bg-band px-5 py-4">
-        {release ? (
+        {!isRelease ? (
+          p.status === "Approved" && done ? (
+            <>
+              <span className="text-[0.9375rem] text-foreground">{done.text}</span>
+              <CtaLink to={done.to}>{done.cta}</CtaLink>
+            </>
+          ) : open ? (
+            <span className="text-[0.9375rem] text-muted-foreground">When {NEEDED} seats approve, the DAO applies this change to the contract.</span>
+          ) : (
+            <span className="text-[0.9375rem] text-muted-foreground">{p.status === "Approved" ? "Approved." : "Closed without a change."}</span>
+          )
+        ) : release ? (
           <>
             <span className="text-[0.9375rem] text-foreground">Produced release #{release.id}</span>
             <StatusTag status={release.status} />

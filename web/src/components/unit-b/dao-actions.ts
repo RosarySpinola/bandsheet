@@ -39,7 +39,7 @@ export function useDaoActions({ mock, council }: { mock: string | null; council:
       const list = qc.getQueryData<DaoProposal[]>(KEY) ?? []
       const id = Math.max(-1, ...list.map((p) => p.id)) + 1
       const description = describeQuery(input).replace(/^Mean/, "Release mean")
-      const p: DaoProposal = { id, description, proposer: council[0] ?? "council seat 1", status: "InProgress", query: input, votes: {}, submission_time: new Date().toISOString() }
+      const p: DaoProposal = { id, kind: "release", summary: null, description, proposer: council[0] ?? "council seat 1", status: "InProgress", query: input, votes: {}, submission_time: new Date().toISOString() }
       qc.setQueryData<DaoProposal[]>(KEY, [p, ...list])
       return { proposal_id: id, description, proposer: p.proposer, tx: { hash: fakeHash(), url: "" } }
     },
