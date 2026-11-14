@@ -9,7 +9,7 @@ import { CtaLink } from "@/components/unit/links"
 const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "What is stored, and where?",
-    a: "The NEAR contract stores one sealed entry per member slot: an encrypted envelope holding gross annual pay, grade, gender and site. It is sealed in your browser to the engine's public key, so the contract, the chapel and our server only ever see ciphertext. Payslips are never stored: the server forwards them to NEAR AI Cloud's enclave, reads the reply and forgets both.",
+    a: "The NEAR contract stores one sealed entry per member slot: an encrypted envelope holding gross annual pay, grade, gender, site and, when you use one, the signed payroll email. It is sealed in your browser to the engine's public key, so the contract, the chapel and our server only ever see ciphertext. Payslips are never stored: the server forwards them to NEAR AI Cloud's enclave, reads the reply and forgets both. If you used your payroll email, it travels inside the sealed entry so the engine can check the employer's signature; only the engine can open it.",
   },
   {
     q: "What does a refusal mean?",
@@ -18,6 +18,14 @@ const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "Why is a cell withheld when it has more than k members?",
     a: "Because of differencing. If release #1 showed Senior pay for 9 people and release #2 shows it for 10, subtracting the two reveals the newcomer's salary exactly. The engine replays every earlier release before publishing and catches this; a typical n ≥ 3 tool does not. The Attack lab shows it step by step.",
+  },
+  {
+    q: "What is DKIM, and why does my payslip email matter?",
+    a: "DKIM is a signature your employer's mail system adds to every email it sends, made with a key only the employer holds. The chapel's DAO votes to trust Harbour Courier's payroll key and records it on NEAR. When you upload the payslip email exactly as payroll sent it, the sealed engine checks that signature inside its enclave before counting your figure, so the bands rest on what the employer actually paid, not on what anyone typed.",
+  },
+  {
+    q: "What happens to a forged payslip?",
+    a: "It is sealed and sent like any entry, because the contract can't read it. At release the enclave recomputes the employer's signature over the email; if one character was changed after signing, the signature no longer matches. The entry is left out of every cell and the release records only a count, such as \"1 forged payslip refused\", never who sent it. Release #3 shows a real one.",
   },
   {
     q: "Who can ask for a release?",

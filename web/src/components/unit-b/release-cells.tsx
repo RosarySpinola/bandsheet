@@ -39,13 +39,13 @@ export function ReleaseCells({ cells, suppressed, groupBy }: { cells: Cell[]; su
         <tbody>
           {rows.map((r) =>
             r.kind === "cell" ? (
-              <tr key={keyLabel(r.cell.key)} className="border-b border-line text-ink">
+              <tr key={keyLabel(r.cell.key)} className="border-b border-border text-ink">
                 <th scope="row" className="py-3 pr-3 text-[1rem] font-medium">{keyLabel(r.cell.key)}</th>
                 <td className="tabular py-3 pr-3 text-right text-[1rem]">{int(r.cell.n)}</td>
                 <td className="gl-num py-3 text-right text-[1.1875rem]">{eur(r.cell.mean_eur)}</td>
               </tr>
             ) : (
-              <tr key={`w-${keyLabel(r.s.key)}`} className="border-b border-line bg-lav-soft/60">
+              <tr key={`w-${keyLabel(r.s.key)}`} className="border-b border-border bg-lav-soft/60">
                 <th scope="row" className="py-3 pr-3 pl-0 text-[1rem] font-medium text-ink">{keyLabel(r.s.key)}</th>
                 <td colSpan={2} className="py-3 text-right">
                   <span className="font-serif text-[1.125rem] text-ink italic">Withheld</span>
@@ -60,7 +60,7 @@ export function ReleaseCells({ cells, suppressed, groupBy }: { cells: Cell[]; su
         </tbody>
       </table>
       {withheld.length > 0 && (
-        <ol className="flex flex-col gap-2 border-t border-line pt-4">
+        <ol className="flex flex-col gap-2 border-t border-border pt-4">
           {withheld.map((s, i) => (
             <li key={keyLabel(s.key)} className="flex gap-2 font-serif text-[1.0625rem] leading-snug text-ink">
               <span className="w-4 shrink-0 text-indigo">{sup(i + 1)}</span>

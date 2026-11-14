@@ -6,10 +6,19 @@ import { demoSubmit, extractPayslip, type ExtractResponse } from "@/lib/api"
 import type { Policy } from "@/lib/chain"
 import { checkKey, nearLib } from "../key-check"
 import type { Member } from "../session"
+import { isEml } from "../dropzone"
+
+async function fileB64(f: File): Promise<string> {
+  const bytes = new Uint8Array(await f.arrayBuffer())
+  let bin = ""
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin)
+}
 
 export type Step = 1 | 2 | 3 | 4 | 5
 export type Fields = { gross_annual_eur: string; grade?: Entry["grade"]; gender?: Entry["gender"]; site?: Entry["site"] }
 export type Receipt = { tx: string | null; via: "browser" | "server"; count: number | null; before: number | null }
+export type SampleKind = "email" | "forged" | "image"
 export type Async<T> = { status: "idle" | "busy" | "done" | "error"; data?: T; error?: unknown }
 
 const idle = { status: "idle" } as const
@@ -26,6 +35,9 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   const [fields, setFields] = useState<Fields>({ gross_annual_eur: "" })
   const [sealed, setSealed] = useState<Ciphertext | null>(null)
   const [send, setSend] = useState<Async<Receipt>>(idle)
+  /** The raw payroll email (base64) when an .eml was used; sealed with the entry for the enclave's DKIM check. */
+  const [emlB64, setEmlB64] = useState<string | null>(null)
+  const [sample, setSample] = useState<SampleKind | null>(null)
 
   const go = useCallback((s: Step) => {
     setStep(s)
@@ -52,8 +64,10 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   const resetInvite = checkStored
 
   /** One NEAR AI Cloud call: the server verifies the enclave before the payslip leaves it. */
-  const runExtract = useCallback(async (f: File) => {
+  const runExtract = useCallback(async (f: File, kind: SampleKind | null = null) => {
     setFile(f)
+    setSample(kind)
+    setEmlB64(isEml(f) ? await fileB64(f) : null)
     setExtract({ status: "busy" })
     try {
       const res = await extractPayslip(f)
@@ -69,9 +83,9 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   }, [])
 
   const trySample = useCallback(
-    async (path: string, name: string, type: string) => {
+    async (path: string, name: string, type: string, kind: SampleKind) => {
       const blob = await (await fetch(path)).blob()
-      await runExtract(new File([blob], name, { type }))
+      await runExtract(new File([blob], name, { type }), kind)
     },
     [runExtract],
   )
@@ -88,10 +102,16 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
       site: fields.site,
       submitted_at: Math.floor(Date.now() / 1000),
     })
-    setSealed(core.encryptEntry(core.parseEnclavePublicKey(policy.policy.enclave_pubkey), entry))
+    const key = core.parseEnclavePublicKey(policy.policy.enclave_pubkey)
+    // With an email, the entry carries it (eml_b64) so the engine can verify the employer's DKIM signature.
+    setSealed(
+      emlB64
+        ? core.encryptBytes(key, new TextEncoder().encode(JSON.stringify({ ...entry, eml_b64: emlB64 })))
+        : core.encryptEntry(key, entry),
+    )
     setSend(idle)
     go(4)
-  }, [policy, invite, fields, go])
+  }, [policy, invite, fields, emlB64, go])
 
   /** Sign `submit` with the member key in the browser; for the demo key, fall back to the server signer. */
   const sendSealed = useCallback(async () => {
@@ -125,6 +145,8 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
 
   const restart = useCallback(() => {
     setFile(null)
+    setEmlB64(null)
+    setSample(null)
     setExtract(idle)
     setSealed(null)
     setSend(idle)
@@ -134,7 +156,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
 
   return {
     step, reached, go, invite, resetInvite,
-    file, extract, runExtract, trySample, fields, setFields,
+    file, extract, runExtract, trySample, fields, setFields, emlB64, sample,
     sealed, seal, send, sendSealed, restart,
   }
 }

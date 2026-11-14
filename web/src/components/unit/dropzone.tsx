@@ -1,9 +1,12 @@
 import { useRef, useState, type DragEvent } from "react"
-import { FileText, ImageIcon, Upload } from "lucide-react"
+import { FileText, ImageIcon, Mail, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const ACCEPT = ["image/png", "image/jpeg", "application/pdf"]
+const ACCEPT = ["image/png", "image/jpeg", "application/pdf", "message/rfc822"]
 const MAX = 6 * 1024 * 1024
+const MAX_EML = 1024 * 1024
+
+export const isEml = (f: File) => f.type === "message/rfc822" || /\.eml$/i.test(f.name)
 
 export type DropzoneProps = {
   onFile: (f: File) => void
@@ -22,8 +25,8 @@ export function Dropzone({ onFile, file, disabled, className }: DropzoneProps) {
 
   const take = (f: File | undefined) => {
     if (!f) return
-    if (!ACCEPT.includes(f.type)) return setProblem("That file type is not supported. Use a PNG, JPEG or PDF.")
-    if (f.size > MAX) return setProblem("That file is over 6 MB.")
+    if (!ACCEPT.includes(f.type) && !isEml(f)) return setProblem("That file type is not supported. Use the .eml email, or a PNG, JPEG or PDF.")
+    if (isEml(f) ? f.size > MAX_EML : f.size > MAX) return setProblem(isEml(f) ? "That email is over 1 MB." : "That file is over 6 MB.")
     setProblem(null)
     onFile(f)
   }
@@ -32,7 +35,7 @@ export function Dropzone({ onFile, file, disabled, className }: DropzoneProps) {
     setOver(false)
     if (!disabled) take(e.dataTransfer.files[0])
   }
-  const Icon = file ? (file.type === "application/pdf" ? FileText : ImageIcon) : Upload
+  const Icon = file ? (isEml(file) ? Mail : file.type === "application/pdf" ? FileText : ImageIcon) : Upload
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
@@ -63,15 +66,15 @@ export function Dropzone({ onFile, file, disabled, className }: DropzoneProps) {
           </span>
         ) : (
           <span className="flex flex-col gap-1">
-            <span className="text-[1.0625rem] font-semibold text-ink">Drop your payslip here, or click to choose</span>
-            <span className="text-[0.9375rem] text-muted-foreground">PNG, JPEG or PDF · up to 6 MB · it is read once and never stored</span>
+            <span className="text-[1.0625rem] font-semibold text-ink">Drop your payslip email from payroll, or a payslip file</span>
+            <span className="text-[0.9375rem] text-muted-foreground">.eml as payroll sent it, or PNG, JPEG, PDF · read once and never stored</span>
           </span>
         )}
       </button>
       <input
         ref={input}
         type="file"
-        accept={ACCEPT.join(",")}
+        accept={[...ACCEPT, ".eml"].join(",")}
         className="sr-only"
         tabIndex={-1}
         aria-hidden="true"

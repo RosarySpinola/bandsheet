@@ -38,6 +38,20 @@ export async function checkKey(source: KeySource, input?: string | Record<string
   if (invite.contractId !== CONTRACT) {
     throw new ApiError(`This invite is for ${invite.contractId}, not this chapel's contract.`, "INVITE_INVALID")
   }
-  const member = await view<boolean>(invite.contractId, "is_member", { slot: invite.slot })
+  const member = await withRetry(() => view<boolean>(invite.contractId, "is_member", { slot: invite.slot }))
   return { invite, raw, member: Boolean(member), demo: source === "demo" || demoFlag }
+}
+
+/** Public testnet RPCs rate-limit; back off twice before giving up. */
+async function withRetry<T>(fn: () => Promise<T>, tries = 3): Promise<T> {
+  let last: unknown
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await fn()
+    } catch (e) {
+      last = e
+      if (i < tries - 1) await new Promise((r) => setTimeout(r, 1500 * 2 ** i))
+    }
+  }
+  throw last
 }

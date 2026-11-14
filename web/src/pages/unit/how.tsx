@@ -7,7 +7,7 @@ import { CtaLink } from "@/components/unit/links"
 import { NavGlyph } from "@/components/unit/nav-glyph"
 import { cn } from "@/lib/utils"
 
-const FLOW = ["Payslip", "NEAR AI Cloud TEE", "Sealed in your browser", "NEAR contract", "Chapel vote", "OutLayer TEE", "Band or refusal on NEAR"]
+const FLOW = ["Payroll email, signed by the employer", "NEAR AI Cloud TEE", "Sealed in your browser", "NEAR contract", "Chapel vote", "OutLayer TEE checks the signature", "Band or refusal on NEAR"]
 
 const LAYERS = [
   {
@@ -21,6 +21,15 @@ const LAYERS = [
   },
   {
     n: "02",
+    kind: "verify" as const,
+    title: "Signed by the employer.",
+    who: "DKIM, checked inside the enclave",
+    body: "Payroll systems sign every payslip email with DKIM, the same signature mail servers use to stop spoofing. The chapel votes to trust the employer's key, and that key is recorded on NEAR. At release the engine verifies each entry's email against it inside the enclave, reads the signed figures and checks they match the entry. A forged or edited payslip is left out and counted as refused, without naming anyone.",
+    points: ["Employer keys are added only by DAO vote", "Signature, grade and pay are checked inside the enclave", "Each payslip counts once, so a duplicate can't double a figure"],
+    link: { to: "/unit/attack#cheat", label: "See a forged payslip refused" },
+  },
+  {
+    n: "03",
     kind: "vote" as const,
     title: "Asked by the chapel.",
     who: "Sputnik DAO on NEAR",
@@ -29,7 +38,7 @@ const LAYERS = [
     link: { to: "/unit/vote", label: "See the chapel vote" },
   },
   {
-    n: "03",
+    n: "04",
     kind: "ledger" as const,
     title: "Decided in a sealed engine.",
     who: "OutLayer, Intel TDX",
@@ -46,7 +55,7 @@ export default function How() {
         glyph="how"
         eyebrow="Learn"
         title="How it works"
-        lede="Three layers, each run by a different party, so no single one of them, us included, ever holds a member's figure in the clear."
+        lede="Four layers, each run by a different party, so no single one of them, us included, ever holds a member's figure in the clear, and no one can slip in a figure their employer never paid."
       />
 
       <Reveal>

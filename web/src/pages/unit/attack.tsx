@@ -6,6 +6,7 @@ import { ChoiceGroup } from "@/components/unit-b/choice-group"
 import { EvalFigure } from "@/components/unit-b/eval-figure"
 import { GuardPanel } from "@/components/unit-b/guard-panel"
 import { NaivePanel } from "@/components/unit-b/naive-panel"
+import { CheatSection } from "@/components/unit-b/cheat-section"
 import { Page, PageHeader, SquareButton } from "@/components/unit"
 
 function Label({ children }: { children: string }) {
@@ -47,7 +48,7 @@ export default function AttackPage() {
       />
 
       <Reveal>
-        <div className="flex flex-col gap-6 border-b border-line pb-7 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-6 border-b border-border pb-7 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex flex-col gap-6 md:flex-row md:gap-10">
             <div className="flex flex-col gap-3">
               <Label>Releases</Label>
@@ -60,7 +61,7 @@ export default function AttackPage() {
                   onClick={swap}
                   aria-label="Swap the order of the releases"
                   title="Swap the order"
-                  className="inline-grid size-10 cursor-pointer place-items-center border border-line text-ink transition-colors duration-[400ms] ease-gl hover:border-ink hover:bg-lav-soft focus-visible:outline-2 focus-visible:outline-lav"
+                  className="inline-grid size-10 cursor-pointer place-items-center border border-border text-ink transition-colors duration-[400ms] ease-gl hover:border-ink hover:bg-lav-soft focus-visible:outline-2 focus-visible:outline-lav"
                 >
                   <ArrowLeftRight className="size-4" />
                 </button>
@@ -92,6 +93,10 @@ export default function AttackPage() {
       <Reveal delay={400}>
         <EvalFigure />
       </Reveal>
+
+      <div className="pt-8 md:pt-12">
+        <CheatSection />
+      </div>
     </Page>
   )
 }

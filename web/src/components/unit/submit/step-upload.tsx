@@ -1,14 +1,29 @@
 import { useEffect } from "react"
-import { FileText, ImageIcon } from "lucide-react"
+import { Mail, MailWarning } from "lucide-react"
 import { plainError } from "@/lib/api"
+import { cn } from "@/lib/utils"
 import { Dropzone } from "../dropzone"
 import { CtaButton } from "../links"
 import { ErrorState } from "../states"
-import type { SubmitFlow } from "./use-submit-flow"
+import type { SampleKind, SubmitFlow } from "./use-submit-flow"
 
-const SAMPLES = [
-  { path: "/samples/payslip-senior-monthly.png", name: "payslip-senior-monthly.png", type: "image/png", label: "Senior Reporter, monthly", kind: "PNG" },
-  { path: "/samples/payslip-editor.pdf", name: "payslip-editor.pdf", type: "application/pdf", label: "Editor", kind: "PDF" },
+const SAMPLES: { path: string; name: string; kind: SampleKind; title: string; note: string; Icon: typeof Mail }[] = [
+  {
+    path: "/samples/payroll-email-noor-haddad.eml",
+    name: "payroll-email-noor-haddad.eml",
+    kind: "email",
+    title: "Use a sample payroll email",
+    note: "Signed by harbourcourier.example, with a PDF payslip attached",
+    Icon: Mail,
+  },
+  {
+    path: "/samples/payroll-email-forged.eml",
+    name: "payroll-email-forged.eml",
+    kind: "forged",
+    title: "Try a forged one",
+    note: "Same employer signature, but one digit of the pay was edited afterwards",
+    Icon: MailWarning,
+  },
 ]
 
 const ALARM = new Set(["ATTESTATION_FAILED"])
@@ -18,7 +33,7 @@ const TITLES: Record<string, string> = {
   EXTRACT_UNREADABLE: "The payslip could not be read",
 }
 
-/** Step 2: custom dropzone or a synthetic sample, read once inside NEAR AI Cloud's enclave. */
+/** Step 2: the payroll email (or a payslip file), read once inside NEAR AI Cloud's enclave. */
 export function StepUpload({ flow }: { flow: SubmitFlow }) {
   const ex = flow.extract
   const busy = ex.status === "busy"
@@ -29,9 +44,10 @@ export function StepUpload({ flow }: { flow: SubmitFlow }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <p className="max-w-[38rem] text-[1.0625rem] leading-relaxed text-foreground">
-        The server first checks NEAR AI Cloud's attestation with a fresh nonce. Only then does your payslip go to the model, inside its
-        enclave, to read four things: gross pay, pay period, currency and job title. Nothing is kept afterwards.
+      <p className="max-w-[40rem] text-[1.0625rem] leading-relaxed text-foreground">
+        Best is the payslip email exactly as your payroll system sent it: your employer signs it (DKIM), and the sealed engine checks
+        that signature before counting your figure. First the server checks NEAR AI Cloud's attestation with a fresh nonce; only then is
+        the payslip read inside its enclave. Nothing is kept afterwards.
       </p>
 
       {busy ? (
@@ -48,32 +64,42 @@ export function StepUpload({ flow }: { flow: SubmitFlow }) {
           <p className="text-[0.875rem] text-muted-foreground">This usually takes 10 to 30 seconds.</p>
         </div>
       ) : (
-        <Dropzone onFile={flow.runExtract} file={flow.file} />
+        <Dropzone onFile={(f) => flow.runExtract(f)} file={flow.file} />
       )}
 
       {!busy && (
         <div className="flex flex-col gap-3">
-          <p className="text-[0.9375rem] font-medium text-ink">No payslip to hand? Use a synthetic sample:</p>
-          <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+          <p className="text-[0.9375rem] font-medium text-ink">No payroll email to hand? Synthetic samples from Harbour Courier Ltd:</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {SAMPLES.map((s) => (
               <button
                 key={s.path}
                 type="button"
-                onClick={() => flow.trySample(s.path, s.name, s.type)}
-                className="group flex flex-1 cursor-pointer items-center gap-4 border border-border bg-white px-4 py-4 text-left transition-colors duration-[400ms] ease-gl hover:border-ink hover:bg-band"
+                onClick={() => flow.trySample(s.path, s.name, "message/rfc822", s.kind)}
+                className="group flex cursor-pointer items-center gap-4 border border-border bg-white px-4 py-4 text-left transition-colors duration-[400ms] ease-gl hover:border-ink hover:bg-band"
               >
-                <span className="grid size-10 shrink-0 place-items-center bg-band text-ink transition-colors duration-[400ms] group-hover:bg-ink group-hover:text-white">
-                  {s.kind === "PDF" ? <FileText className="size-5" /> : <ImageIcon className="size-5" />}
+                <span
+                  className={cn(
+                    "grid size-10 shrink-0 place-items-center transition-colors duration-[400ms] group-hover:bg-ink group-hover:text-white",
+                    s.kind === "forged" ? "bg-lav-mid text-ink" : "bg-band text-ink",
+                  )}
+                >
+                  <s.Icon className="size-5" />
                 </span>
                 <span className="flex min-w-0 flex-col">
-                  <span className="wipe w-fit text-[1rem] font-semibold text-ink group-hover:after:scale-x-100">Use a sample payslip</span>
-                  <span className="truncate text-[0.875rem] text-muted-foreground">
-                    {s.label} · {s.kind} · fictional Harbour Courier Media DAC
-                  </span>
+                  <span className="wipe w-fit text-[1rem] font-semibold text-ink group-hover:after:scale-x-100">{s.title}</span>
+                  <span className="text-[0.875rem] leading-snug text-muted-foreground">{s.note}</span>
                 </span>
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => flow.trySample("/samples/payslip-senior-monthly.png", "payslip-senior-monthly.png", "image/png", "image")}
+            className="wipe w-fit cursor-pointer text-[0.9375rem] text-muted-foreground transition-colors duration-[400ms] hover:text-ink"
+          >
+            Or use a payslip image (read, but not counted while the chapel requires signed emails)
+          </button>
         </div>
       )}
 
@@ -82,7 +108,7 @@ export function StepUpload({ flow }: { flow: SubmitFlow }) {
           error={ex.error}
           tone={ALARM.has(plainError(ex.error).code) ? "alarm" : "calm"}
           title={TITLES[plainError(ex.error).code]}
-          onRetry={plainError(ex.error).code === "SPEND_CAP" ? undefined : () => flow.file && flow.runExtract(flow.file)}
+          onRetry={plainError(ex.error).code === "SPEND_CAP" ? undefined : () => flow.file && flow.runExtract(flow.file, flow.sample)}
         >
           <CtaButton onClick={() => flow.go(3)} className="w-fit">
             Enter the figures by hand instead

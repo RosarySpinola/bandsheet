@@ -20,10 +20,12 @@ export class ApiError extends Error {
 const PLAIN: Record<string, string> = {
   SPEND_CAP: "The demo's NEAR AI Cloud budget is used up, so nothing more can be read for now. Nothing was sent.",
   ATTESTATION_FAILED: "NEAR AI Cloud's enclave could not prove what it is, so your payslip was never sent to it.",
+  EML_NO_TEXT: "This email has no payslip text in it. Upload the payslip email itself, not a forward or a reply.",
+  EML_UNREADABLE: "This email could not be read. Upload the .eml file exactly as your payroll system sent it.",
   EXTRACT_UNREADABLE: "The figures on this payslip could not be read. Try a clearer image, or enter them by hand.",
   PDF_NO_TEXT_LAYER: "This PDF is a scan with no text inside. Upload a photo or PNG of the page instead.",
   PDF_UNREADABLE: "This PDF could not be opened. Upload a PNG or JPEG of the page instead.",
-  UNSUPPORTED_TYPE: "Upload a PNG, JPEG or PDF payslip.",
+  UNSUPPORTED_TYPE: "Upload your payslip email (.eml), or a PNG, JPEG or PDF payslip.",
   TOO_LARGE: "That file is over 6 MB. A phone photo or a one-page PDF is plenty.",
   NO_RELEASED_BANDS: "The chapel has not published any bands yet, so there is nothing to compare with.",
   CHAIN_READ: "NEAR testnet did not answer just now. It rate-limits public reads; try again in a moment.",
@@ -106,10 +108,19 @@ export const ExtractResponseSchema = z.object({
     currency: z.string(),
     grade_guess: GradeSchema.nullable(),
     role_text: z.string().nullable(),
-    source: z.enum(["image", "pdf_text"]),
+    source: z.enum(["image", "pdf_text", "eml"]),
     warnings: z.array(z.string()),
   }),
   verified: VerifiedSchema,
+  /** Present for .eml uploads: what the email claims about its signature. The enclave does the real check. */
+  dkim_preview: z
+    .object({
+      has_signature: z.boolean(),
+      domain: z.string().nullable(),
+      selector: z.string().nullable(),
+      signed_headers: z.array(z.string()).default([]),
+    })
+    .nullish(),
 })
 export type ExtractResponse = z.infer<typeof ExtractResponseSchema>
 
@@ -167,11 +178,19 @@ export const extractPayslip = (file: File) => {
 export const StandRequestSchema = z.object({
   gross_annual_eur: z.number().int().min(1).max(10_000_000),
   grade: GradeSchema,
+  /** Eurostat context country for the answer and letter (the demo chapel is set in Malta). */
+  country: z.enum(["MT", "GR", "DE", "FR", "IE"]).default("MT"),
 })
-export type StandRequest = z.infer<typeof StandRequestSchema>
+export type StandRequest = z.input<typeof StandRequestSchema>
 
 export const askStand = (req: StandRequest) => api("/stand", StandResponseSchema, postJson(StandRequestSchema.parse(req)))
 export const getReleasesApi = () => api("/releases", ReleasesResponseSchema)
 export const getDemoInvite = () => api("/demo/invite", DemoInviteSchema)
 export const demoSubmit = (ciphertext: { epk: string; nonce: string; ct: string }) =>
   api("/demo/submit", DemoSubmitSchema, postJson({ ciphertext }))
+
+/** Eurostat SES median for a country and ISCO-08 major group (served from a hashed snapshot by the server). */
+export const getContext = async (country = "MT", isco = "OC2") => {
+  const { ContextSchema } = await import("./dkim")
+  return api(`/context?country=${encodeURIComponent(country)}&isco=${encodeURIComponent(isco)}`, ContextSchema)
+}

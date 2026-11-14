@@ -25,7 +25,7 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
           <p className="text-[1.125rem] font-semibold">Sealed in this browser</p>
         </div>
         <p className="max-w-[38rem] text-[1rem] leading-relaxed text-white/80">
-          Your entry is encrypted to the engine's public key{" "}
+          Your entry{flow.emlB64 ? ", with the signed payroll email inside it," : ""} is encrypted to the engine's public key{" "}
           <code className="font-mono text-lav-mid">{shortHash(policy?.policy.enclave_pubkey, 10, 4)}</code>, read from the contract
           policy. Only the sealed OutLayer engine holds the matching private key. The contract, the chapel and this server see only the
           envelope below.

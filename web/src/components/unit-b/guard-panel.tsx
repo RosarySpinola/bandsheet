@@ -14,8 +14,8 @@ function ChainRow({ r, choice }: { r: ReleaseRecord; choice: CellChoice }) {
   if (choice === "all") {
     const n = r.cells.reduce((s, c) => s + c.n, 0)
     return (
-      <div className="flex items-baseline justify-between gap-4 border-b border-line py-3">
-        <span className="text-[0.9375rem] text-text">
+      <div className="flex items-baseline justify-between gap-4 border-b border-border py-3">
+        <span className="text-[0.9375rem] text-foreground">
           Release #{r.id} · all published cells<span className="text-muted-foreground max-sm:block sm:ml-2">{int(n)} members</span>
         </span>
         <span className="text-[0.875rem] text-muted-foreground">{r.suppressed.length ? `${r.suppressed.length} withheld` : "complete"}</span>
@@ -25,8 +25,8 @@ function ChainRow({ r, choice }: { r: ReleaseRecord; choice: CellChoice }) {
   const cell = r.cells.find((c) => c.key.grade === choice)
   const held = r.suppressed.find((s) => s.key.grade === choice)
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-line py-3">
-      <span className="text-[0.9375rem] text-text">
+    <div className="flex items-baseline justify-between gap-4 border-b border-border py-3">
+      <span className="text-[0.9375rem] text-foreground">
         Release #{r.id} · {choice}
         {cell && <span className="text-muted-foreground max-sm:block sm:ml-2">{int(cell.n)} members</span>}
       </span>
@@ -52,7 +52,7 @@ function Outcome({ g, choice }: { g: GuardResult; choice: CellChoice }) {
           </div>
           <Step at={T0 + 0.5}>
             <p className="font-serif text-[1.25rem] leading-snug text-ink italic">{prettyWitness(g.witness)}.</p>
-            <p className="mt-2 text-[0.9375rem] text-text">
+            <p className="mt-2 text-[0.9375rem] text-foreground">
               The engine saw the subtraction coming and refused the cell in release #{g.release}. There is nothing to subtract, and the refusal itself is on chain.
             </p>
           </Step>
@@ -85,7 +85,7 @@ function Outcome({ g, choice }: { g: GuardResult; choice: CellChoice }) {
             </div>
           )}
           <Step at={T0 + 0.4}>
-            <p className="text-[0.9375rem] text-text">
+            <p className="text-[0.9375rem] text-foreground">
               {g.missing.length
                 ? `${g.missing.join(", ")} is withheld, so the published cells cover ${int(g.fromN)} and ${int(g.minusN)} members. Their difference spans ${int(Math.abs(g.fromN - g.minusN))} people, not one.`
                 : `Both releases publish every cell; the totals differ by ${int(Math.abs(g.fromN - g.minusN))} members.`}
@@ -96,7 +96,7 @@ function Outcome({ g, choice }: { g: GuardResult; choice: CellChoice }) {
     case "leak":
       return <p className="text-[0.9375rem] font-semibold text-alarm">These two published cells differ by one member. Report this: the audit should have refused it.</p>
     case "missing":
-      return <p className="text-[0.9375rem] text-text">One of these releases has no {choiceLabel(choice)} cell on chain, so there is nothing to subtract.</p>
+      return <p className="text-[0.9375rem] text-foreground">One of these releases has no {choiceLabel(choice)} cell on chain, so there is nothing to subtract.</p>
   }
 }
 
@@ -126,7 +126,7 @@ export function GuardPanel({ from, minus, choice, run }: { from: HeroId; minus: 
       ) : isError ? (
         <ErrorState error={error} title="The on-chain releases could not be read." onRetry={() => void refetch()} />
       ) : !rFrom || !rMinus ? (
-        <p className="text-[0.9375rem] text-text">Release #{!rFrom ? from : minus} is not on chain yet. Run the hero vote first.</p>
+        <p className="text-[0.9375rem] text-foreground">Release #{!rFrom ? from : minus} is not on chain yet. Run the hero vote first.</p>
       ) : (
         <>
           <div>
@@ -139,7 +139,7 @@ export function GuardPanel({ from, minus, choice, run }: { from: HeroId; minus: 
             <div key={`${run}-${from}-${minus}-${choice}`} className="flex min-h-[14.5rem] flex-col justify-between gap-6">
               <Outcome g={g} choice={choice} />
               {tx && (
-                <Step at={T0 + 1} className="flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-4 text-[0.9375rem]">
+                <Step at={T0 + 1} className="flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-4 text-[0.9375rem]">
                   <TxLink tx={tx} label={`Release #${proofId} transaction`} />
                   <ExtLink href={explorer.attestation(tx)}>OutLayer attestation</ExtLink>
                 </Step>

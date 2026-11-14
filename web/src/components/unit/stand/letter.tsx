@@ -1,8 +1,13 @@
-import { Download } from "lucide-react"
+import { useState } from "react"
+import { Check, Download } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { CopyButton } from "../copy-button"
 
 /** Article 7 letter in a framed paper block, with copy and a .txt download. */
-export function Letter({ subject, body, source }: { subject: string; body: string; source: "model" | "fallback" }) {
+export function Letter({ subject, body: raw, source, reference }: { subject: string; body: string; source: "model" | "fallback"; reference?: string }) {
+  const [withRef, setWithRef] = useState(true)
+  /** Put the outside reference before the sign-off, or at the end if there is no recognisable sign-off. */
+  const body = !reference || !withRef ? raw : insertBeforeSignoff(raw, reference)
   const text = `Subject: ${subject}\n\n${body}\n`
   const download = () => {
     const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }))
@@ -34,6 +39,20 @@ export function Letter({ subject, body, source }: { subject: string; body: strin
           <p className="font-serif text-[1.0625rem] leading-[1.7] whitespace-pre-wrap text-ink">{body}</p>
         </div>
       </div>
+      {reference && (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={withRef}
+          onClick={() => setWithRef((v) => !v)}
+          className="group flex w-fit cursor-pointer items-start gap-3 text-left text-[0.9375rem] text-ink"
+        >
+          <span className={cn("mt-0.5 grid size-5 shrink-0 place-items-center border-2 border-ink transition-colors duration-[400ms] ease-gl", withRef ? "bg-ink text-white" : "bg-white")}>
+            {withRef && <Check className="size-3.5" strokeWidth={3} />}
+          </span>
+          <span className="wipe group-hover:after:scale-x-100">Include the Eurostat reference in the letter</span>
+        </button>
+      )}
       <p className="text-[0.875rem] text-muted-foreground">
         {source === "model"
           ? "Drafted inside NEAR AI Cloud's enclave. Your pay figure is deliberately left out; fill the bracketed parts before sending."
@@ -41,4 +60,10 @@ export function Letter({ subject, body, source }: { subject: string; body: strin
       </p>
     </div>
   )
+}
+
+function insertBeforeSignoff(body: string, para: string): string {
+  const m = body.match(/\n\s*(Yours (sincerely|faithfully)|Kind regards|Best regards|Sincerely|Thank you)[^\n]*/i)
+  if (!m || m.index === undefined) return `${body.trimEnd()}\n\n${para}`
+  return `${body.slice(0, m.index).trimEnd()}\n\n${para}\n${body.slice(m.index)}`
 }

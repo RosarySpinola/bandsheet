@@ -13,8 +13,8 @@ import { useSubmitFlow } from "@/components/unit/submit/use-submit-flow"
 
 const PATH = [
   { n: "1", title: "Read inside an enclave", body: "NEAR AI Cloud reads the payslip in a TEE whose attestation is checked before anything is sent." },
-  { n: "2", title: "Sealed in your browser", body: "Four fields are encrypted to the engine's key. The payslip itself never goes on-chain." },
-  { n: "3", title: "Opened only by the engine", body: "The OutLayer engine decrypts entries in its own TEE and publishes only bands that expose no one." },
+  { n: "2", title: "Sealed in your browser", body: "Four fields, and the signed payroll email if you used one, are encrypted to the engine's key. Nothing readable goes on-chain." },
+  { n: "3", title: "Checked and opened only by the engine", body: "The OutLayer engine decrypts entries in its TEE, checks each employer signature, and publishes only bands that expose no one." },
 ]
 
 export default function Submit() {

@@ -8,6 +8,8 @@ import { ErrorState, Shimmer } from "@/components/unit/states"
 import { VerifyItem, type Check } from "@/components/unit/verify/verify-item"
 import { ReleaseAttestation } from "@/components/unit/verify/release-attestations"
 import { releaseTxs, useCodeHash } from "@/components/unit/verify/data"
+import { DkimItems } from "@/components/unit/verify/dkim-items"
+import { EngineHistory } from "@/components/unit/verify/engine-history"
 
 const VIEW = `near view ${CONTRACT} get_policy '{}' --networkId testnet`
 
@@ -85,7 +87,7 @@ export default function Verify() {
               n={5}
               title="Contract"
               value={<AccountLink id={p.unit} />}
-              proves="Holds the sealed entries, the member list and every release or refusal. Its policy can change only through the owner, and a change resets entries."
+              proves="Holds the sealed entries, the member list, the trusted employer keys and every release or refusal. Trusted keys, the signature requirement and the engine change only by DAO vote."
               links={[
                 ...(deployed.data?.unit_deploy_tx ? [{ href: explorer.tx(deployed.data.unit_deploy_tx), label: "Deploy transaction" }] : []),
                 ...(deployed.data?.unit_upgrade_tx ? [{ href: explorer.tx(deployed.data.unit_upgrade_tx), label: "Upgrade transaction" }] : []),
@@ -113,6 +115,14 @@ export default function Verify() {
               proves="A digest of the whole policy. Every release is bound to it, so a release can never be reread under a different k or key."
               command={VIEW}
             />
+            <DkimItems start={9} />
+            <VerifyItem
+              n={11}
+              title="Engine versions"
+              value={<EngineHistory runs={runs} releases={releases.data?.releases ?? []} current={p.policy.wasm_sha256} />}
+              proves="The engine can change only by DAO vote, and each release names the build that produced it. Old releases keep the hash of the engine they ran, so a newer engine never rewrites history."
+              command={`near view ${CONTRACT} get_releases '{"from":0,"limit":20}' --networkId testnet   # wasm_sha256 per release`}
+            />
           </ol>
         ) : null}
       </Section>
@@ -131,7 +141,6 @@ export default function Verify() {
                 exec={txHashOf(r.exec!)}
                 txs={r.txs}
                 release={releases.data?.releases.find((x) => x.id === r.id)}
-                policy={p}
                 project={project}
               />
             ))}

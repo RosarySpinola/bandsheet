@@ -20,7 +20,7 @@ function ListSkeleton() {
   return (
     <div className="flex flex-col gap-10" aria-label="Loading proposals">
       {[0, 1].map((i) => (
-        <div key={i} className="flex flex-col gap-4 border-t-2 border-line pt-6">
+        <div key={i} className="flex flex-col gap-4 border-t-2 border-border pt-6">
           <Shimmer className="h-4 w-40" />
           <Shimmer className="h-8 w-72 max-w-full" />
           <div className="grid gap-3 sm:grid-cols-3">

@@ -1,0 +1,51 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=g+5RXxGdg0UIWnVkrrr6Bx17zssstd2cvnjthQ/nb7M=;
+	b=PIoNuqDxZErMfS9utCYaust4Q9UWBUQBkIwBQyOjAvq8nMXcTmClBZdeXDuOD/vT
+	3fYtQw0nkYrCy+hFmGeBJFYkY7mq2mfr6EPa4zIMzinwdPv1fgLc3RZUbz8qRIWD
+	7Fz2BmJKJURcPm7x3g4ZSUDgcmFxQUNN3XOOFgHG0ELDA7FwM+JzEk297ZBFK3ru
+	54bHjyCdJFnZxLjP2fQjx31BAeefOjRgZJa4Ngh8TVENFT91IIxUNPojoSqSVFL6
+	Nx7tjja5eOB9ShZjEzPNjBFZwnho4skSRv1XB7QW5BWGGumLODAzp9fPxiQza2lq
+	O7+gM1Qa1Dyhltt635Mz3g==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Noor Haddad <noor.haddad@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-0412-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="hc-payslip-boundary-2026-10"
+
+--hc-payslip-boundary-2026-10
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Dear Noor Haddad,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-0412
+Grade: Senior
+Period: 2026-10
+Gross pay (month): EUR 5,833.33
+
+Harbour Courier Payroll (synthetic demo data)
+
+--hc-payslip-boundary-2026-10
+Content-Type: application/pdf; name="payslip-2026-10.pdf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="payslip-2026-10.pdf"
+
+JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2Jq
+CjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2Jq
+CjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIg
+NzkyXSAvQ29udGVudHMgNCAwIFIgL1Jlc291cmNlcyA8PCAvRm9udCA8PCAvRjEgNSAwIFIgPj4g
+Pj4gPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCAxNDYgPj4Kc3RyZWFtCkJUIC9GMSAxMiBU
+ZiA3MiA3MjAgVGQgMTQgVEwgKEVtcGxveWVlIElEOiBIQy0wNDEyKSBUaiBUKiAoR3JhZGU6IFNl
+bmlvcikgVGogVCogKFBlcmlvZDogMjAyNi0xMCkgVGogVCogKEdyb3NzIHBheSAobW9udGgpOiBF
+VVIgNSw4MzMuMzMpIFRqIFQqIEVUCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PCAvVHlwZSAv
+Rm9udCAvU3VidHlwZSAvVHlwZTEgL0Jhc2VGb250IC9IZWx2ZXRpY2EgPj4KZW5kb2JqCnhyZWYK
+MCA2CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAwOSAwMDAwMCBuIAowMDAwMDAwMDU4IDAw
+MDAwIG4gCjAwMDAwMDAxMTUgMDAwMDAgbiAKMDAwMDAwMDI0MSAwMDAwMCBuIAowMDAwMDAwNDM4
+IDAwMDAwIG4gCnRyYWlsZXIKPDwgL1NpemUgNiAvUm9vdCAxIDAgUiA+PgpzdGFydHhyZWYKNTA4
+CiUlRU9GCg==
+--hc-payslip-boundary-2026-10--

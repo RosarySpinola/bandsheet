@@ -101,6 +101,8 @@
   --font-serif: "Newsreader Variable", "Times New Roman", serif;
   --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
   --color-ink: var(--ink);
+  --color-text: var(--text);
+  --color-line: var(--line);
   --color-band: var(--band);
   --color-inactive: var(--inactive);
   --color-ghost: var(--ghost);

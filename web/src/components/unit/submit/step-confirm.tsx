@@ -3,6 +3,7 @@ import { eur } from "@/lib/format"
 import { GlField, GlSelect } from "../gl-select"
 import { SquareButton, CtaButton } from "../links"
 import { VerifiedPanel } from "../verified-panel"
+import { DkimCard } from "./dkim-card"
 import type { SubmitFlow } from "./use-submit-flow"
 
 const GRADES = ["Junior", "Reporter", "Senior", "Editor", "Chief"].map((g) => ({ value: g, label: g }))
@@ -59,6 +60,7 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
         ) : (
           <p className="bg-band p-6 text-[1rem] text-foreground">Enter your figures by hand. Nothing was read from a payslip.</p>
         )}
+        <DkimCard preview={ex?.dkim_preview} email={Boolean(flow.emlB64)} sample={flow.sample} />
 
         <div className="grid grid-cols-1 gap-7 sm:grid-cols-2">
           <GlField
@@ -84,7 +86,7 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
         </div>
         <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
           Gender and site are not on a payslip. They let the chapel ask for gaps by gender or site, and the engine still refuses any cell
-          that would expose someone. These four fields and your slot are all that get sealed.
+          that would expose someone. These four fields, your slot and, if you used one, the payroll email are all that get sealed.
         </p>
         {tried && !ok && <p className="text-[0.9375rem] font-medium text-indigo" role="alert">Fill in all four fields to continue.</p>}
         {sealError && <p className="text-[0.9375rem] font-medium text-indigo" role="alert">Could not seal the entry: {sealError}</p>}
@@ -94,7 +96,7 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
         </div>
       </div>
 
-      <div>{ex ? <VerifiedPanel verified={ex.verified} defaultOpen /> : null}</div>
+      <div>{ex ? <VerifiedPanel verified={ex.verified} /> : null}</div>
     </div>
   )
 }

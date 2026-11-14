@@ -74,7 +74,7 @@ function ChoiceItem({ value, title, children }: { value: string; title?: string;
       value={value}
       title={title}
       className={cn(
-        "inline-flex min-h-10 cursor-pointer items-center border border-line bg-white px-4 text-[0.9375rem] font-medium text-[var(--gray-350)]",
+        "inline-flex min-h-10 cursor-pointer items-center border border-border bg-white px-4 text-[0.9375rem] font-medium text-[var(--gray-350)]",
         "transition-colors duration-[400ms] ease-gl hover:border-ink hover:text-ink",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lav",
         "data-[state=on]:border-ink data-[state=on]:bg-ink data-[state=on]:text-white",

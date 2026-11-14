@@ -46,11 +46,11 @@ function CaseCaption({ c }: { c: EvalCase | undefined }) {
   return (
     <div className="grid gap-x-10 gap-y-2 md:grid-cols-[auto_1fr_1fr]">
       <p className="font-serif text-[1.25rem] text-ink">Case {c.case}</p>
-      <p className="text-[0.9375rem] text-text md:col-span-2">
+      <p className="text-[0.9375rem] text-foreground md:col-span-2">
         {c.pattern.charAt(0).toUpperCase() + c.pattern.slice(1)}; {c.releases.length} releases over {int(c.releases[0]?.members ?? 0)}–{int(Math.max(...c.releases.map((r) => r.members)))} members.
       </p>
       <span className="max-md:hidden" />
-      <p className={cn("text-[0.9375rem]", c.naive.leaked ? "text-alarm" : "text-text")}>
+      <p className={cn("text-[0.9375rem]", c.naive.leaked ? "text-alarm" : "text-foreground")}>
         Typical tool: {c.naive.leaked ? `leaked. ${int(c.naive.exact_recoveries)} salaries recovered, ${int(c.naive.isolated_pairs)} pairs isolated` : "no leak"}
         {c.naive.leaked && c.naive.worst_recovery_error_eur !== undefined ? ` (worst error ${eur(c.naive.worst_recovery_error_eur)})` : ""}. {int(naiveCells)} cells.
       </p>
@@ -81,7 +81,7 @@ function EvalBody({ data }: { data: Evaluation }) {
       <header className="flex max-w-[44rem] flex-col gap-3">
         <p className="text-[0.8125rem] font-semibold tracking-[0.04em] text-ink uppercase">Evaluation · {int(s.cases)} simulated chapels</p>
         <h2 className="font-serif text-[2rem] leading-tight text-ink md:text-[2.75rem]">One subtraction is a demo. Here are a hundred.</h2>
-        <p className="text-[1rem] leading-relaxed text-text">
+        <p className="text-[1rem] leading-relaxed text-foreground">
           Joins, leaves, repeated tables and overlapping group-bys at k = {s.k}. An independent attacker, exact rational Gaussian elimination that shares
           no code with the audit, tried to solve every member's pay from what each tool published.
         </p>
@@ -96,11 +96,11 @@ function EvalBody({ data }: { data: Evaluation }) {
               </span>
               <div className="flex flex-col pb-1">
                 <span className="text-[0.8125rem] font-semibold tracking-[0.04em] text-ink uppercase">{side === "naive" ? "A typical n≥3 tool" : "Bandsheet"}</span>
-                <span className="text-[1rem] text-text">of {int(s.cases)} cases leaked a salary</span>
+                <span className="text-[1rem] text-foreground">of {int(s.cases)} cases leaked a salary</span>
               </div>
             </div>
             <DotGrid cases={data.cases} side={side} active={active} onActive={setActive} inView={inView} />
-            <p className="text-[0.9375rem] text-text">
+            <p className="text-[0.9375rem] text-foreground">
               {side === "naive"
                 ? `${int(s.naive.cases_with_exact_recovery)} cases gave up a salary to the euro; ${int(s.naive.members_exactly_recovered)} members exposed in all.`
                 : `Nobody exposed, while still publishing ${int(s.bandsheet.cells_published)} of the typical tool's ${int(s.naive.cells_published)} cells (${pct}%).`}

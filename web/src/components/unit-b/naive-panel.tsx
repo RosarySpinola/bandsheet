@@ -8,8 +8,8 @@ export const NAIVE_DONE_AT = 2.3
 
 function PublishedRow({ t, choice }: { t: Term; choice: CellChoice }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-line py-3">
-      <span className="text-[0.9375rem] text-text">
+    <div className="flex items-baseline justify-between gap-4 border-b border-border py-3">
+      <span className="text-[0.9375rem] text-foreground">
         Release #{t.release} · {choiceLabel(choice)}
         <span className="text-muted-foreground max-sm:block sm:ml-2">{int(t.n)} members</span>
       </span>
@@ -50,7 +50,7 @@ export function NaivePanel({ from, minus, choice, run }: { from: HeroId; minus: 
       </header>
 
       {!r ? (
-        <p className="text-[0.9375rem] text-text">This tool did not publish {choiceLabel(choice)} in one of the releases, so there is nothing to subtract.</p>
+        <p className="text-[0.9375rem] text-foreground">This tool did not publish {choiceLabel(choice)} in one of the releases, so there is nothing to subtract.</p>
       ) : (
         <>
           <div>
@@ -100,7 +100,7 @@ export function NaivePanel({ from, minus, choice, run }: { from: HeroId; minus: 
           )}
         </>
       )}
-      <p className="mt-auto border-t border-line pt-4 text-[0.8125rem] text-muted-foreground">
+      <p className="mt-auto border-t border-border pt-4 text-[0.8125rem] text-muted-foreground">
         Simulated in your browser from the same synthetic payroll ({NAIVE_MEMBERS[1]} members, then {NAIVE_MEMBERS[2]}) with the naive rule in packages/core.
       </p>
     </section>

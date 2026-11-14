@@ -26,7 +26,7 @@ function Seat({ n, account, vote, open, busy, disabled, onVote }: {
   onVote: (action: "approve" | "reject") => void
 }) {
   return (
-    <div className={cn("flex min-w-0 flex-col gap-1.5 border p-3 sm:gap-3 sm:p-4", vote === "Approve" ? "border-ink" : "border-line")}>
+    <div className={cn("flex min-w-0 flex-col gap-1.5 border p-3 sm:gap-3 sm:p-4", vote === "Approve" ? "border-ink" : "border-border")}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col">
           <span className="text-[0.8125rem] font-semibold tracking-[0.04em] text-ink uppercase">Seat {n}</span>
@@ -105,7 +105,7 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
         </div>
         <div className="grid grid-cols-3 gap-3" aria-hidden>
           {[0, 1, 2].map((i) => (
-            <span key={i} className={cn("h-[2px] transition-colors duration-500 ease-gl", i < approvals ? "bg-ink" : "bg-line")} />
+            <span key={i} className={cn("h-[2px] transition-colors duration-500 ease-gl", i < approvals ? "bg-ink" : "bg-border")} />
           ))}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -127,7 +127,7 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
         </div>
         {mine && <p className="text-[0.875rem] text-muted-foreground">Testnet transactions usually take 5 to 20 seconds.</p>}
         {txHere && (
-          <p className="text-[0.875rem] text-text">
+          <p className="text-[0.875rem] text-foreground">
             Vote recorded{" "}
             {txHere.mock ? <span className="text-muted-foreground">(mock, not sent)</span> : <TxLink tx={txHere.hash} />}
           </p>
@@ -138,7 +138,7 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
       <footer className="flex flex-wrap items-center gap-x-6 gap-y-2 bg-band px-5 py-4">
         {release ? (
           <>
-            <span className="text-[0.9375rem] text-text">Produced release #{release.id}</span>
+            <span className="text-[0.9375rem] text-foreground">Produced release #{release.id}</span>
             <StatusTag status={release.status} />
             <CtaLink to={`/unit/releases#r${release.id}`}>Open in the ledger</CtaLink>
           </>

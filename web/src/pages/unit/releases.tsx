@@ -13,7 +13,7 @@ function LedgerSkeleton() {
   return (
     <div className="flex flex-col" aria-label="Loading the release ledger">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="flex gap-6 border-b border-line py-7 pl-10 max-sm:pl-7">
+        <div key={i} className="flex gap-6 border-b border-border py-7 pl-10 max-sm:pl-7">
           <div className="flex flex-1 flex-col gap-3">
             <Shimmer className="h-4 w-48" />
             <Shimmer className="h-8 w-[min(26rem,80%)]" />

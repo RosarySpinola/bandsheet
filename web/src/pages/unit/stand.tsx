@@ -1,8 +1,8 @@
 import { useState } from "react"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { Navigate } from "react-router"
 import { joinHref, useMember } from "@/components/unit/session"
-import { askStand, plainError, StandRequestSchema } from "@/lib/api"
+import { askStand, getContext, plainError, StandRequestSchema } from "@/lib/api"
 import { useReleases } from "@/lib/chain"
 import { Page } from "@/components/unit/page"
 import { PageHeader, Section } from "@/components/unit/page-header"
@@ -22,8 +22,9 @@ export default function Stand() {
   const releases = useReleases()
   const ask = useMutation({ mutationFn: askStand })
   const member = useMember()
+  const context = useQuery({ queryKey: ["context", "MT", "OC2"], queryFn: () => getContext("MT", "OC2"), staleTime: Infinity, retry: 1 })
 
-  const parsed = StandRequestSchema.safeParse({ gross_annual_eur: Number(gross), grade })
+  const parsed = StandRequestSchema.safeParse({ gross_annual_eur: Number(gross), grade, country: "MT" })
   const grossOk = gross !== "" && Number(gross) >= 1000
   const latest = releases.data?.latest
 
@@ -93,7 +94,7 @@ export default function Stand() {
           ) : ask.data ? (
             <div className="flex flex-col gap-12">
               {ask.data.position ? (
-                <PositionCard p={ask.data.position} />
+                <PositionCard p={ask.data.position} context={context.data} />
               ) : (
                 <EmptyState
                   title={`No safe band for ${grade} yet`}
@@ -104,7 +105,16 @@ export default function Stand() {
                 <p className="max-w-[44rem] font-serif text-[1.25rem] leading-[1.6] text-ink md:text-[1.3125rem]">{ask.data.answer}</p>
               </Section>
               <Section title="Article 7 pay-information request" aside="Directive (EU) 2023/970">
-                <Letter subject={ask.data.letter.subject} body={ask.data.letter.body} source={ask.data.source} />
+                <Letter
+                  subject={ask.data.letter.subject}
+                  body={ask.data.letter.body}
+                  source={ask.data.source}
+                  reference={
+                    context.data
+                      ? `For context, Eurostat's Structure of Earnings Survey (${context.data.year}) puts the median gross monthly earnings of ${context.data.isco_label.toLowerCase()} in ${context.data.country_name} at EUR ${context.data.median_monthly_eur.toLocaleString("en-IE")} (${context.data.source_url}). I understand this is a broad category and an older survey year.`
+                      : undefined
+                  }
+                />
               </Section>
               <VerifiedPanel verified={ask.data.verified} />
             </div>

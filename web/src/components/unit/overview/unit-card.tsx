@@ -7,14 +7,22 @@ import { AccountLink } from "../links"
 import { Shimmer } from "../states"
 
 /** Members, entries, k, releases as serif figures; policy and WASM hashes below. */
-export function UnitCard({ policy }: { policy: Policy }) {
+export function UnitCard({ policy, verified }: { policy: Policy; verified?: { n: number | null; release: number | null } }) {
   return (
     <div className="flex flex-col gap-8 bg-band p-6 md:p-10">
-      <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 xl:grid-cols-5">
         <Figure value={int(policy.members)} caption="members with a key" />
         <Figure value={int(policy.entries)} caption="sealed entries" />
         <Figure value={<>k = {policy.policy.k}</>} caption="smallest group ever shown" />
         <Figure value={int(policy.releases)} caption={policy.releases === 1 ? "release logged" : "releases logged"} />
+        <Figure
+          value={verified?.n != null ? int(verified.n) : "—"}
+          caption={
+            verified?.n != null
+              ? `payslips verified by employer signature, release #${verified.release}`
+              : "payslips verified by employer signature (from the first DKIM release)"
+          }
+        />
       </div>
       <dl className="grid grid-cols-1 gap-x-10 gap-y-5 border-t border-border pt-6 sm:grid-cols-2">
         <Fact label="Policy hash">
@@ -40,8 +48,8 @@ export function UnitCard({ policy }: { policy: Policy }) {
 export function UnitCardSkeleton() {
   return (
     <div className="flex flex-col gap-8 bg-band p-6 md:p-10" aria-busy="true" aria-label="Loading the unit">
-      <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-        {[0, 1, 2, 3].map((i) => (
+      <div className="grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-5">
+        {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="flex flex-col gap-2">
             <Shimmer className="h-11 w-24 bg-white" />
             <Shimmer className="h-4 w-32 bg-white" />

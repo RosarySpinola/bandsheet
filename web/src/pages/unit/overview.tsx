@@ -11,6 +11,7 @@ import { ReleaseStatus } from "@/components/unit/overview/release-status"
 import { Proposals, ProposalsSkeleton } from "@/components/unit/overview/proposals"
 import { QuickLinks } from "@/components/unit/overview/quick-links"
 import { Shimmer } from "@/components/unit/states"
+import { extras } from "@/lib/dkim"
 
 export default function Overview() {
   const policy = usePolicy()
@@ -19,6 +20,7 @@ export default function Overview() {
 
   const list = releases.data?.releases ?? []
   const newest = list.length ? list.reduce((a, b) => (b.id > a.id ? b : a)) : undefined
+  const signed = [...list].sort((a, b) => b.id - a.id).find((r) => extras(r).entriesVerified !== null)
 
   return (
     <Page>
@@ -40,7 +42,7 @@ export default function Overview() {
         ) : policy.isError ? (
           <ErrorState error={policy.error} onRetry={() => policy.refetch()} />
         ) : (
-          <UnitCard policy={policy.data} />
+          <UnitCard policy={policy.data} verified={{ n: signed ? extras(signed).entriesVerified : null, release: signed?.id ?? null }} />
         )}
       </Section>
 

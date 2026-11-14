@@ -67,5 +67,72 @@
     "https://testnet.nearblocks.io/txns/A9ZjCsFv25cWfSENJkAetCTKDUpj9BLRTvCu4aPJ2qQH",
     "https://testnet.nearblocks.io/txns/8j2TY2h5HC3tqKVgtbpwjES1Qa4C5LHmriw85o1YPdgv",
     "https://testnet.nearblocks.io/txns/ErEry8mFcVR3DrwyjdHcWZHVHBPXs6xnJBQPpxhdP6dZ"
+  ],
+  "dao_trust_issuer": [
+    "https://testnet.nearblocks.io/txns/4G8BgLruHneA2oYCAqw1BEcojFkkLS2ibvF85gdpHrpU",
+    "https://testnet.nearblocks.io/txns/Ty76GfXr7PYskw2cvhFYEZUWmZmcsCjjHReNNAYfPtE",
+    "https://testnet.nearblocks.io/txns/3bNDWwnSw1cRHwHSNticJVwFBBHmkmznTgLdbkGZpDk5"
+  ],
+  "dao_require_dkim": [
+    "https://testnet.nearblocks.io/txns/6NXPSmu9hwySkoLD6T7QR87uyA9YifDGaginXEUBA4vx",
+    "https://testnet.nearblocks.io/txns/7UQwfX5AXQoS6LD7shhsLf2Uqshp1o34GrXyLGTabLrM",
+    "https://testnet.nearblocks.io/txns/DQxhKGLxm81MemdWLu44eqKVXwXWPZSThy83ZAtv69KD"
+  ],
+  "dao_require_dkim_first_proposal_3": [
+    "https://testnet.nearblocks.io/txns/7fPNdpNovtJGMMG9wEH74FsQkEC4ECfqdFrbe3f4LYWq",
+    "https://testnet.nearblocks.io/txns/A4XaXCm6EuVGDAZikTBab3fjDsiDCUwPnRjRTpZLqf5r",
+    "https://testnet.nearblocks.io/txns/21tpXpK32qHwHFxnirBTn25ZtczeRV8Py8kaHC91JeDA"
+  ],
+  "dkim_resubmit": [
+    "https://testnet.nearblocks.io/txns/vhoZbTq1K8ggw76ZDx8oeWRJ35Cxebt3Am7m9bWg33j",
+    "https://testnet.nearblocks.io/txns/HKLimpsHV8NXwbgoj6bDX9RK2zBKuWRUVyuwWjzYBmFB",
+    "https://testnet.nearblocks.io/txns/E4SSee4jGiapTrfgaqHmvAQZGjZ6tA3DphT4p1HVUZ9X",
+    "https://testnet.nearblocks.io/txns/46ogWd45QNBN8riD31sWnTZkhJ4KZKpu3xWdrSe5Ty3X",
+    "https://testnet.nearblocks.io/txns/Kd9zaKftXr2qnhbugCfXNWeejJC3Q68KTrz6MmwXnLB",
+    "https://testnet.nearblocks.io/txns/6GsTViUB3FDgiUbmVEpjK5nSgPvgRWexTLgkxgy2WJCw",
+    "https://testnet.nearblocks.io/txns/7tVEDr2Ju4mPyGUkkohYnJxJgWViTLcypySd2fQA8yPQ",
+    "https://testnet.nearblocks.io/txns/UnDXAodZnPDV557EJxUvmd5F2KKAiqZGmWts3nFsBh3",
+    "https://testnet.nearblocks.io/txns/8yYbm1hoVHLRuCticHXJNXWnmQR9HdzEShKyXkS16LzN",
+    "https://testnet.nearblocks.io/txns/44jthAsGgJYXUn2mR2tKVU34DM5LbbW5gLDVXrKRjX56",
+    "https://testnet.nearblocks.io/txns/2nrtrc6gMDA2vJG6irCChz5ctWMtfVxiMJ98qKHTtCsL",
+    "https://testnet.nearblocks.io/txns/A68jhdh1q5xV3tYPsQNbbBCf37gQTNMjska7zzrLZkLK",
+    "https://testnet.nearblocks.io/txns/93F6Mpq6o5z6saQEVaW9ajwFtm5ERKqSQRKJ2351fgCA",
+    "https://testnet.nearblocks.io/txns/9AxmHsr2UhYThcVm4roNowMgdZ1XEFjtiTnNYXkwPAeM",
+    "https://testnet.nearblocks.io/txns/8MFVSAjvoYUkbmLv7iLaUUZB384SBiqbBsm1CN1L59yy",
+    "https://testnet.nearblocks.io/txns/62mVB4d7ybaUzfa4Af2AnZZa3PYDdBexcMsttvuqHmmJ",
+    "https://testnet.nearblocks.io/txns/GH53xHiRXV6Gxv2whv9gKKChbttuB2s3poaiZYwKJ451",
+    "https://testnet.nearblocks.io/txns/8H4dhe3hDbiyuRcWCVpT2chPwFtduCYNFu5ycqMVedjG",
+    "https://testnet.nearblocks.io/txns/9itKAA9ZEspXFvkXE3VzMc4o6zPBMPeYdajCY2APUoL",
+    "https://testnet.nearblocks.io/txns/3XJbJFQCsGFeTcWaPG7G9MCk5YCQ636LMuaGKGtaunVi",
+    "https://testnet.nearblocks.io/txns/6D2NxY7HqA5e77rmCdkzoWipQsX46fXWfKpUNzXrofa3",
+    "https://testnet.nearblocks.io/txns/9rvpGXWKoFr5CmYZ6czqu9Dv6xUHAThKKF5f2VBV6Bnb",
+    "https://testnet.nearblocks.io/txns/5x8UVUL5LsQbouiQALr7JqvSbih645vHPefsPLmqLvRN",
+    "https://testnet.nearblocks.io/txns/8ZP6ij6cQGMyWohEXtqpFtnDN6GsNx7FXDi4CDruKBUd",
+    "https://testnet.nearblocks.io/txns/9s9FYkVe83VUb5t3erpcd5uAmzntG2ThQDHuxgpypwkH",
+    "https://testnet.nearblocks.io/txns/EftE9UzfVCRXgJVSbmAMJUDhF3pmkR6uhikj9wc4bEiA",
+    "https://testnet.nearblocks.io/txns/E8NVqKYYn1jwn4dhSYtimoLUuMNnMgemu3EgHBeiVjhu",
+    "https://testnet.nearblocks.io/txns/7Dyd4sFuNS2fDXcnFzzmoi7PHVR5FrJiKAECVXW6XvG5",
+    "https://testnet.nearblocks.io/txns/5BfqPRrFg1pDAsXRDWdnH9b27Wq5rckKvKg7HcaXK73G",
+    "https://testnet.nearblocks.io/txns/9cWLg63UY2WcrG1NDkpAYZ5JgJsXTQDVHxGWojospXwj",
+    "https://testnet.nearblocks.io/txns/BD4XzryP3TESPSKKMdTcSTr4nzen8kQQBib2kPyKrtiw",
+    "https://testnet.nearblocks.io/txns/8ia7hS3SsPpZjcB1PfUVH4ZXdo1sTk2Ne3PV8zd1vMG3",
+    "https://testnet.nearblocks.io/txns/HdKLjcRTHbgNwpb3i8jD4J873zkSKx2YEpW63BSd8rov",
+    "https://testnet.nearblocks.io/txns/Co2sBeNqnaM72ef66kc8HbNo4Zqbua7ZMdXkvYCajuvP",
+    "https://testnet.nearblocks.io/txns/CcCAmL3xcfMPkmrrYyQZtpMZcSt9R7a2Urbab1koiVh7",
+    "https://testnet.nearblocks.io/txns/E3c7813TZJMdRAUTgeHLWsMzcicmuiBoNYyUmNiBRsPQ",
+    "https://testnet.nearblocks.io/txns/HZg53vs1Cb5ue1k7KUk7FCe8mbaedvDgAzCGo31aFCAa"
+  ],
+  "dkim_forged_submit": [
+    "https://testnet.nearblocks.io/txns/6XbEAZSFQ9AfXT2CefXcJV4Err8xnxVFwSfa2b2a4UkH"
+  ],
+  "dao_set_engine": [
+    "https://testnet.nearblocks.io/txns/GzBmmztWUZmpBoQqBitHWNeWPZLXNhmNgdQpgjGRDmEf",
+    "https://testnet.nearblocks.io/txns/3Cp4SuJPTftNcrTHSyftTt2CjnFeD4CxqC1vtG82Q6pb",
+    "https://testnet.nearblocks.io/txns/sup1HY7CCinTTcevMVjpUYBipgd1NRuQ2a7kHYzdVuf"
+  ],
+  "release_3": [
+    "https://testnet.nearblocks.io/txns/5B9mURqeoFM9BkkMcrN2t27qaS8u9V4s3fmLzs7KEGCv",
+    "https://testnet.nearblocks.io/txns/GFeD199uAiCREqQtLuYxZWfEzRXRsDu6Gq6Sh5hHQo1o",
+    "https://testnet.nearblocks.io/txns/CqPS4C69oPj6BgaTxfW5ZAgJ9Zs8zuStD8DABJASCSH5"
   ]
 }

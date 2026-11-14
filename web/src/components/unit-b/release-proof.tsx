@@ -3,16 +3,17 @@ import type { ReleaseRecord } from "@bandsheet/core"
 import { Check, Minus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { CONTRACT, explorer } from "@/lib/chain"
-import { useAttestation, usePolicyWasm } from "./data"
+import { useAttestation } from "./data"
+import { extras } from "@/lib/dkim"
 import { AccountLink, ExtLink, TxLink, HashValue } from "@/components/unit"
 
 function CheckLine({ ok, children }: { ok: boolean | null; children: string }) {
   return (
-    <li className={cn("flex items-start gap-2 text-[0.875rem] leading-snug", ok === false ? "text-alarm" : "text-text")}>
+    <li className={cn("flex items-start gap-2 text-[0.875rem] leading-snug", ok === false ? "font-medium text-ink" : "text-foreground")}>
       {ok === null ? (
         <Minus className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
       ) : (
-        <Check className={cn("mt-0.5 size-3.5 shrink-0", ok ? "text-[var(--green-400)]" : "text-alarm")} strokeWidth={2.5} />
+        <Check className={cn("mt-0.5 size-3.5 shrink-0", ok ? "text-[var(--green-400)]" : "text-ink")} strokeWidth={2.5} />
       )}
       <span>{children}</span>
     </li>
@@ -22,11 +23,13 @@ function CheckLine({ ok, children }: { ok: boolean | null; children: string }) {
 /** Proof column: tx, OutLayer attestation (fetched and compared), sha256 of input and output, engine WASM. */
 export function ReleaseProof({ release, tx }: { release: ReleaseRecord; tx?: string }) {
   const att = useAttestation(tx)
-  const policyWasm = usePolicyWasm().data
+  const recorded = extras(release).wasm
   const input = release.input_sha256 ?? release.input_hash
   const output = release.output_sha256 ?? release.output_hash
-  const wasm = att.data?.executed_wasm_sha256 ?? att.data?.wasm_hash ?? policyWasm
-  const wasmOk = att.data && policyWasm ? (att.data.executed_wasm_sha256 ?? att.data.wasm_hash) === policyWasm : null
+  const attested = att.data?.executed_wasm_sha256 ?? att.data?.wasm_hash
+  const wasm = recorded ?? attested
+  // Compare against the build this record names (engines change by DAO vote); older records name none.
+  const wasmOk = attested && recorded ? attested === recorded : null
   const outOk = att.data && output ? att.data.output_hash === output : null
   const inOk = att.data && input ? att.data.input_hash === input : null
 
@@ -40,7 +43,7 @@ export function ReleaseProof({ release, tx }: { release: ReleaseRecord; tx?: str
       </Row>
       <Row label="Input sha256">{input ? <HashValue value={input} /> : <span className="text-muted-foreground">not recorded</span>}</Row>
       <Row label="Output sha256">{output ? <HashValue value={output} /> : <span className="text-muted-foreground">not recorded</span>}</Row>
-      <Row label="Engine WASM sha256" wide>
+      <Row label={recorded ? "Engine version (recorded with this release)" : "Engine version (attested by OutLayer)"} wide>
         {wasm ? <HashValue value={wasm} head={12} tail={6} /> : <span className="text-muted-foreground">loading…</span>}
       </Row>
       {tx && (
@@ -52,9 +55,9 @@ export function ReleaseProof({ release, tx }: { release: ReleaseRecord; tx?: str
             ) : att.isError ? (
               <p className="text-[0.875rem] text-muted-foreground">OutLayer's attestation could not be fetched just now. The link above still works.</p>
             ) : (
-              <ul className="flex flex-col gap-1.5 border-t border-line pt-4">
+              <ul className="flex flex-col gap-1.5 border-t border-border pt-4">
                 <CheckLine ok={true}>Intel TDX quote present for this transaction</CheckLine>
-                <CheckLine ok={wasmOk}>{wasmOk === null ? "Reading the contract policy to compare the engine hash…" : wasmOk ? "Engine hash matches the contract policy" : "Engine hash differs from the contract policy"}</CheckLine>
+                <CheckLine ok={wasmOk}>{wasmOk === null ? "Engine build named by OutLayer's attestation (this record predates per-release engine hashes)" : wasmOk ? "OutLayer ran exactly the engine build this record names" : "OutLayer ran a different build from the one this record names"}</CheckLine>
                 <CheckLine ok={inOk}>{inOk === null ? "No input hash to compare" : inOk ? "Input hash matches this record" : "Input hash differs from this record"}</CheckLine>
                 <CheckLine ok={outOk}>{outOk === null ? "No output hash to compare" : outOk ? "Output hash matches this record" : "Output hash differs from this record"}</CheckLine>
               </ul>

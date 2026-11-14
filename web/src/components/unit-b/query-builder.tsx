@@ -51,7 +51,7 @@ export function QueryBuilder({ onPropose, pending, error, result, mock, k }: {
     <section className="flex flex-col gap-6 bg-band p-6 md:p-8" aria-labelledby="ask-title">
       <header className="flex flex-col gap-2">
         <h2 id="ask-title" className="font-serif text-[1.75rem] leading-tight text-ink">Ask for a release</h2>
-        <p className="text-[0.9375rem] text-text">Choose the table you want. Council seat 1 files it as a proposal on the chapel's DAO.</p>
+        <p className="text-[0.9375rem] text-foreground">Choose the table you want. Council seat 1 files it as a proposal on the chapel's DAO.</p>
       </header>
 
       <div className="flex flex-col gap-3">

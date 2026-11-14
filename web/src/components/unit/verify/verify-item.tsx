@@ -15,12 +15,15 @@ type VerifyItemProps = {
   command?: string
   links?: { href: string; label: string }[]
   check?: Check
+  /** anchor id, e.g. for /unit/verify#trusted-employers */
+  id?: string
 }
 
 /** One verifiable fact: the value, what it proves, and how to re-check it without trusting us. */
-export function VerifyItem({ n, title, value, proves, command, links, check }: VerifyItemProps) {
+export function VerifyItem({ n, title, value, proves, command, links, check, id }: VerifyItemProps) {
   return (
-    <Reveal as="li" duration={500} className="grid grid-cols-1 gap-6 border-b border-border py-8 md:grid-cols-[3rem_minmax(0,1fr)] md:gap-x-8 xl:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.1fr)]">
+    <Reveal as="li" duration={500} className="relative grid grid-cols-1 gap-6 border-b border-border py-8 md:grid-cols-[3rem_minmax(0,1fr)] md:gap-x-8 xl:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.1fr)]">
+      {id && <span id={id} className="absolute top-0 left-0 scroll-mt-24" aria-hidden="true" />}
       <span className="gl-num text-[1.5rem] leading-none text-[var(--gray-300)]">{String(n).padStart(2, "0")}</span>
       <div className="flex min-w-0 flex-col gap-3">
         <h3 className="text-[1.25rem] leading-tight font-semibold text-ink">{title}</h3>
