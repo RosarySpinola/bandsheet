@@ -46,7 +46,7 @@ function Header({ f }: { f: number }) {
         <Link p={l1} />
         <Node p={server} label="bandsheet-mcp" sub="MCP server" isMono />
         <Link p={l2} />
-        <Node p={api} label="bandsheet.pages.dev/api" sub="read-only" isMono />
+        <Node p={api} label="bandsheet.pages.dev" sub="read-only API" isMono />
       </div>
       <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
         {TOOLS.map((t, i) => {
