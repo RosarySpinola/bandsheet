@@ -1,4 +1,3 @@
-import { useEffect } from "react"
 import { Mail, MailWarning } from "lucide-react"
 import { plainError } from "@/lib/api"
 import { cn } from "@/lib/utils"
@@ -40,10 +39,6 @@ const TITLES: Record<string, string> = {
 export function StepUpload({ flow }: { flow: SubmitFlow }) {
   const ex = flow.extract
   const busy = ex.status === "busy"
-
-  useEffect(() => {
-    if (ex.status === "done" && flow.step === 2) flow.go(3)
-  }, [ex.status, flow])
 
   return (
     <div className="flex flex-col gap-8">

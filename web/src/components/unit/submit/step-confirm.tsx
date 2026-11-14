@@ -92,7 +92,7 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
         {sealError && <p className="text-[0.9375rem] font-medium text-indigo" role="alert">Could not seal the entry: {sealError}</p>}
         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
           <SquareButton onClick={submit}>Seal to the engine</SquareButton>
-          <CtaButton onClick={() => flow.go(2)}>Use another payslip</CtaButton>
+          <CtaButton onClick={flow.anotherPayslip}>Use another payslip</CtaButton>
         </div>
       </div>
 

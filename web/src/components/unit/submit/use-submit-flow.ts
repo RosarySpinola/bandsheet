@@ -77,10 +77,12 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
         gross_annual_eur: res.extracted.gross_annual_eur ? String(res.extracted.gross_annual_eur) : prev.gross_annual_eur,
         grade: res.extracted.grade_guess ?? prev.grade,
       }))
+      // Advance only on a fresh read. (An effect keyed on "done" would bounce a member who comes back to step 2.)
+      go(3)
     } catch (error) {
       setExtract({ status: "error", error })
     }
-  }, [])
+  }, [go])
 
   const trySample = useCallback(
     async (path: string, name: string, type: string, kind: SampleKind) => {
@@ -143,6 +145,18 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     go(5)
   }, [sealed, invite, policy, qc, go])
 
+  /** Step 3 -> 2: forget the read payslip (and anything sealed from it) and show an empty upload step. Gender and site stay. */
+  const anotherPayslip = useCallback(() => {
+    setFile(null)
+    setEmlB64(null)
+    setSample(null)
+    setExtract(idle)
+    setSealed(null)
+    setSend(idle)
+    setFields((prev) => ({ gross_annual_eur: "", gender: prev.gender, site: prev.site }))
+    go(2)
+  }, [go])
+
   const restart = useCallback(() => {
     setFile(null)
     setEmlB64(null)
@@ -157,7 +171,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   return {
     step, reached, go, invite, resetInvite,
     file, extract, runExtract, trySample, fields, setFields, emlB64, sample,
-    sealed, seal, send, sendSealed, restart,
+    sealed, seal, send, sendSealed, restart, anotherPayslip,
   }
 }
 
