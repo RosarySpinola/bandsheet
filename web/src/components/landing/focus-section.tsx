@@ -41,7 +41,7 @@ export function FocusSection() {
             </h2>
           </div>
 
-          <motion.div style={{ rotate, scale }} className="relative mx-auto aspect-square w-full max-w-[calc(var(--gl)*30)] max-[991px]:max-w-[17rem]">
+          <motion.div style={{ rotate, scale }} className="relative mx-auto aspect-square w-full max-w-[calc(var(--gl)*30)] max-[991px]:max-w-[min(26rem,78vw)]">
             <img src="/landing/crystal-gem.webp" alt="" width={800} height={800} className="absolute inset-0 size-full mix-blend-multiply" />
             <img
               src="/landing/crystal-gem-b.webp"
@@ -66,7 +66,7 @@ export function FocusSection() {
                 {set.map((label, i) => (
                   <li
                     key={label}
-                    className="gl-label absolute max-w-[calc(var(--gl)*21)] text-text max-[991px]:static max-[991px]:text-sm max-[991px]:leading-5"
+                    className={cn("gl-label absolute max-w-[calc(var(--gl)*21)] text-text max-[991px]:static max-[991px]:max-w-none max-[991px]:text-sm max-[991px]:leading-5", i >= 2 && "max-[991px]:col-span-2")}
                     style={{ top: `${6 + i * 24}%`, right: `calc(var(--gl) * ${OFFSETS[i]})` }}
                   >
                     {label}
