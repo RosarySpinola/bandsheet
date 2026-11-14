@@ -3,6 +3,9 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { base58ToHex, sha256Hex, viewAccount, viewCall, getJson } from "./lib.mjs";
 
+/** Engine build that ran releases #1 and #2 (before the DKIM upgrade); documented in enclave/README.md. */
+const LEGACY_ENGINE = "a1dd40549adacc6183e140cc34ae7ed5c6af63eb646ab7978e4d50a371073f57";
+
 export const ROOT = join(import.meta.dirname, "..", "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
 const readJson = (p) => JSON.parse(read(p));
@@ -62,12 +65,21 @@ export async function checkReleases(deployed, log, unit) {
     }
     if (!att) { out.push(line(`c${r.id}`, false, `release #${r.id}: no OutLayer attestation found for its transactions`)); continue; }
     const a = att.rec;
-    const wasmOk = a.wasm_hash === unit.policy.wasm_sha256 && a.executed_wasm_sha256 === unit.policy.wasm_sha256;
+    /* Each record names the engine it ran under (releases before the DKIM upgrade ran on the documented v0.1.0 build). */
+    const ranUnder = r.wasm_sha256 || LEGACY_ENGINE;
+    const known = ranUnder === unit.policy.wasm_sha256 || ranUnder === LEGACY_ENGINE;
+    const wasmOk = known && a.wasm_hash === ranUnder && a.executed_wasm_sha256 === ranUnder;
     const inOk = a.input_hash === r.input_sha256;
     const outOk = a.output_hash === r.output_sha256;
     out.push(line(`c${r.id}`, wasmOk && inOk && outOk,
-      `release #${r.id} (${r.status}): attestation ${att.tx.slice(0, 8)}... engine hash ${wasmOk ? "=" : "!="} policy, ` +
+      `release #${r.id} (${r.status}): attestation ${att.tx.slice(0, 8)}... engine hash ${wasmOk ? "=" : "!="} ${ranUnder === unit.policy.wasm_sha256 ? "current policy" : "v0.1.0 engine it ran under"}, ` +
       `input hash ${inOk ? "=" : "!="} record, output hash ${outOk ? "=" : "!="} record`));
+    if (r.require_dkim) {
+      const rej = (r.rejections ?? []).map((x) => `${x.reason}: ${x.count}`).join(", ") || "none";
+      const nIssuers = Array.isArray(r.issuers) ? r.issuers.length : Number(r.issuers ?? 0);
+      out.push(line(`c${r.id}-dkim`, nIssuers > 0 && Number.isInteger(r.entries_verified),
+        `release #${r.id} required employer DKIM (${nIssuers} DAO-trusted issuer): ${r.entries_verified} entries verified, rejected ${rej}`));
+    }
   }
   return out;
 }
@@ -106,7 +118,7 @@ export function checkEvaluation(docs) {
   ];
   for (const f of ["release1", "release2"]) {
     const a = readJson(`enclave/proof/${f}-attestation.json`);
-    out.push(line(`e-${f}`, a.wasm_hash === docs.engine, `saved proof ${f}-attestation.json names the documented engine hash`));
+    out.push(line(`e-${f}`, a.wasm_hash === LEGACY_ENGINE, `saved proof ${f}-attestation.json names the v0.1.0 engine it ran under`));
   }
   return out;
 }
