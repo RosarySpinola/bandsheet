@@ -143,3 +143,13 @@ fn rejections_and_entries_verified_are_stored_as_returned() {
     let page = c.get_releases(None, None);
     assert_eq!(page[0].entries_verified, Some(2));
 }
+
+#[test]
+fn deposit_grows_with_the_input_beyond_the_free_32_kb() {
+    let c = fresh();
+    let cfg = c.get_policy().outlayer;
+    assert_eq!(outlayer::deposit_for(&cfg, 10_000), cfg.run_deposit.0);
+    let big = outlayer::deposit_for(&cfg, 95_000);
+    // about 0.7 NEAR for a full 38-entry DKIM input
+    assert!(big > 600_000_000_000_000_000_000_000 && big < 800_000_000_000_000_000_000_000, "{big}");
+}

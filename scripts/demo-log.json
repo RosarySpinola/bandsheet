@@ -124,5 +124,15 @@
   ],
   "dkim_forged_submit": [
     "https://testnet.nearblocks.io/txns/6XbEAZSFQ9AfXT2CefXcJV4Err8xnxVFwSfa2b2a4UkH"
+  ],
+  "dao_set_engine": [
+    "https://testnet.nearblocks.io/txns/GzBmmztWUZmpBoQqBitHWNeWPZLXNhmNgdQpgjGRDmEf",
+    "https://testnet.nearblocks.io/txns/3Cp4SuJPTftNcrTHSyftTt2CjnFeD4CxqC1vtG82Q6pb",
+    "https://testnet.nearblocks.io/txns/sup1HY7CCinTTcevMVjpUYBipgd1NRuQ2a7kHYzdVuf"
+  ],
+  "release_3": [
+    "https://testnet.nearblocks.io/txns/5B9mURqeoFM9BkkMcrN2t27qaS8u9V4s3fmLzs7KEGCv",
+    "https://testnet.nearblocks.io/txns/GFeD199uAiCREqQtLuYxZWfEzRXRsDu6Gq6Sh5hHQo1o",
+    "https://testnet.nearblocks.io/txns/CqPS4C69oPj6BgaTxfW5ZAgJ9Zs8zuStD8DABJASCSH5"
   ]
 }

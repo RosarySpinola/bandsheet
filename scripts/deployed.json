@@ -12,9 +12,10 @@
   "dao": "harbour-chapel.sputnik-v2.testnet",
   "dao_create_tx": "9FHFrJbpskEtW3j9ktfZbPq7ji5PBxg5r91qrysMQYA8",
   "unit_deploy_tx": "BVFTsxaGUNP6WpV4T51dwK2REsSVqPvyqCCfm4ak5pfd",
-  "wasm_sha256": "0e6370b0d4feb189d4336ed0ac6c988975edf3db15c813f0b116e6680d34dc56",
+  "wasm_sha256": "5414e7db7fd9d05c913e6224277a0a0f3a482ac863e6f6180fecd5adb2707f4f",
   "mockOutlayer": "bs-mock-3f36b7.testnet",
-  "unit_upgrade_tx": "3jqEq5pshEcHUQu2yuR3By3h4ArFb5QxteeAXzcLnEUJ",
+  "unit_upgrade_tx": "95Sg7WDqjcnwWfQASVByQKRUXFXQqjL4ofH1kqEyEBbV",
   "proposal_for_release_1": 0,
-  "proposal_for_release_2": 1
+  "proposal_for_release_2": 1,
+  "proposal_for_release_3": 6
 }

@@ -32,9 +32,18 @@ pub fn build_input(policy: &str, query: &str, entries: &[&String], history: Opti
     )
 }
 
+/// OutLayer holds about 1e19 yocto per byte of input_data beyond 32 KB (the unused part is refunded). With a 10% margin.
+const FREE_INPUT_BYTES: usize = 32_768;
+const YOCTO_PER_EXTRA_BYTE: u128 = 11_000_000_000_000_000_000;
+
+/// The deposit for this input: the configured base, plus the size charge for a large input.
+pub fn deposit_for(cfg: &OutlayerCfg, input_len: usize) -> u128 {
+    cfg.run_deposit.0 + input_len.saturating_sub(FREE_INPUT_BYTES) as u128 * YOCTO_PER_EXTRA_BYTE
+}
+
 /// request_execution on OutLayer; the caller chains the callback. The union pays from its own balance
 /// (payer null: OutLayer refunds the unused deposit to the caller, which is the union).
-pub fn request(cfg: &OutlayerCfg, input: &str, gas: Gas) -> Promise {
+pub fn request(cfg: &OutlayerCfg, input: &str, deposit: u128, gas: Gas) -> Promise {
     let secrets = if cfg.secrets_ref.is_empty() { "null" } else { cfg.secrets_ref.as_str() };
     let args = format!(
         "{{\"source\":{},\"resource_limits\":{{\"max_instructions\":{MAX_INSTRUCTIONS},\"max_memory_mb\":{MAX_MEMORY_MB},\"max_execution_seconds\":{MAX_SECONDS}}},\
@@ -45,7 +54,7 @@ pub fn request(cfg: &OutlayerCfg, input: &str, gas: Gas) -> Promise {
     Promise::new(cfg.account.clone()).function_call(
         "request_execution".to_string(),
         args.into_bytes(),
-        NearToken::from_yoctonear(cfg.run_deposit.0),
+        NearToken::from_yoctonear(deposit),
         gas,
     )
 }
