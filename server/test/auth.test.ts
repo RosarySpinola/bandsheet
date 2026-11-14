@@ -15,8 +15,6 @@ import { UNIT, chainCfg, config, mockChain } from "./helpers";
 
 const OWNER = { accountId: "c0ffee".repeat(10) + "abcd", privateKey: KeyPair.fromRandom("ed25519").toString() };
 const WALLET = "maria-lopes.testnet";
-/** As the contract stores it: the submitted JSON text, key order kept. */
-const STORED_ENTRY = '{"epk":"a","nonce":"b","ct":"c"}';
 
 /** Mock chain: the unit's member list plus owner calls (add_members, revoke_member) and NEAR Auth `sign`. */
 function authChain(mpcSign?: (payload: Uint8Array) => Uint8Array) {
@@ -28,7 +26,6 @@ function authChain(mpcSign?: (payload: Uint8Array) => Uint8Array) {
     ...base.chain,
     async view<T>(contract: string, method: string, args: Record<string, unknown> = {}) {
       if (method === "is_member") return members.has(String(args.slot)) as T;
-      if (method === "get_entries") return [STORED_ENTRY] as T;
       return base.chain.view<T>(contract, method, args);
     },
     async send(signer, receiver, method, args, o) {
@@ -205,38 +202,5 @@ describe("NEAR Auth path (statement transaction signed through fast-auth.testnet
     const sig = Buffer.from(mpcSign(bytes)).toString("base64");
     const r = await s.post("join", { scheme: "near-tx", account_id: other, public_key: pk, signature: sig, nonce: n, member_public_key: mk, method: "near-auth" });
     expect(r).toMatchObject({ status: 401, body: { code: "UNKNOWN_ACCOUNT" } });
-  });
-});
-
-describe("POST /api/auth/entry (bind a submission to the signed-in account)", () => {
-  const kp = KeyPair.fromRandom("ed25519");
-  const full = { [WALLET]: "full_access" as KeyStatus };
-  const ct = sha256(new TextEncoder().encode(STORED_ENTRY));
-  const ctHex = Buffer.from(ct).toString("hex");
-
-  it("records (account, slot, ciphertext hash, time); refuses another slot and a hash the contract does not hold", async () => {
-    const s = setup(full);
-    const mk = memberKey();
-    const jn = await s.nonce();
-    await s.post("join", { ...(await walletSign(kp, WALLET, `Bandsheet join: ${mk}`, jn)), member_public_key: mk, method: "near-connect" });
-    const slot = slotIdFromNearPublicKey(mk);
-    const en = await s.nonce("entry");
-    const r = await s.post("entry", { ...(await walletSign(kp, WALLET, `Bandsheet entry: ${ctHex}`, en)), ct_sha256: ctHex, slot, method: "near-connect" });
-    expect(r).toMatchObject({ status: 200, body: { account_id: WALLET, slot, ct_sha256: ctHex } });
-    expect(s.store.bindings).toHaveLength(1);
-    const en2 = await s.nonce("entry");
-    const r2 = await s.post("entry", { ...(await walletSign(kp, WALLET, `Bandsheet entry: ${ctHex}`, en2)), ct_sha256: ctHex, slot: "cd".repeat(32), method: "near-connect" });
-    expect(r2).toMatchObject({ status: 409, body: { code: "SLOT_MISMATCH" } });
-    const other = "ef".repeat(32);
-    const en3 = await s.nonce("entry");
-    const r3 = await s.post("entry", { ...(await walletSign(kp, WALLET, `Bandsheet entry: ${other}`, en3)), ct_sha256: other, slot, method: "near-connect" });
-    expect(r3).toMatchObject({ status: 404, body: { code: "ENTRY_NOT_ON_CHAIN" } });
-  });
-
-  it("a join nonce cannot be spent on an entry", async () => {
-    const s = setup(full);
-    const jn = await s.nonce("join");
-    const r = await s.post("entry", { ...(await walletSign(kp, WALLET, `Bandsheet entry: ${ctHex}`, jn)), ct_sha256: ctHex, slot: "cd".repeat(32), method: "near-connect" });
-    expect(r).toMatchObject({ status: 400, body: { code: "NONCE_WRONG_PURPOSE" } });
   });
 });

@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { Signer } from "../chain/port";
@@ -7,6 +7,7 @@ import { AppError } from "../errors";
 import type { KeyLookup } from "../auth/keys";
 import { addMemberKey, memberSlot, revokeMemberKey } from "../auth/members";
 import { relayNearAuthSign } from "../auth/near-auth";
+import { type Broadcast, readPostingTx } from "../auth/posting";
 import { PURPOSES, type Purpose, statementTxBytes } from "../auth/statement";
 import type { AuthStore, NonceCheck } from "../auth/store";
 import { verifyClaim } from "../auth/verify";
@@ -16,6 +17,8 @@ export interface AuthDeps {
   store: AuthStore;
   keys: KeyLookup;
   owner: Signer | undefined;
+  /** Broadcasts a wallet member's posting-key `submit` after their wallet signature is verified. */
+  broadcast?: Broadcast;
   now?: () => number;
 }
 
@@ -33,7 +36,8 @@ const Claim = z.object({
   nonce: NONCE,
 });
 const JoinBody = Claim.extend({ member_public_key: ED25519, method: z.enum(["near-auth", "near-connect"]) });
-const EntryBody = Claim.extend({ ct_sha256: HEX64, slot: HEX64, method: z.enum(["near-auth", "near-connect"]) });
+/** A wallet-signed entry: the wallet's claim over sha256(ciphertext JSON) plus the posting key's signed, unsent submit. */
+const EntryBody = Claim.extend({ signed_tx: z.string().regex(/^[A-Za-z0-9+/=]+$/).max(24_000), method: z.enum(["near-auth", "near-connect"]) });
 const RelayBody = z.object({
   purpose: z.enum(PURPOSES),
   subject: z.string().min(1).max(80),
@@ -133,25 +137,33 @@ export function authRoutes(deps: Deps): Hono {
     });
   });
 
+  /**
+   * Wallet-signed entry, in this order: the wallet's signature over the entry hash is verified, the posting key's
+   * transaction is checked to be that same entry from this account's slot, and only then is it broadcast and the
+   * binding recorded. A missing or wrong wallet signature means nothing is posted.
+   */
   app.post("/entry", async (c) => {
     const a = need();
     const b = await body(c, EntryBody);
+    if (!a.broadcast) throw new AppError(503, "posting is not configured on this server", "POSTING_NOT_CONFIGURED");
+    const post = readPostingTx(b.signed_tx, cfg.unit);
     const used = await a.store.consumeNonce(b.nonce, "entry", now(a));
     if (used !== "ok") throw nonceError(used);
-    const who = await verifyClaim(b, { purpose: "entry", subject: b.ct_sha256, nonce: nonceBytes(b.nonce), recipient: cfg.unit }, a.keys);
+    const who = await verifyClaim(b, { purpose: "entry", subject: post.ctSha256, nonce: nonceBytes(b.nonce), recipient: cfg.unit }, a.keys);
     const m = await a.store.getMember(who.account_id);
-    if (!m) throw new AppError(404, "this account has not joined with a member key", "NOT_JOINED");
-    if (m.slot !== b.slot) throw new AppError(409, "this entry was sent from a different member key than this account's", "SLOT_MISMATCH");
-    // The hash must be one of the sealed entries the contract holds (get_entries returns the stored ciphertext text).
-    const stored = await chain.view<string[]>(cfg.unit, "get_entries", { from: 0, limit: 200 }).catch(() => {
-      throw new AppError(502, "could not read the entries from NEAR testnet", "CHAIN_READ");
+    if (!m) throw new AppError(404, "this account has not joined with a posting key", "NOT_JOINED");
+    if (m.slot !== post.slot) throw new AppError(409, "this entry is signed by a different posting key than this account's", "SLOT_MISMATCH");
+    const tx = await a.broadcast(post.bytes).catch(() => {
+      throw new AppError(502, "NEAR testnet did not accept the transaction just now; nothing was recorded", "CHAIN_READ");
     });
-    if (!stored.some((t) => createHash("sha256").update(t).digest("hex") === b.ct_sha256)) {
-      throw new AppError(404, "no entry with this hash is on the contract yet; try again in a few seconds", "ENTRY_NOT_ON_CHAIN");
-    }
+    if (!tx.ok) throw new AppError(422, `the chain refused: ${tx.error || "submit failed"}`, "CHAIN_REJECTED");
     const signed_at = now(a);
-    await a.store.addBinding({ account_id: who.account_id, slot: m.slot, ct_sha256: b.ct_sha256, method: b.method, signed_at });
-    return c.json({ account_id: who.account_id, slot: m.slot, ct_sha256: b.ct_sha256, signed_at: new Date(signed_at).toISOString() });
+    await a.store.addBinding({ account_id: who.account_id, slot: m.slot, ct_sha256: post.ctSha256, method: b.method, signed_at });
+    const count = Number(tx.value);
+    return c.json({
+      account_id: who.account_id, slot: m.slot, ct_sha256: post.ctSha256, signed_at: new Date(signed_at).toISOString(),
+      tx: txOut(tx.hash), entry_count: Number.isFinite(count) ? count : null,
+    });
   });
 
   return app;

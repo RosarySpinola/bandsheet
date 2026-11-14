@@ -11,7 +11,9 @@ import { createPriceSource } from "./nearai/models";
 import { DEFAULT_ACCEPTED_TCB } from "./nearai/verify";
 import { SpendGuard } from "./spend";
 import { D1LedgerStore, type D1Like } from "./spend-d1";
+import { TESTNET_RPCS } from "@bandsheet/core/near";
 import { createKeyLookup } from "./auth/keys";
+import { createBroadcast } from "./auth/posting";
 import { loadOwnerSigner } from "./auth/owner";
 import { type AuthD1, D1AuthStore } from "./auth/store";
 
@@ -78,7 +80,7 @@ function build(env: WorkerEnv): NonNullable<typeof cached> {
     chainCfg,
     view: (contractId, method, args) => chain.view(contractId, method, args),
     auth: env.AUTH_DB
-      ? { store: new D1AuthStore(env.AUTH_DB), keys: createKeyLookup(strings.NEAR_RPC_URLS?.split(",").map((u) => u.trim())), owner: loadOwnerSigner(strings as NodeJS.ProcessEnv) }
+      ? { store: new D1AuthStore(env.AUTH_DB), keys: createKeyLookup(strings.NEAR_RPC_URLS?.split(",").map((u) => u.trim())), owner: loadOwnerSigner(strings as NodeJS.ProcessEnv), broadcast: createBroadcast(strings.NEAR_RPC_URLS?.split(",").map((u) => u.trim()) ?? TESTNET_RPCS) }
       : undefined,
   };
   return { deps, app: createApp(deps), timings };

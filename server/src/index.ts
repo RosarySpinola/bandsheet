@@ -10,7 +10,9 @@ import { verifyGpuNras, verifyQuoteDcap } from "./nearai/dcap";
 import { createPriceSource } from "./nearai/models";
 import { DEFAULT_ACCEPTED_TCB } from "./nearai/verify";
 import { SpendGuard } from "./spend";
+import { TESTNET_RPCS } from "@bandsheet/core/near";
 import { createKeyLookup } from "./auth/keys";
+import { createBroadcast } from "./auth/posting";
 import { loadOwnerSigner } from "./auth/owner";
 import { MemoryAuthStore } from "./auth/store";
 
@@ -38,7 +40,7 @@ export function buildDeps(): Deps {
     chainCfg,
     view: (contractId, method, args) => chain.view(contractId, method, args),
     // Local dev keeps sign-in state in memory (lost on restart); the deployed worker uses D1 (AUTH_DB).
-    auth: { store: new MemoryAuthStore(), keys: createKeyLookup(), owner: loadOwnerSigner() },
+    auth: { store: new MemoryAuthStore(), keys: createKeyLookup(), owner: loadOwnerSigner(), broadcast: createBroadcast(TESTNET_RPCS) },
   };
 }
 

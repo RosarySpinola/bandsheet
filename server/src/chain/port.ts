@@ -26,7 +26,7 @@ export interface ChainPort {
   balanceNear(accountId: string): Promise<number>;
 }
 
-function decodeValue(status: unknown): unknown {
+export function decodeValue(status: unknown): unknown {
   const v = (status as { SuccessValue?: string } | undefined)?.SuccessValue;
   if (v === undefined) return undefined;
   const text = Buffer.from(v, "base64").toString("utf8");
@@ -37,7 +37,7 @@ function decodeValue(status: unknown): unknown {
   }
 }
 
-function failureText(status: unknown): string {
+export function failureText(status: unknown): string {
   const f = (status as { Failure?: unknown } | undefined)?.Failure;
   if (!f) return "";
   const j = JSON.stringify(f);
