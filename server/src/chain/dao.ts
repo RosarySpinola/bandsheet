@@ -46,7 +46,7 @@ interface FnCallKind {
   FunctionCall: { receiver_id: string; actions: { method_name: string; args: string }[] };
 }
 
-export type ProposalKind = "release" | "trust_employer" | "require_dkim" | "engine" | "other";
+export type ProposalKind = "release" | "trust_employer" | "require_dkim" | "engine" | "poll" | "council" | "other";
 
 interface Decoded {
   kind: ProposalKind;
@@ -61,6 +61,11 @@ const fingerprint = (spkiB64: string): string => createHash("sha256").update(Buf
  * (add_issuer, remove_issuer, set_require_dkim, set_engine). Anything not targeting the unit returns undefined.
  */
 export function decodeProposal(kind: unknown, unit: string, description = ""): Decoded | undefined {
+  // The chapel's own business that is not a contract call: signalling polls and council seat changes.
+  if (kind === "Vote") return { kind: "poll", summary: description, query: null };
+  const role = kind as { AddMemberToRole?: { member_id: string; role: string }; RemoveMemberFromRole?: { member_id: string; role: string } };
+  if (role?.AddMemberToRole) return { kind: "council", summary: `Give ${role.AddMemberToRole.member_id} a ${role.AddMemberToRole.role} seat`, query: null };
+  if (role?.RemoveMemberFromRole) return { kind: "council", summary: `Remove ${role.RemoveMemberFromRole.member_id} from the ${role.RemoveMemberFromRole.role}`, query: null };
   const fc = (kind as FnCallKind | undefined)?.FunctionCall;
   const act = fc?.actions?.[0];
   if (!fc || fc.receiver_id !== unit || !act) return undefined;

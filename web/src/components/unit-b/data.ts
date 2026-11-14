@@ -80,7 +80,7 @@ export const useEvaluation = () =>
 
 /* ---------- Sputnik DAO release proposals ---------- */
 
-export type ProposalKind = "release" | "trust_employer" | "require_dkim" | "engine" | "other"
+export type ProposalKind = "release" | "trust_employer" | "require_dkim" | "engine" | "poll" | "council" | "other"
 
 export type DaoProposal = {
   id: number
@@ -95,7 +95,7 @@ export type DaoProposal = {
   submission_time: string | null
 }
 
-const KindSchema = z.enum(["release", "trust_employer", "require_dkim", "engine", "other"]).catch("other")
+const KindSchema = z.enum(["release", "trust_employer", "require_dkim", "engine", "poll", "council", "other"]).catch("other")
 
 const DaoProposalSchema = z.object({
   id: z.number(),
@@ -120,6 +120,8 @@ const METHOD_KIND: Record<string, ProposalKind> = {
 }
 
 function decodeKind(kind: unknown): ProposalKind {
+  if (kind === "Vote") return "poll"
+  if (kind && typeof kind === "object" && ("AddMemberToRole" in kind || "RemoveMemberFromRole" in kind)) return "council"
   const fc = (kind as { FunctionCall?: { receiver_id: string; actions: { method_name: string }[] } })?.FunctionCall
   const m = fc?.receiver_id === CONTRACT ? fc.actions?.[0]?.method_name : undefined
   return (m && METHOD_KIND[m]) || "other"

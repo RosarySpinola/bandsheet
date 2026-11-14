@@ -21,6 +21,8 @@ const KIND_LABEL: Record<string, string> = {
   trust_employer: "Trust an employer",
   require_dkim: "Require signed payslips",
   engine: "Adopt an engine build",
+  poll: "Chapel poll",
+  council: "Council seat",
   other: "Other chapel business",
 }
 
@@ -31,11 +33,13 @@ const GOVERNANCE_DONE: Record<string, { text: string; to: string; cta: string }>
   engine: { text: "Approved. The contract now runs releases on this engine build.", to: "/unit/verify", cta: "See the engine versions" },
 }
 
-function Seat({ n, account, vote, open, busy, disabled, onVote }: {
+function Seat({ n, account, vote, open, walletOnly, busy, disabled, onVote }: {
   n: 1 | 2 | 3
   account: string
   vote: string | undefined
   open: boolean
+  /** Open, but only a council wallet can vote on it (the demo's server-held seat keys vote on releases only). */
+  walletOnly: boolean
   busy: "approve" | "reject" | null
   disabled: boolean
   onVote: (action: "approve" | "reject") => void
@@ -59,6 +63,8 @@ function Seat({ n, account, vote, open, busy, disabled, onVote }: {
       </div>
       {vote ? (
         <p className="text-[0.9375rem] text-ink">{vote === "Approve" ? "Approved" : vote === "Reject" ? "Rejected" : vote}</p>
+      ) : open && walletOnly ? (
+        <p className="text-[0.9375rem] text-muted-foreground">Votes from its own wallet</p>
       ) : open ? (
         busy ? (
           <p className="flex items-center gap-2 text-[0.9375rem] text-ink" role="status">
@@ -140,6 +146,7 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
                 account={account}
                 vote={p.votes[account]}
                 open={open}
+                walletOnly={!isRelease}
                 busy={mine && vote.pending?.member === n ? vote.pending.action : null}
                 disabled={vote.pending !== null}
                 onVote={(action) => onVote({ proposal_id: p.id, member: n, action })}
@@ -164,6 +171,8 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
               <span className="text-[0.9375rem] text-foreground">{done.text}</span>
               <CtaLink to={done.to}>{done.cta}</CtaLink>
             </>
+          ) : open && p.kind === "poll" ? (
+            <span className="text-[0.9375rem] text-muted-foreground">A signalling poll: it changes nothing on chain. Council seats vote from their own wallets, above.</span>
           ) : open ? (
             <span className="text-[0.9375rem] text-muted-foreground">When {NEEDED} seats approve, the DAO applies this change to the contract.</span>
           ) : (
