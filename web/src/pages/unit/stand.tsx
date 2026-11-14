@@ -101,7 +101,7 @@ export default function Stand() {
                 />
               )}
               <Section title="Your private answer">
-                <p className="max-w-[44rem] font-serif text-[1.375rem] leading-[1.55] text-ink md:text-[1.5rem]">{ask.data.answer}</p>
+                <p className="max-w-[44rem] font-serif text-[1.25rem] leading-[1.6] text-ink md:text-[1.3125rem]">{ask.data.answer}</p>
               </Section>
               <Section title="Article 7 pay-information request" aside="Directive (EU) 2023/970">
                 <Letter subject={ask.data.letter.subject} body={ask.data.letter.body} source={ask.data.source} />

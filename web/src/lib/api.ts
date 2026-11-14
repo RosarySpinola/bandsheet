@@ -30,6 +30,7 @@ const PLAIN: Record<string, string> = {
   CONTRACT_NOT_CONFIGURED: "The server does not know which contract to read yet.",
   NOT_MEMBER: "This key is not a registered member of the chapel, so the contract refused the entry.",
   NETWORK: "The Bandsheet server could not be reached. Check that it is running and try again.",
+  SERVER_DOWN: "The Bandsheet server did not answer just now, perhaps mid-restart. Nothing was stored; try again in a moment.",
   NOT_FOUND: "This part of the demo server is not available yet.",
   DEMO_NOT_CONFIGURED: "This server has no demo member key. Paste an invite instead.",
   CHAIN_REJECTED: "The contract refused the entry.",
@@ -65,7 +66,8 @@ export async function api<T>(path: string, schema: z.ZodType<T>, init?: RequestI
   const body: unknown = await res.json().catch(() => null)
   if (!res.ok) {
     const e = ErrorBody.safeParse(body)
-    throw new ApiError(e.success ? e.data.error : `HTTP ${res.status}`, e.success ? (e.data.code ?? "UNKNOWN") : "UNKNOWN", res.status)
+    if (!e.success) throw new ApiError(PLAIN.SERVER_DOWN!, "SERVER_DOWN", res.status)
+    throw new ApiError(e.data.error, e.data.code ?? "UNKNOWN", res.status)
   }
   const parsed = schema.safeParse(body)
   if (!parsed.success) throw new ApiError("The server answered in an unexpected shape.", "BAD_RESPONSE", res.status)

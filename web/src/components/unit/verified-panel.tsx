@@ -27,6 +27,7 @@ export function VerifiedPanel({ verified, title, defaultOpen = false, className 
   const passed = verified.checks.filter((c) => c.pass).length
   const total = verified.checks.length
   const ok = verified.all_passed
+  const signers = [...new Set(verified.signers.model)]
 
   return (
     <section className={cn("border-t-2 bg-band", "border-ink", className)} aria-label="Verification">
@@ -54,12 +55,12 @@ export function VerifiedPanel({ verified, title, defaultOpen = false, className 
           <Fact label="Chat id">{verified.chat_id ? <HashValue value={verified.chat_id} head={10} /> : "—"}</Fact>
           <Fact label="Signature">{verified.signature_kind ?? "—"}</Fact>
           <Fact label="Gateway signer">{verified.signers.gateway ? <HashValue value={verified.signers.gateway} /> : "—"}</Fact>
-          <Fact label={verified.signers.model.length > 1 ? `Model signers (${verified.signers.model.length})` : "Model signer"}>
-            {verified.signers.model.length === 0 ? (
+          <Fact label={signers.length > 1 ? `Model signers (${signers.length})` : "Model signer"}>
+            {signers.length === 0 ? (
               "—"
             ) : (
               <span className="flex flex-col">
-                {verified.signers.model.map((s) => (
+                {signers.map((s) => (
                   <HashValue key={s} value={s} />
                 ))}
               </span>

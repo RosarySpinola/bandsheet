@@ -50,7 +50,7 @@ export default function Help() {
     <Page width="narrow">
       <PageHeader glyph="help" eyebrow="Learn" title="Help" lede="Plain answers about what Bandsheet keeps, what it refuses and why." />
       <Reveal>
-        <A.Root type="single" collapsible defaultValue="item-0" className="flex flex-col border-t-2 border-ink">
+        <A.Root type="single" collapsible defaultValue="item-0" className="flex flex-col">
           {FAQ.map((f, i) => (
             <A.Item key={f.q} value={`item-${i}`} className="group border-b border-border">
               <A.Header>

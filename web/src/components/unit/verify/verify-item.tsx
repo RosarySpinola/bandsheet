@@ -20,7 +20,7 @@ type VerifyItemProps = {
 /** One verifiable fact: the value, what it proves, and how to re-check it without trusting us. */
 export function VerifyItem({ n, title, value, proves, command, links, check }: VerifyItemProps) {
   return (
-    <Reveal as="li" duration={500} className="grid grid-cols-1 gap-6 border-b border-border py-8 md:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.1fr)] md:gap-8">
+    <Reveal as="li" duration={500} className="grid grid-cols-1 gap-6 border-b border-border py-8 md:grid-cols-[3rem_minmax(0,1fr)] md:gap-x-8 xl:grid-cols-[3rem_minmax(0,1fr)_minmax(0,1.1fr)]">
       <span className="gl-num text-[1.5rem] leading-none text-[var(--gray-300)]">{String(n).padStart(2, "0")}</span>
       <div className="flex min-w-0 flex-col gap-3">
         <h3 className="text-[1.25rem] leading-tight font-semibold text-ink">{title}</h3>
@@ -36,7 +36,7 @@ export function VerifyItem({ n, title, value, proves, command, links, check }: V
           </p>
         )}
       </div>
-      <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4 md:col-start-2 xl:col-start-3">
         <p className="text-[1rem] leading-relaxed text-foreground">{proves}</p>
         {command && (
           <div className="flex items-start gap-2 bg-ink py-3 pr-2 pl-4">
