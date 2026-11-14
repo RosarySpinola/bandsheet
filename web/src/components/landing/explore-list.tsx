@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { Link } from "react-router"
 import { cn } from "@/lib/utils"
-import { Glyph } from "@/components/gl/glyph"
 import { SCREENS } from "@/components/gl/screens"
+import { CRYSTAL } from "@/components/gl/crystals"
 import { Reveal } from "@/components/gl/reveal"
 
-/** Greenlock "Explore our products": grey rows that go ink on hover (scroll-highlighted on mobile). */
+/** Greenlock "Explore our products": grey rows that go ink with a coloured crystal on hover (scroll-highlighted below 992px). */
 export function ExploreList() {
   const [active, setActive] = useState<number | null>(null)
   const listRef = useRef<HTMLUListElement | null>(null)
@@ -31,32 +31,56 @@ export function ExploreList() {
     <section className="gl-section bg-white">
       <div className="gl-container">
         <Reveal>
-          <h2 className="gl-h1 mb-[calc(var(--gl)*4)]">Explore the demo unit</h2>
+          <h2 className="gl-h1 mb-[calc(var(--gl)*6)] max-[991px]:mb-6">Explore the demo unit</h2>
         </Reveal>
         <ul ref={listRef} className="flex flex-col">
           {SCREENS.map((s, k) => {
             const on = active === k
+            const tone = on ? "duration-500" : "duration-[400ms]"
             return (
               <li key={s.to}>
                 <Link
                   to={s.to}
                   onMouseEnter={() => setActive(k)}
                   onMouseLeave={() => setActive(null)}
-                  className="grid min-h-[calc(var(--gl)*12.25)] grid-cols-[minmax(0,22rem)_auto_minmax(0,1fr)] items-center gap-[calc(var(--gl)*3)] py-[calc(var(--gl)*1.5)] max-[991px]:grid-cols-[1fr_auto] max-[991px]:gap-3 max-[991px]:py-5"
+                  onFocus={() => setActive(k)}
+                  onBlur={() => setActive(null)}
+                  className="gl-halves min-h-[calc(var(--gl)*16.5)] items-start py-[calc(var(--gl)*1.5)] max-[991px]:min-h-0 max-[991px]:items-center max-[991px]:py-2"
                 >
-                  <span
-                    className={cn(
-                      "gl-h2 transition-colors ease-gl",
-                      on ? "text-ink! duration-500" : "text-inactive! duration-[400ms]",
-                    )}
-                  >
-                    {s.title}
+                  <span className="grid grid-cols-[minmax(0,1fr)_auto] items-start max-[991px]:items-center">
+                    <span
+                      className={cn(
+                        "max-w-[calc(var(--gl)*20)] text-[calc(var(--gl)*2.05)] leading-[calc(var(--gl)*2.75)] transition-colors ease-gl max-[991px]:text-lg max-[991px]:leading-6",
+                        tone,
+                        on ? "text-ink" : "text-inactive",
+                      )}
+                    >
+                      {s.title}
+                    </span>
+                    <span className="relative mr-[calc(var(--gl)*8)] -mt-[calc(var(--gl)*1)] size-[calc(var(--gl)*12.5)] max-[991px]:m-0 max-[991px]:size-[4.5rem]">
+                      <img
+                        src={CRYSTAL[s.kind]}
+                        alt=""
+                        width={400}
+                        height={400}
+                        loading="lazy"
+                        className="absolute inset-0 size-full opacity-60 mix-blend-multiply grayscale"
+                      />
+                      <img
+                        src={CRYSTAL[s.kind]}
+                        alt=""
+                        width={400}
+                        height={400}
+                        loading="lazy"
+                        className={cn("absolute inset-0 size-full mix-blend-multiply transition-opacity duration-700 ease-gl", on ? "opacity-100" : "opacity-0")}
+                      />
+                    </span>
                   </span>
-                  <Glyph kind={s.kind} muted={!on} className="size-[calc(var(--gl)*8)] max-[991px]:size-16" />
                   <span
                     className={cn(
-                      "gl-body3 transition-colors ease-gl max-[991px]:col-span-2",
-                      on ? "text-text! duration-500" : "text-inactive! duration-[400ms]",
+                      "gl-h2 transition-colors ease-gl max-[991px]:hidden",
+                      tone,
+                      on ? "text-ink" : "text-inactive!",
                     )}
                   >
                     {s.blurb}
