@@ -111,6 +111,8 @@ export function WalletSeat({ proposals }: { proposals: DaoProposal[] }) {
           {open.map((p) => {
             const busy = voting?.id === p.id
             const out = outcome?.id === p.id ? outcome : null
+            // This seat's own vote, read from the chain (so a second tap cannot send a vote the DAO would refuse).
+            const mine = conn ? chainOpen.data?.find((c) => c.id === p.id)?.votes?.[conn.accountId] : undefined
             return (
               <div key={p.id} className="flex flex-col gap-2 border-l-2 border-ink bg-band px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -119,6 +121,8 @@ export function WalletSeat({ proposals }: { proposals: DaoProposal[] }) {
                   </span>
                   {busy ? (
                     <span className="flex items-center gap-2 text-[0.9375rem] text-ink" role="status"><Spinner className="size-3.5" /> Confirm in your wallet…</span>
+                  ) : mine ? (
+                    <span className="text-[0.9375rem] font-semibold text-ink">You voted {mine === "Approve" ? "approve" : mine === "Reject" ? "reject" : mine}</span>
                   ) : (
                     <span className="flex items-center gap-4">
                       <button type="button" disabled={voting !== null || !chainOpen.data} onClick={() => vote(p.id, "VoteApprove")} className="wipe cursor-pointer text-[0.9375rem] font-semibold text-ink disabled:opacity-40">Approve</button>
