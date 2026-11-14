@@ -31,7 +31,7 @@ are about to be requested everywhere.
 | Deciding | **OutLayer** | The release engine treats every published cell as a sum query over members. It solves the attacker's equations first (exact rank over two primes), withholds any cell that would isolate a member, and suppresses complements too. |
 | Asking | **Sputnik DAO** | A release can only be requested by a passed DAO proposal (2 of 3 council seats). The same DAO trusts DKIM issuers, turns `require_dkim` on and adopts a new engine build. |
 | Membership | **NEAR access keys** | Each member holds a function-call key that can only call `submit`, so submitting is gas-free. A resubmission replaces the earlier entry, so the count doesn't change. Outside accounts are refused. |
-| Sign-in | **NEAR Auth**, **NEAR Connect**, **NEP-413** | A member can join with their own NEAR account (email/passkey/Google through NEAR Auth, or any testnet wallet through NEAR Connect). The account signs a statement naming the browser-made member key; the server verifies it and registers the key. Council seats can vote from their own wallets. |
+| Sign-in | **NEAR Connect**, **NEP-413**, EIP-191 | Members join with their own wallet (NEAR wallets or an Ethereum wallet). The wallet signs for a `submit`-only posting key and then signs every entry before the posting key posts it, so the wallet never appears on chain next to an entry. Council seats vote from their own wallets. |
 | Record | **NEAR Protocol** | Every release and every refusal is written to the contract with its witness, input/output hashes, rejection counts and OutLayer request. |
 
 Beyond NEAR:
@@ -43,40 +43,44 @@ Beyond NEAR:
 | MCP | `mcp/`: six read-only tools so an AI assistant can read bands, explain a refusal and verify a release. |
 | EU Directive 2023/970, Art. 7 | `/unit/stand` drafts the member's pay-information letter under Article 7, as transposed into Maltese law; Article 7(4) gives the employer a reasonable period, at most two months, to reply. |
 
-## Sign in with NEAR (NEAR Auth, NEAR Connect, NEP-413)
+## Members join with their own wallet (NEAR Connect, NEP-413, EIP-191)
 
-A member can join with their own NEAR account instead of an invite. The browser makes the member's `submit`-only key
-locally, as before; the account signs one statement that names that key; the server checks it and the committee key
-registers the member key with `add_members`. **Which account owns which slot is kept only in the server's D1 database
-(`AUTH_DB`), never on chain**, because on chain it would deanonymise every entry.
+**The wallet is the member's identity.** On `/unit/join` the first thing is **Connect your NEAR wallet**
+(`@hot-labs/near-connect`, testnet): Meteor, Intear, Nightly, Ledger, NEAR CLI, and **Ethereum Wallets** (MetaMask and
+others, through the eth-implicit `0x…` NEAR account). Unity and WalletConnect wallets are not offered because they
+need a WalletConnect project id (`WALLETCONNECT_PROJECT_ID`, not configured). "Judge demo: no wallet" sits underneath
+and works exactly as before.
 
-| Route | What signs | How the server checks it |
+The browser also makes a **posting key**: a function-call key on the union account that can only call `submit`. It
+cannot hold or move funds and is not the member's wallet. Using it keeps the member's account off chain: on chain every
+entry is signed by `bandsheet-3f36b7.testnet`, never by a member's wallet.
+
+| Step | What the wallet signs | What the server checks before acting |
 |---|---|---|
-| **NEAR Connect** (`@hot-labs/near-connect`, testnet) | The wallet's NEP-413 `signMessage` over `Bandsheet join: <member ed25519 key>`, recipient `bandsheet-3f36b7.testnet`, a server-issued single-use 32-byte nonce | Re-encodes the Borsh payload itself (tag 2^31+413, message, nonce, recipient, no callback), verifies the ed25519 signature, then `view_access_key` must return `FullAccess` for that key on that account |
-| **NEAR Auth** (FastAuth, `@fast-auth-near/javascript-provider`, testnet shared client; email, passkey or Google) | The published SDK (javascript-provider 1.4.1) signs transactions but has **no NEP-413 message signing**, so the account signs a *statement transaction*: one FunctionCall `bandsheet_join` to the unit with args `{message, nonce}`, access-key nonce 0 and an all-zero block hash, so it can never execute. The server relays the approved request to `fast-auth.testnet` `sign` (owner pays the gas; only the exact statement bytes it issued are relayed) and gets the MPC signature | Re-encodes the transaction, verifies the ed25519 signature over its sha256. A new NEAR Auth user's implicit account does not exist yet, so, as the NEAR Auth docs prescribe, it is accepted only while `view_account` says `UNKNOWN_ACCOUNT` and the id is the hex of that same key |
+| Join | `Bandsheet join: <posting key>`: NEP-413 with recipient `bandsheet-3f36b7.testnet` and a server-issued single-use nonce, or for an Ethereum wallet an EIP-191 `personal_sign` text with the same statement, `Recipient:` and `Nonce:` | NEP-413: it re-encodes the Borsh payload itself and verifies ed25519, and `view_access_key` must say FullAccess. EIP-191: viem `verifyMessage` must recover the account's own 0x address. Only then does the registrar key call `add_members`. One posting key per wallet: re-joining revokes the old one |
+| Each entry | `Bandsheet entry: <sha256 of the sealed ciphertext JSON>` (NEP-413 or EIP-191), required | The browser builds the posting key's `submit` transaction but does not send it. The server checks the wallet signature over that exact ciphertext, and that the posting key is this wallet's slot. Only then does it broadcast the transaction and record (wallet, slot, hash, time) in D1. If the wallet declines, nothing is posted |
+| Vote | `act_proposal` from the seat holder's own wallet on `/unit/vote` (seats are read from the DAO's `get_policy`) | The DAO's own 2-of-3 policy |
 
-Rules enforced in code (`server/src/routes/auth.ts`, `server/src/auth/`): the nonce is consumed atomically before
-verification (replays get `NONCE_USED`, late ones `NONCE_EXPIRED`); a join nonce cannot be spent on an entry; one active
-member key per account (re-joining revokes the old key with `revoke_member` first); 5 joins a minute per IP; zod on every
-body; errors are `{error, code}`. After submitting, a signed-in member can also sign `Bandsheet entry: <sha256 of the
-ciphertext JSON>`; the server checks that hash is one of the contract's stored entries and that the account's slot sent
-it, then records (account, slot, hash, time) in D1. The gas-free submit itself is unchanged.
+The wallet-to-slot link is stored only in the server's D1 database (`AUTH_DB`), never on chain. Nonces are consumed
+atomically and expire after 10 minutes, joins are limited to 5 a minute per IP, every body is checked with zod, and
+errors come back as `{error, code}`. The hosted server holds only a **registrar key**: a function-call key on the
+committee account that can call `add_members` and `revoke_member`, nothing else.
 
-`/unit/vote` adds **Connect wallet** (NEAR Connect): the seat list is read from the DAO's `get_policy` council role; a
-seat holder gets Approve and Reject on open proposals, signed as `act_proposal` by their own wallet and read back from the
-chain; any other account sees "this account holds no seat". The demo's server-held seat buttons stay as they were.
+Tested live on https://bandsheet.pages.dev (14 Nov 2026), through NEAR Connect's NEAR CLI wallet with a local testnet key:
+- join, with the earlier key revoked: [add_members](https://testnet.nearblocks.io/txns/FWjsTeujDUcivBbxQaimdz5esLX8KrjtnZnk5yuYv4Jq), [revoke](https://testnet.nearblocks.io/txns/HNbQG6qt2a2xG8gaS447cc49VBdLhRuhiAcrc5y2F2fz)
+- declining the entry signature showed "Your wallet did not sign, so nothing was posted", and the entry count stayed 38
+- signing it posted the entry: [submit](https://testnet.nearblocks.io/txns/9tRQdptwc6PvnPQtD1H9QKTSrdjzp7hhoxxdvthGKE5v), signed by the union account's posting key, and the binding was recorded
+- cleanup: test keys revoked, so 38 members and 38 entries again
 
-Tested live on the preview (`server/scripts/auth-live.ts`, 9/9, plus the UI): NEAR Connect join through the NEAR CLI
-executor as `bs-guest-3f36b7.testnet` ([add_members](https://testnet.nearblocks.io/txns/DoXMnkMTGVCkUYAVGWgReybiy6yA2KgD7p2SiZQVXG1K)),
-a gas-free submit with that key ([submit](https://testnet.nearblocks.io/txns/3BHmJ7zexY5XzHJjDJzkXNJVMWeWJM1XL9qAZPfYPWXJ))
-and its entry binding; NEAR Auth with a passkey (CDP virtual authenticator) from `localhost:3000`
-([MPC sign](https://testnet.nearblocks.io/txns/DXN837PH64yG66Q9JhXDLHG4ezMVJnepiVLUCqNicFS3),
-[add_members](https://testnet.nearblocks.io/txns/HspVCBQtxJx6N9oSFjY8LvoTPvGEieZF5pqaSTyMUVYy),
-[submit](https://testnet.nearblocks.io/txns/2yAguBa2AW76j8Ypehjqii5GTB4wKCr2gc1h8mu1xQbx)) and its entry binding;
-re-join revoking the old key ([revoke](https://testnet.nearblocks.io/txns/B3bDxMzFGv7atQREv3BFVGeRhwuQHUGJvyexKYfDN9Qx));
-refusals for a wrong recipient, a replayed nonce and a key that is not on the account. Every test key was revoked
-afterwards, so the chapel still has 38 members and 38 entries. Not tested: a real third-party wallet (Meteor, Intear,
-Nightly, Ledger) signing in, Google login, and a wallet vote (no proposal is open, and opening one would change the DAO).
+Meteor's web wallet opens as a tab in the same window: `patches/@hot-labs__near-connect@0.12.0.patch` drops the popup
+window features and keeps the opener link. An Ethereum Wallets join reached evm-on-near.dev and connected a scripted
+EIP-1193 wallet. That page then stopped at "Setup failed: Failed to fetch", because its testnet RPC
+(`rpc.testnet.fastnear.com`) answered HTTP 429. The EIP-191 check itself is covered by unit tests only. Not tested with
+real wallet apps (Meteor, Intear, Nightly, Ledger, MetaMask) or a real seat vote.
+
+Council seat for a member's wallet: `scripts/seat-swap.ts <accountId>` proposes removing `bs-c3-3f36b7.testnet` and
+adding the account (seats 1 and 2 approve each), then opens a signalling poll. The council stays at 3 seats with 2 of 3
+to pass. `scripts/seat-restore.ts <accountId>` reverses it.
 
 ## Measured result
 
@@ -189,7 +193,7 @@ Do this, see that (routes: `/`, `/pricing`, `/unit`, `/unit/join`, `/unit/submit
 | `fixtures/dkim/` | Fictional employer `harbourcourier.example`, signed payslip emails and negatives; keys generated by us |
 | `scripts/` | Testnet setup, member keys, DAO proposals, the seeded demo (`demo-log.json` lists every tx) |
 | `deploy/` | Cloudflare Pages deploy (`DEPLOY.md`), sign-in schema (`migrations-auth/`), preview deploy (`preview-wallet.sh`) |
-| `web/src/lib/wallet/` | NEAR Auth and NEAR Connect clients, sign-in API calls, entry binding |
+| `web/src/lib/wallet/` | NEAR Connect join and voting, EIP-191 for Ethereum wallets, wallet-signed submit |
 | [`JUDGES.md`](JUDGES.md) | The 90-second path, the 5-minute path, track fit |
 | [`THREAT_MODEL.md`](THREAT_MODEL.md) | Assets, actors, attacks, residual risks |
 
@@ -200,16 +204,10 @@ Do this, see that (routes: `/`, `/pricing`, `/unit`, `/unit/join`, `/unit/submit
   policy, not DNS. The DKIM `x=` expiry is not enforced and `l=` signatures are rejected. DKIM proves the email came
   from the key holder, not that payroll was right.
 - The committee is still the trusted registrar of member keys; a malicious majority could register fake members.
-- **NEAR Auth is blocked on the deployed site.** What was tried: the shared testnet Auth0 client
-  (`np8paqIpMWmNbzT4xAvOOapZBjsOpptl` on `login.testnet.fast-auth.com`) from https://wallet.bandsheet.pages.dev. Exact error:
-  Auth0 403 `unauthorized_client: Callback URL mismatch. https://wallet.bandsheet.pages.dev is not in the list of allowed
-  callback URLs`. Probing other origins on 14 Nov 2026, only `http://localhost:3000` was accepted (localhost on other
-  ports, 127.0.0.1 and `bandsheet.pages.dev` all got the same 403). From `localhost:3000` the full path passed (passkey,
-  MPC signature, member added, submit, entry bound; tx links above). The deployed page shows the NEAR Auth button
-  disabled with a one-line reason. **What unblocks it:** the NEAR Auth team allowlisting `https://bandsheet.pages.dev` on
-  the shared testnet client, or issuing a client in their tenant for it (then set `VITE_NEAR_AUTH_CLIENT_ID`). Separately,
-  the published SDK (javascript-provider 1.4.1) has no NEP-413 signing and no public relayer, hence the statement
-  transaction and our own relay of `fast-auth.testnet` `sign`.
+- NEAR Auth (FastAuth: email, passkey, Google) is not offered. Its shared testnet login accepts only `http://localhost:3000`
+  (Auth0 403 `Callback URL mismatch` for bandsheet.pages.dev). From localhost:3000 it worked end to end with a passkey
+  ([MPC sign](https://testnet.nearblocks.io/txns/DXN837PH64yG66Q9JhXDLHG4ezMVJnepiVLUCqNicFS3)); the NEAR Auth team
+  would have to allowlist the site's origin.
 - Sign-in opens membership to any NEAR account (one active key per account, but no roster or allow-list check yet): it
   proves control of an account, not employment or personhood, so one person with several accounts could join several times.
 - The audit is exact for k ≤ 3 (the default). For larger k it still catches any single member
