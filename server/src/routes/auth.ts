@@ -29,12 +29,12 @@ const B64 = z.string().regex(/^[A-Za-z0-9+/=_-]+$/).max(200);
 const HEX64 = z.string().regex(/^[0-9a-f]{64}$/);
 
 const Claim = z.object({
-  scheme: z.enum(["nep413", "near-tx"]),
+  scheme: z.enum(["nep413", "near-tx", "eip191"]),
   account_id: ACCOUNT,
-  public_key: ED25519,
-  signature: B64,
+  public_key: ED25519.optional(),
+  signature: z.union([B64, z.string().regex(/^0x[0-9a-fA-F]{130}$/)]),
   nonce: NONCE,
-});
+}).refine((c) => c.scheme === "eip191" || c.public_key !== undefined, "public_key is required for NEAR signatures");
 const JoinBody = Claim.extend({ member_public_key: ED25519, method: z.enum(["near-auth", "near-connect"]) });
 /** A wallet-signed entry: the wallet's claim over sha256(ciphertext JSON) plus the posting key's signed, unsent submit. */
 const EntryBody = Claim.extend({ signed_tx: z.string().regex(/^[A-Za-z0-9+/=]+$/).max(24_000), method: z.enum(["near-auth", "near-connect"]) });
