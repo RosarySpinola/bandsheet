@@ -4,6 +4,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 import { CONTRACT } from "@/lib/chain"
 import { shortAccount } from "@/lib/wallet/identity"
+import { nearAuthAvailable } from "@/lib/wallet/near-auth"
 import { HashValue } from "../copy-button"
 import { CtaButton, SquareButton, TxLink } from "../links"
 import { UNIT_NAME } from "../nav"
@@ -35,14 +36,21 @@ export function SignInOptions({ onEnter }: { onEnter: () => void }) {
   const { phase, startNearAuth, approveNearAuth, startWallet, reset } = useAccountJoin()
   const busy = phase.s in BUSY || phase.s === "joining"
   const showButtons = phase.s === "idle" || phase.s === "cancelled" || phase.s === "error"
+  const authHere = nearAuthAvailable()
 
   return (
     <section aria-labelledby="own-account" className="flex flex-col gap-4">
       <h2 id="own-account" className="text-[0.9375rem] font-medium text-ink">Join with your own NEAR account</h2>
       {showButtons && (
         <div className="flex flex-col gap-3">
-          <Option variant="ink" icon={<Fingerprint className="size-5" />} title="Continue with email, passkey or Google" sub="NEAR Auth · no wallet or seed phrase" onClick={startNearAuth} disabled={busy} />
-          <Option variant="line" icon={<Wallet className="size-5" />} title="Connect a NEAR wallet" sub="NEAR Connect · Meteor, Intear, Nightly, MyNearWallet, Ledger… on testnet" onClick={startWallet} disabled={busy} />
+          <Option variant="line" icon={<Fingerprint className="size-5" />} title="Continue with email, passkey or Google" sub="NEAR Auth · no wallet or seed phrase" onClick={startNearAuth} disabled={busy || !authHere} />
+          {!authHere && (
+            <p className="-mt-1 text-[0.8125rem] leading-relaxed text-muted-foreground">
+              NEAR Auth's shared testnet login accepts only <code className="font-mono">localhost:3000</code>, so it runs from a local build for now. This
+              domain needs its own NEAR Auth client.
+            </p>
+          )}
+          <Option variant="line" icon={<Wallet className="size-5" />} title="Connect a NEAR wallet" sub="NEAR Connect · Meteor, Intear, Nightly and more, on testnet" onClick={startWallet} disabled={busy} />
         </div>
       )}
 
@@ -69,7 +77,9 @@ export function SignInOptions({ onEnter }: { onEnter: () => void }) {
           </div>
         )}
         {phase.s === "cancelled" && (
-          <p className="border-l-2 border-ink bg-band px-5 py-3 text-[0.9375rem] text-ink">Cancelled. Nothing was signed and no key was added.</p>
+          <p className="border-l-2 border-ink bg-band px-5 py-3 text-[0.9375rem] text-ink">
+            {phase.timedOut ? "The NEAR Auth window timed out." : "Cancelled."} Nothing was signed and no key was added. You can start again.
+          </p>
         )}
         {phase.s === "error" && <ErrorState error={phase.error} title="You were not added." className="bg-white" onRetry={reset} />}
         {phase.s === "done" && (
@@ -87,6 +97,12 @@ export function SignInOptions({ onEnter }: { onEnter: () => void }) {
                 <dt className="text-[0.8125rem] font-medium tracking-[0.02em] text-muted-foreground uppercase">Key added</dt>
                 <dd><TxLink tx={phase.result.tx.hash} /></dd>
               </div>
+              {phase.relayTx && (
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[0.8125rem] font-medium tracking-[0.02em] text-muted-foreground uppercase">NEAR Auth signature</dt>
+                  <dd><TxLink tx={phase.relayTx} /></dd>
+                </div>
+              )}
               <div className="flex flex-col gap-1 sm:col-span-2">
                 <dt className="text-[0.8125rem] font-medium tracking-[0.02em] text-muted-foreground uppercase">Slot id</dt>
                 <dd><HashValue value={phase.result.slot} head={14} tail={8} /></dd>

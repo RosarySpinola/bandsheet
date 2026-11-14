@@ -17,8 +17,8 @@ export type JoinPhase =
   | { s: "auth-approving"; account: NearAuthAccount }
   | { s: "wallet" }
   | { s: "joining"; via: Method; account: string }
-  | { s: "done"; via: Method; result: JoinResult }
-  | { s: "cancelled"; via: Method }
+  | { s: "done"; via: Method; result: JoinResult; relayTx?: string }
+  | { s: "cancelled"; via: Method; timedOut: boolean }
   | { s: "error"; via: Method; error: unknown }
 
 const newKey = async (): Promise<MemberKey> => (await nearLib()).generateMemberKey()
@@ -39,19 +39,19 @@ export function useAccountJoin() {
     void getConnector().catch(() => undefined)
   }, [])
 
-  const finish = useCallback(async (via: Method, account: string, claim: Parameters<typeof joinWithAccount>[0], k: MemberKey, walletId?: string) => {
+  const finish = useCallback(async (via: Method, account: string, claim: Parameters<typeof joinWithAccount>[0] & { relayTx?: string }, k: MemberKey, walletId?: string) => {
     setPhase({ s: "joining", via, account })
     const result = await joinWithAccount(claim, k.publicKey, via)
     setMember({ invite: { account_id: CONTRACT, contract_id: CONTRACT, private_key: k.privateKey }, slot: result.slot, publicKey: k.publicKey, demo: false, joinedAt: Date.now() })
     setIdentity({ account_id: result.account_id, method: via, public_key: claim.public_key, wallet_id: walletId, slot: result.slot })
-    setPhase({ s: "done", via, result })
+    setPhase({ s: "done", via, result, relayTx: claim.relayTx })
   }, [])
 
   /** Closing a popup or declining in the wallet is a cancel, not an error; a blocked popup stays an error. */
   const fail = (via: Method, error: unknown) => {
     const msg = String((error as Error)?.message ?? error)
     const cancel = error instanceof WalletCancelled || /popup closed|cancelled|user rejected|access_denied|timeout/i.test(msg)
-    setPhase(cancel ? { s: "cancelled", via } : { s: "error", via, error })
+    setPhase(cancel ? { s: "cancelled", via, timedOut: /timeout/i.test(msg) } : { s: "error", via, error })
   }
 
   /** Step 1 of NEAR Auth: sign in (popup), then prepare the statement for the approve click. */

@@ -8,7 +8,7 @@ import { approveStatement, prepareStatement, type PreparedStatement } from "./ne
 import { WalletCancelled, walletSignStatement } from "./near-connect"
 
 /** The ciphertext JSON exactly as the contract stores it (submission key order, compact), so anyone can match the hash on chain. */
-export const storedText = (c: Ciphertext) => JSON.stringify({ epk: c.epk, nonce: c.nonce, ct: c.ct })
+const storedText = (c: Ciphertext) => JSON.stringify({ epk: c.epk, nonce: c.nonce, ct: c.ct })
 
 type State =
   | { s: "idle" }

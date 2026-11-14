@@ -11,11 +11,21 @@ import { getNonce, relayNearAuth, statementText, type Purpose, type SignedClaim 
  * `bandsheet_join|bandsheet_entry` to the unit, with args {message, nonce}, access-key nonce 0 and an all-zero block
  * hash. It can never be included on chain; the server re-encodes it and verifies the MPC signature over it.
  */
+const SHARED_TESTNET_CLIENT = "np8paqIpMWmNbzT4xAvOOapZBjsOpptl"
+const OWN_CLIENT: string | undefined = import.meta.env.VITE_NEAR_AUTH_CLIENT_ID
+
 export const NEAR_AUTH = {
-  clientId: "np8paqIpMWmNbzT4xAvOOapZBjsOpptl",
+  clientId: OWN_CLIENT || SHARED_TESTNET_CLIENT,
   contractId: "fast-auth.testnet",
   mpcContractId: "v1.signer-prod.testnet",
 } as const
+
+/**
+ * The shared testnet Auth0 client accepts only http://localhost:3000 as its callback (probed 14 Nov 2026: every other
+ * origin, *.pages.dev included, gets "Callback URL mismatch"). A deployed domain needs its own client in the NEAR Auth
+ * tenant, passed as VITE_NEAR_AUTH_CLIENT_ID.
+ */
+export const nearAuthAvailable = (): boolean => Boolean(OWN_CLIENT) || window.location.origin === "http://localhost:3000"
 
 const METHOD: Record<Purpose, string> = { join: "bandsheet_join", entry: "bandsheet_entry" }
 
@@ -28,9 +38,14 @@ let ready: Libs | null = null
 
 /** Load the SDK ahead of the click, so the Auth0 popup opens inside the user's gesture and is not blocked. */
 export function preloadNearAuth(): Promise<Libs> {
+  // near-api-js v5 (the FastAuth provider's dependency) reads the Node `global` object at load time.
+  ;(globalThis as { global?: unknown }).global ??= globalThis
   libs ??= Promise.all([import("@fast-auth-near/javascript-provider"), import("near-api-js-v5")]).then(([p, near]) => {
     ready = { provider: new p.JavascriptProvider({ network: "testnet", clientId: NEAR_AUTH.clientId }), near }
     return ready
+  })
+  libs.catch(() => {
+    libs = null
   })
   return libs
 }

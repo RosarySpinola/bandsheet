@@ -64,7 +64,7 @@ export function WalletSeat({ proposals }: { proposals: DaoProposal[] }) {
   const seat = conn && council.data ? council.data.includes(conn.accountId) : null
 
   return (
-    <section aria-labelledby="wallet-seat" className="-mt-4 flex flex-col gap-4 border-y border-border py-5 md:-mt-8">
+    <section aria-labelledby="wallet-seat" className="-mt-4 flex flex-col gap-4 border-b border-border pb-6 md:-mt-8">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
         <div className="flex min-w-0 flex-col gap-1">
           <h2 id="wallet-seat" className="text-[1rem] font-semibold text-ink">Hold a council seat? Vote from your own wallet.</h2>
