@@ -69,6 +69,8 @@ interface RpcReply {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const errText = (e: RpcReply["error"]) => JSON.stringify(e?.data ?? e?.cause?.name ?? e?.message ?? "rejected").slice(0, 240);
 /** "Not decided yet" answers: the provider gave up waiting (dRPC's free plan does) or the tx is not indexed yet. */
+/** A JSON-RPC rate limit inside a 200 reply: try the next RPC, nothing was decided. */
+const limited = (e: RpcReply["error"]) => /-429|429|rate.?limit|too many/i.test(JSON.stringify(e ?? {}));
 const pending = (e: RpcReply["error"]) => /timeout|TIMEOUT|UNKNOWN_TRANSACTION|not found|doesn't exist|does not exist/i.test(JSON.stringify(e ?? {}));
 
 /** Hash of a signed transaction: sha256 of its Transaction bytes (the trailing 65 bytes are the ed25519 signature). */
@@ -108,6 +110,10 @@ export function createBroadcast(urls: readonly string[], fetchFn: typeof fetch =
     for (const url of urls) {
       try {
         const r = await call(url, "send_tx", { signed_tx_base64: b64, wait_until: "NONE" });
+        if (limited(r.error)) {
+          last = "rate limited";
+          continue;
+        }
         if (r.result || pending(r.error)) {
           accepted = true;
           break;
@@ -123,7 +129,7 @@ export function createBroadcast(urls: readonly string[], fetchFn: typeof fetch =
         try {
           const r = await call(url, "tx", { tx_hash: hash, sender_account_id: signer, wait_until: "EXECUTED_OPTIMISTIC" });
           if (r.result?.receipts_outcome) return outcomeOf(r.result);
-          if (r.error && !pending(r.error)) return { hash, ok: false, error: errText(r.error), value: undefined };
+          if (r.error && !pending(r.error) && !limited(r.error)) return { hash, ok: false, error: errText(r.error), value: undefined };
         } catch {
           // rate limit or transport error: try the next RPC
         }

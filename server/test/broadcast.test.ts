@@ -45,6 +45,20 @@ describe("createBroadcast", () => {
     expect(r.calls.filter((c) => c === "send_tx")).toHaveLength(1);
   });
 
+  it("a rate-limited RPC (429 inside a 200 reply) passes the submit to the next one", async () => {
+    const t = await signedSubmit();
+    const sent: string[] = [];
+    const f = (async (url: string, init: RequestInit) => {
+      const { method } = JSON.parse(String(init.body)) as { method: string };
+      sent.push(`${url} ${method}`);
+      const body = url === "https://a.test" ? { error: { code: -429, message: "Too Many Requests" } } : method === "send_tx" ? { result: { final_execution_status: "NONE" } } : success(t.hash);
+      return new Response(JSON.stringify(body), { status: 200 });
+    }) as unknown as typeof fetch;
+    const out = await createBroadcast(["https://a.test", "https://b.test"], f, 1)(t.bytes);
+    expect(out).toMatchObject({ ok: true, hash: t.hash });
+    expect(sent.slice(0, 2)).toEqual(["https://a.test send_tx", "https://b.test send_tx"]);
+  });
+
   it("an invalid transaction is a definite refusal and is not polled", async () => {
     const t = await signedSubmit();
     const r = rpc({ send_tx: [{ error: { name: "HANDLER_ERROR", data: { TxExecutionError: { InvalidTxError: "InvalidNonce" } } } }] });
