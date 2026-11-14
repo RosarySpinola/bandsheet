@@ -27,9 +27,12 @@ const SAMPLES: { path: string; name: string; kind: SampleKind; title: string; no
 ]
 
 const ALARM = new Set(["ATTESTATION_FAILED"])
+/** Limits that a retry cannot clear: the demo's spend cap and the chapel's monthly read allowance. */
+const NO_RETRY = new Set(["SPEND_CAP", "MONTHLY_READS"])
 const TITLES: Record<string, string> = {
   ATTESTATION_FAILED: "Attestation failed. Your payslip was never sent.",
   SPEND_CAP: "The reading budget for this demo is used up",
+  MONTHLY_READS: "This month's payslip reads are used up",
   EXTRACT_UNREADABLE: "The payslip could not be read",
 }
 
@@ -108,7 +111,7 @@ export function StepUpload({ flow }: { flow: SubmitFlow }) {
           error={ex.error}
           tone={ALARM.has(plainError(ex.error).code) ? "alarm" : "calm"}
           title={TITLES[plainError(ex.error).code]}
-          onRetry={plainError(ex.error).code === "SPEND_CAP" ? undefined : () => flow.file && flow.runExtract(flow.file, flow.sample)}
+          onRetry={NO_RETRY.has(plainError(ex.error).code) ? undefined : () => flow.file && flow.runExtract(flow.file, flow.sample)}
         >
           <CtaButton onClick={() => flow.go(3)} className="w-fit">
             Enter the figures by hand instead

@@ -19,7 +19,7 @@ const ROWS: [string, boolean | string, boolean | string][] = [
 
 const FAQ = [
   ["What counts as usage?", "One payslip read inside NEAR AI Cloud's enclave. Releases, votes, refusals and letters are not metered."],
-  ["What happens at the limit?", "New payslip reads pause until the next month. Members can still type their figures in, and releases keep working."],
+  ["What happens at the limit?", "The 2,001st payslip read in a calendar month is refused, and reading starts again on the 1st (UTC). Members can still type their figures in, and releases keep working."],
   ["Who pays?", "The union or committee, never the member. A member only ever needs the one-purpose key their committee gives them."],
   ["Is there a judges' code?", "Not needed. The demo unit runs on NEAR testnet with synthetic data, and every feature is open without paying."],
   ["How do we switch plans?", "Write to us and we move the unit across. The contract, the ledger and the release history stay exactly where they are."],

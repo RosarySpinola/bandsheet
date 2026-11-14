@@ -134,6 +134,8 @@ export function extractRoutes(deps: Deps): Hono {
       throw new AppError(415, "upload a PNG, JPEG, WebP, PDF or .eml payslip", "UNSUPPORTED_TYPE");
     }
 
+    // Chapel plan limit: one read per accepted upload, counted in the spend ledger before NEAR AI is called.
+    await deps.guard.takeRead();
     const chat = await deps.chat({ model, messages, max_tokens: model === deps.config.textModel ? 1200 : 400, temperature: 0, estimatedInputTokens, ...(model === deps.config.textModel ? { reasoning_effort: "low" as const } : {}) });
     let parsed;
     try {

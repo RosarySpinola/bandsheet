@@ -1,5 +1,5 @@
 import { SpendCapError } from "./errors";
-import type { LedgerEntry, LedgerStore } from "./spend";
+import { type LedgerEntry, type LedgerStore, READ_KIND } from "./spend";
 
 /** The slice of Cloudflare D1 we use, so the Node build needs no Workers types. */
 export interface D1Like {
@@ -15,12 +15,26 @@ export class D1LedgerStore implements LedgerStore {
   async totals(): Promise<{ total_usd: number; calls: number }> {
     try {
       const row = await this.db
-        .prepare("SELECT COALESCE(SUM(cost_usd), 0) AS total_usd, COUNT(*) AS calls FROM spend_ledger")
-        .bind()
+        .prepare("SELECT COALESCE(SUM(cost_usd), 0) AS total_usd, COALESCE(SUM(kind <> ?), 0) AS calls FROM spend_ledger")
+        .bind(READ_KIND)
         .first<{ total_usd: number; calls: number }>();
       const total = Number(row?.total_usd);
       if (!row || !Number.isFinite(total)) throw new Error("bad row");
       return { total_usd: total, calls: Number(row.calls) };
+    } catch {
+      throw new SpendCapError("spend ledger unreadable; refusing (fail closed)");
+    }
+  }
+
+  async countSince(kind: string, sinceIso: string): Promise<number> {
+    try {
+      const row = await this.db
+        .prepare("SELECT COUNT(*) AS n FROM spend_ledger WHERE kind = ? AND ts >= ?")
+        .bind(kind, sinceIso)
+        .first<{ n: number }>();
+      const n = Number(row?.n);
+      if (!row || !Number.isInteger(n)) throw new Error("bad row");
+      return n;
     } catch {
       throw new SpendCapError("spend ledger unreadable; refusing (fail closed)");
     }

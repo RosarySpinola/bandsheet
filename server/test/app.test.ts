@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../src/app";
 import type { Deps } from "../src/deps";
@@ -93,6 +94,19 @@ describe("POST /api/extract", () => {
     const { app } = makeApp("", { chat: async () => { throw new SpendCapError(); } });
     const res = await app.request("/api/extract", upload(png, "image/png", "p.png"));
     expect([res.status, await res.json()]).toEqual([402, { error: "spend cap reached", code: "SPEND_CAP" }]);
+  });
+  it("refuses a read past the chapel's monthly limit with 429 MONTHLY_READS, before NEAR AI is called", async () => {
+    const path = join(mkdtempSync(join(tmpdir(), "reads-")), ".spend.json");
+    const guard = new SpendGuard({ path, getPrice: async () => ({ prompt: 0, completion: 0 }), monthlyReads: 1 });
+    const { app, calls } = makeApp(modelJson, { guard });
+    expect((await app.request("/api/extract", upload(png, "image/png", "p.png"))).status).toBe(200);
+    const res = await app.request("/api/extract", upload(png, "image/png", "p.png"));
+    expect([res.status, await res.json()]).toEqual([429, { error: "this chapel has used its 1 payslip reads for the month", code: "MONTHLY_READS" }]);
+    expect(calls).toHaveLength(1);
+    // A rejected upload (bad type) is not a read and does not use the quota.
+    expect((await app.request("/api/extract", upload(Buffer.from("x"), "text/plain", "x.txt"))).status).toBe(415);
+    const health = await (await app.request("/api/health")).json();
+    expect(health.payslip_reads).toMatchObject({ used_this_month: 1, monthly_limit: 1 });
   });
   it("never leaks internal errors", async () => {
     const { app } = makeApp("", { chat: async () => { throw new Error("secret stack detail"); } });

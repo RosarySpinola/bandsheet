@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { SpendCapError } from "../src/errors";
-import { SPEND_CAP_USD, SpendGuard } from "../src/spend";
+import { MONTHLY_READS, SPEND_CAP_USD, SpendGuard } from "../src/spend";
 
 const price = async () => ({ prompt: 0.00000015, completion: 0.00000055 });
 const newGuard = (seedTotal?: number) => {
@@ -61,6 +61,30 @@ describe("spend guard", () => {
     const { guard, path } = newGuard();
     writeFileSync(path, "{not json");
     await expect(guard.call("m", "chat", { inputTokens: 1, maxOutputTokens: 1 }, async () => ({}))).rejects.toMatchObject({ code: "SPEND_CAP" });
+  });
+
+  it("allows 2,000 payslip reads a month by default", async () => {
+    expect(MONTHLY_READS).toBe(2000);
+    const { guard } = newGuard(0);
+    expect(await guard.reads(new Date("2026-11-14T10:00:00Z"))).toEqual({ used: 0, limit: 2000, since: "2026-11-01T00:00:00.000Z" });
+  });
+
+  it("refuses the read past the monthly limit with 429 MONTHLY_READS, and starts again next month", async () => {
+    const path = join(mkdtempSync(join(tmpdir(), "spend-")), ".spend.json");
+    const guard = new SpendGuard({ path, getPrice: price, monthlyReads: 2 });
+    const nov = new Date("2026-11-30T23:59:00Z");
+    await guard.takeRead(new Date("2026-10-31T23:59:59Z")); // last month: does not count toward November
+    await guard.takeRead(nov);
+    await guard.takeRead(nov);
+    const err = await guard.takeRead(nov).catch((e) => e);
+    expect(err.status).toBe(429);
+    expect(err.body()).toEqual({ error: "this chapel has used its 2 payslip reads for the month", code: "MONTHLY_READS" });
+    expect((await guard.reads(nov)).used).toBe(2);
+    await expect(guard.takeRead(new Date("2026-12-01T00:00:00Z"))).resolves.toBeUndefined();
+    // Read markers cost nothing and are not counted as NEAR AI calls.
+    expect(await guard.summary()).toMatchObject({ total_usd: 0, calls: 0 });
+    const kinds = JSON.parse(readFileSync(path, "utf8")).entries.map((e: { kind: string }) => e.kind);
+    expect(kinds).toEqual(["read", "read", "read", "read"]);
   });
 
   it("serialises concurrent calls so in-flight projections count toward the cap", async () => {

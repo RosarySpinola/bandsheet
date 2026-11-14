@@ -1,9 +1,17 @@
 import { existsSync } from "node:fs";
 import { readFile, rename, writeFile } from "node:fs/promises";
-import { SpendCapError } from "./errors";
+import { AppError, SpendCapError } from "./errors";
 
 /** Hard cap for the whole project (USD). Refuse any NEAR AI call that would reach it. */
 export const SPEND_CAP_USD = 2.5;
+
+/** Chapel plan: payslip reads (POST /api/extract) per calendar month (UTC) for this deployment. */
+export const MONTHLY_READS = 2000;
+/** Ledger kind for one payslip read: a zero-cost marker row. The NEAR AI calls it makes are their own rows. */
+export const READ_KIND = "read";
+
+/** First instant of the UTC calendar month containing `d`, as the ISO string the ledger stores. */
+export const monthStart = (d: Date): string => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString();
 
 export interface Price {
   /** USD per input token */
@@ -41,8 +49,10 @@ export interface Projection {
 
 /** Where ledger rows live. The Node file store is the default; spend-d1.ts supplies a Cloudflare D1 one. */
 export interface LedgerStore {
-  /** Sum and count of every recorded call. Must throw SpendCapError when the ledger cannot be read (fail closed). */
+  /** Sum of every row and count of NEAR AI calls (read markers excluded). Must throw SpendCapError when unreadable (fail closed). */
   totals(): Promise<{ total_usd: number; calls: number }>;
+  /** Rows of `kind` at or after `sinceIso`. Must throw SpendCapError when unreadable (fail closed). */
+  countSince(kind: string, sinceIso: string): Promise<number>;
   append(entry: LedgerEntry): Promise<void>;
 }
 
@@ -63,7 +73,11 @@ export class FileLedgerStore implements LedgerStore {
 
   async totals(): Promise<{ total_usd: number; calls: number }> {
     const l = await this.read();
-    return { total_usd: l.entries.reduce((s, e) => s + e.cost_usd, 0), calls: l.entries.length };
+    return { total_usd: l.entries.reduce((s, e) => s + e.cost_usd, 0), calls: l.entries.filter((e) => e.kind !== READ_KIND).length };
+  }
+
+  async countSince(kind: string, sinceIso: string): Promise<number> {
+    return (await this.read()).entries.filter((e) => e.kind === kind && e.ts >= sinceIso).length;
   }
 
   async append(entry: LedgerEntry): Promise<void> {
@@ -81,6 +95,8 @@ export interface GuardOptions {
   store?: LedgerStore;
   getPrice: PriceFn;
   cap?: number;
+  /** Payslip reads allowed per UTC month (default MONTHLY_READS). */
+  monthlyReads?: number;
 }
 
 /**
@@ -90,6 +106,7 @@ export interface GuardOptions {
  */
 export class SpendGuard {
   private readonly cap: number;
+  private readonly readLimit: number;
   private pending = 0;
   private chain: Promise<unknown> = Promise.resolve();
 
@@ -97,6 +114,7 @@ export class SpendGuard {
 
   constructor(private readonly opts: GuardOptions) {
     this.cap = opts.cap ?? SPEND_CAP_USD;
+    this.readLimit = opts.monthlyReads ?? MONTHLY_READS;
     if (!opts.store && !opts.path) throw new Error("SpendGuard needs a store or a path");
     this.store = opts.store ?? new FileLedgerStore(opts.path as string);
   }
@@ -113,6 +131,26 @@ export class SpendGuard {
 
   async summary(): Promise<{ total_usd: number; calls: number; cap_usd: number }> {
     return { ...(await this.store.totals()), cap_usd: this.cap };
+  }
+
+  /** Payslip reads used this UTC month against the plan limit. */
+  async reads(now = new Date()): Promise<{ used: number; limit: number; since: string }> {
+    const since = monthStart(now);
+    return { used: await this.store.countSince(READ_KIND, since), limit: this.readLimit, since };
+  }
+
+  /**
+   * Count one payslip read against the month, or refuse with 429 MONTHLY_READS once the month is used up.
+   * Serialised with the spend checks so concurrent reads in one isolate cannot both take the last slot.
+   */
+  async takeRead(now = new Date()): Promise<void> {
+    await this.serial(async () => {
+      const { used, limit } = await this.reads(now);
+      if (used >= limit) {
+        throw new AppError(429, `this chapel has used its ${limit.toLocaleString("en-IE")} payslip reads for the month`, "MONTHLY_READS");
+      }
+      await this.store.append({ ts: now.toISOString(), model: "-", kind: READ_KIND, prompt_tokens: 0, completion_tokens: 0, cost_usd: 0 });
+    });
   }
 
   private async project(model: string, p: Projection): Promise<number> {

@@ -18,12 +18,14 @@ export function createApp(deps: Deps): Hono {
 
   app.get("/api/health", async (c) => {
     const spend = await deps.guard.summary().catch(() => undefined);
+    const reads = await deps.guard.reads().catch(() => undefined);
     return c.json({
       ok: true,
       live: deps.config.hasKey,
       contract: deps.config.contract ?? null,
       models: { vision: deps.config.visionModel, text: deps.config.textModel },
       spend: spend ?? null,
+      payslip_reads: reads ? { used_this_month: reads.used, monthly_limit: reads.limit, month_from: reads.since } : null,
     });
   });
   // Write endpoints share one bucket (10/min/IP). The AI routes cost money, so they get their own.

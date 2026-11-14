@@ -19,6 +19,7 @@ export class ApiError extends Error {
 
 const PLAIN: Record<string, string> = {
   SPEND_CAP: "The demo's NEAR AI Cloud budget is used up, so nothing more can be read for now. Nothing was sent.",
+  MONTHLY_READS: "This chapel has used its 2,000 payslip reads for the month. Reading starts again on the 1st; until then, enter your figures by hand. Nothing was sent.",
   ATTESTATION_FAILED: "NEAR AI Cloud's enclave could not prove what it is, so your payslip was never sent to it.",
   EML_NO_TEXT: "This email has no payslip text in it. Upload the payslip email itself, not a forward or a reply.",
   EML_UNREADABLE: "This email could not be read. Upload the .eml file exactly as your payroll system sent it.",
