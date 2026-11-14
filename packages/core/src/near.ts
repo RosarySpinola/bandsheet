@@ -127,7 +127,8 @@ export async function signSubmitTx(
   opts: SubmitOptions = {},
 ): Promise<{ signedTxB64: string; ctText: string }> {
   const body = CiphertextSchema.parse(ciphertext);
-  const provider = opts.provider ?? makeProvider([invite.rpcUrl]);
+  // Every testnet RPC with failover: a single public endpoint answering 429 (no CORS headers) reads as "Failed to fetch".
+  const provider = opts.provider ?? makeProvider();
   const account = new Account(invite.accountId, provider, invite.privateKey);
   const signed = await account.createSignedTransaction({
     receiverId: invite.contractId,
