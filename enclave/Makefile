@@ -1,4 +1,4 @@
-.PHONY: test evaluate build vectors
+.PHONY: test evaluate build vectors fixtures crosscheck
 # Unit, hero, module and cross-language tests.
 test:
 	cargo test --release --locked
@@ -15,3 +15,11 @@ build:
 # Regenerate the TypeScript-made vector (then `make test` checks Rust against it).
 vectors:
 	node test-vectors/crosscheck.mjs write
+
+# Regenerate the DKIM payslip fixtures (fixtures/dkim). Keys live in keys/dkim/ and are kept if present.
+fixtures:
+	node scripts/dkim-fixtures.mjs
+
+# Independent check of the fixtures with dkimpy: DKIMPY_PYTHON=<python with dkimpy installed> make crosscheck
+crosscheck:
+	$${DKIMPY_PYTHON:-python3} -I scripts/dkim-crosscheck.py

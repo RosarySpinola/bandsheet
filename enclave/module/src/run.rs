@@ -5,6 +5,7 @@
 
 use crate::crypto::{self, CryptoError, Envelope, INFO_ENTRY, INFO_HISTORY};
 use crate::entry;
+use crate::gate;
 use crate::keys::{self, EnclaveKey};
 use bandsheet_audit::{release, History, Query, ReleaseResult};
 use base64::{engine::general_purpose::STANDARD, Engine};
@@ -12,13 +13,21 @@ use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 
+/// Reported on the legacy path, unchanged, so old releases replay byte for byte.
 pub const ENGINE: &str = "bandsheet-enclave/0.1.0";
+/// Reported when the policy requires DKIM.
+pub const ENGINE_DKIM: &str = "bandsheet-enclave/0.2.0+dkim";
 const MAX_ENTRIES: usize = 500;
 const MAX_K: usize = 50;
 
 #[derive(Deserialize)]
 struct Policy {
     k: usize,
+    /// Only read when `require_dkim` is true; ignored (and not validated) otherwise.
+    #[serde(default)]
+    trusted_issuers: Vec<gate::IssuerIn>,
+    #[serde(default)]
+    require_dkim: bool,
 }
 
 #[derive(Deserialize)]
@@ -83,7 +92,8 @@ fn run(raw: &[u8], env: &dyn Fn(&str) -> Option<String>) -> Result<Value, Value>
 }
 
 fn release_op(raw: &[u8], input: Input, key: &EnclaveKey) -> Result<Value, Value> {
-    let k = input.policy.ok_or_else(|| error("E_INPUT", "policy is required"))?.k;
+    let policy = input.policy.ok_or_else(|| error("E_INPUT", "policy is required"))?;
+    let k = policy.k;
     let query = input.query.ok_or_else(|| error("E_INPUT", "query is required"))?;
     if !(2..=MAX_K).contains(&k) {
         return Err(error("E_INPUT", format!("policy.k must be between 2 and {MAX_K}")));
@@ -102,7 +112,7 @@ fn release_op(raw: &[u8], input: Input, key: &EnclaveKey) -> Result<Value, Value
     };
 
     let mut rejected: std::collections::BTreeMap<&'static str, u32> = Default::default();
-    let mut parsed = Vec::new();
+    let mut parsed: Vec<entry::Entry> = Vec::new();
     for v in &input.entries {
         let plain = envelope(v).and_then(|e| crypto::open(INFO_ENTRY, &key.secret, &e));
         match plain {
@@ -113,13 +123,21 @@ fn release_op(raw: &[u8], input: Input, key: &EnclaveKey) -> Result<Value, Value
             },
         }
     }
+    let mut dkim = None;
+    if policy.require_dkim {
+        let issuers = gate::load_issuers(&policy.trusted_issuers).map_err(|m| error("E_INPUT", m))?;
+        let outcome = gate::apply(parsed, &issuers);
+        parsed = outcome.entries;
+        dkim = Some((outcome.rejections, outcome.superseded));
+    }
     let (members, superseded) = entry::latest_per_slot(parsed);
+    let superseded = superseded + dkim.as_ref().map_or(0, |d| d.1);
 
     let result = release(k, &query, &members, &history).map_err(|e| match e {
         bandsheet_audit::AuditError::BadQuery(m) => error("E_QUERY", m),
         bandsheet_audit::AuditError::BadHistory(m) => error("E_HISTORY", m),
     })?;
-    build_output(raw, query.id, result, key, members.len(), superseded, &rejected)
+    build_output(raw, query.id, result, key, members.len(), superseded, &rejected, dkim.map(|d| d.0))
 }
 
 fn build_output(
@@ -130,6 +148,7 @@ fn build_output(
     used: usize,
     superseded: usize,
     rejected: &std::collections::BTreeMap<&'static str, u32>,
+    dkim: Option<std::collections::BTreeMap<&'static str, u32>>,
 ) -> Result<Value, Value> {
     let history_json = serde_json::to_vec(&r.history).map_err(|e| error("E_INTERNAL", e))?;
     let sealed = crypto::seal(INFO_HISTORY, &key.public, &history_json).map_err(|e| error("E_INTERNAL", e))?;
@@ -143,7 +162,15 @@ fn build_output(
     body.insert("entries_used".into(), json!(used));
     body.insert("entries_superseded".into(), json!(superseded));
     body.insert("entries_rejected".into(), json!(rejected));
-    body.insert("engine".into(), json!(ENGINE));
+    match dkim {
+        None => body.insert("engine".into(), json!(ENGINE)),
+        Some(rej) => {
+            let list: Vec<Value> = rej.iter().map(|(reason, count)| json!({"reason": reason, "count": count})).collect();
+            body.insert("rejections".into(), Value::Array(list));
+            body.insert("entries_verified".into(), json!(used));
+            body.insert("engine".into(), json!(ENGINE_DKIM))
+        }
+    };
     let hash = output_hash(&body);
     body.insert("output_hash".into(), json!(hash));
     Ok(Value::Object(body))

@@ -17,7 +17,9 @@ Poly1305 tag. `epk` is the sender's ephemeral X25519 public key (32 bytes). The 
 
 In the enclave input an entry (and the history) may be that JSON object, or a base64 string of that JSON.
 
-Entry plaintext: UTF-8 JSON `{"slot","gross_annual_eur","grade","gender","site","submitted_at"}`.
+Entry plaintext: UTF-8 JSON `{"slot","gross_annual_eur","grade","gender","site","submitted_at"}` plus optional `"eml_b64"`
+(the raw payslip email; verified inside the enclave when the policy sets `require_dkim`, see README). The email travels only
+inside the sealed entry, so the server and the chain never see it.
 The history blob is opaque to everyone except the enclave (it is encrypted to the enclave's own public
 key); pass `output.history` back as `input.history` unchanged. It contains membership bitmaps and
 group labels only, never a pay value.

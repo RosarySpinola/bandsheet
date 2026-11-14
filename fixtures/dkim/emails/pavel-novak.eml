@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=BawPJ7uK4luRd5vI3/D/ifvCMk4SmgPuTLK9NezXLjg=;
+	b=dfg9V/HI5nFT7RX/nJwkEftoA0Kkr9b8/hN0r+KbgIKUlfijIJxBJDSEQddQ5W/G
+	V3x3IdThbAeAKNuAOS9AHHjmCbnUuEGlQziT8GjtXqy4LLRfFRp+vqrxCpxC78dR
+	hF/HIdLSbb6wlkmkWl2LBcI6lfl+RNCWQWstFXf2Z+DUQUgI97IfEXBbPZgj9ukQ
+	LAVO0FDTIL8c7Wm+sN0zWOk4VrcUNAj9TzzsU2DwQLSdZQkCfpn6iYK/TLoVlL82
+	nBy5xJJ3JtF70bR4xITEZkHUYKQzx7o2SSCW7z3QxQ4v/URhzy87GadNpErQc0WD
+	iAJ8y13uKx0bDU7s5DIgoQ==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Pavel Novak <pavel.novak@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-9088-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Pavel Novak,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-9088
+Grade: Senior
+Period: 2026-10
+Gross pay (month): EUR 5,425.00
+
+Harbour Courier Payroll (synthetic demo data)

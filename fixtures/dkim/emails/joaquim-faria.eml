@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=w7kqZ3858FNgCxAu6DjwozqviQL7QJz0Bg63B5/ovtE=;
+	b=u+BXQGxvr90OhpjxcS4SmAO9wtTypfPNgV6GEJvNDm8NVBtIvXzS6MGzcVjsmUjh
+	sSh5CHVdg96AseQwjjeJzhELKVIqSRh0zc0gX5uaoNfdRXJhf9jP5pTdQPXZWYaO
+	b6aOpJRNHNHChXLU2DmSENdsI1iNrYcLDqj3dCAm0X9hlbddWysVINJ/y3vlU37Y
+	3GUSqoUurPudqedSMH7T+SNBcnbyLO5vtAMhkHyXnuqJFq0BukOcRdG7vYlIwd/p
+	j4GaHKY90/XR6vxxIzPBr4UFlWEIZMgBuQcekwSc6HllGMSJPzIbodCXVuqmHerJ
+	J2OvbgCrefeIyyZkkSw8yg==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Joaquim Faria <joaquim.faria@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-5573-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Joaquim Faria,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-5573
+Grade: Senior
+Period: 2026-10
+Gross pay (month): EUR 5,400.00
+
+Harbour Courier Payroll (synthetic demo data)

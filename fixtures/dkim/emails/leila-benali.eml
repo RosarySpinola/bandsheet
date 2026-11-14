@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=Ti7mcqCPqH/9XL3Sl3jQK/gO3fGwNSNYY/vAvSAkW90=;
+	b=bR2q6bg3g3jD4gbXUg4p48QvLOnFPO1cLQIVaMgamQZ9qb2uuTGZGaXFL7X+fRmG
+	gIZ6WLpI8NqfYycvXmkWFUWTHnMW75Dt/i5guokikiHFUGEzLrQ4ekyhcRXJJqGf
+	8R8L1eqDSjaJYVVa2iHPiYSJKuqfc1JeSdWLWOY4n+mzrMDQxxctGOrIL2geM77W
+	4tlY/QUnYrKUUyWRyKiTfGyUxWV7/pXH8ZOsCrsq1j++2MqglIG7v8TDiiIWelYi
+	E/LE1EoJlb464ctUqKdtBzn8K5tdSicdsccM9LpOdWSaUMUD7vRimiHBPb75tIZ1
+	pGmNNY+P/9f8fX191EUarg==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Leila Benali <leila.benali@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-8407-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Leila Benali,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-8407
+Grade: Reporter
+Period: 2026-10
+Gross pay (month): EUR 3,433.33
+
+Harbour Courier Payroll (synthetic demo data)

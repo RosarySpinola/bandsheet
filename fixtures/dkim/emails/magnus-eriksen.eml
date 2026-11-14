@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=/hpaus5TXQBseHI9v2ij7aPHsRPhJ0gEO5aLwL9qKW4=;
+	b=SWc+rk2ZeYvON+EVm8nSn3xKvY52FJldYGG2dHcxJ8zrOxMvkKrxXDhvJRMG4DmG
+	hyqVnMOnK4E8snWFpDZETqQHhP9Qa00XmY+cSTlUut74tr4iRs0nJGoX2IZPZR80
+	x7B+N0bEo/cyB6IDlWPPG0kxyPjThYP4ZAyj0kL0lP9dY8/DzyiOYDRBeS32qDLG
+	FIbdp5vmx9nkN3ozgj0D6ReICpLsYGKJhZnDtfaz3l62c3Sfqy1PYAnspHtDABjC
+	4dhR/tDWlfFEdjBFeew2LLGuIkDSCl0XyWs4UvQNWnsxzjasAq0mzrlpqKtnsOxu
+	dpKfU2Ue3A/k4noMXkdocQ==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Magnus Eriksen <magnus.eriksen@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-3523-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Magnus Eriksen,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-3523
+Grade: Chief
+Period: 2026-10
+Gross pay (month): EUR 9,791.67
+
+Harbour Courier Payroll (synthetic demo data)

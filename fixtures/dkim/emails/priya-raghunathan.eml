@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=uGQx/mFV4qqAUoPKozRRhCVevOtS4cEZTOGTShH+Fnw=;
+	b=BIxVntoZjh3b47lh6TAhDHZYchOXLiGG92z0e2wxkR3/jLGrWgwPRE0S/2pu+jTR
+	WEQWJL60Ia3RKSiJ2M8n/zZUir9qcx1obWPHzja2WbMQf5/AXkml3C4hitm64Xsg
+	0eir/XmKMqigKaimKUiSlYyfd9y71xE17GBIB3pqxhzCJk560KiWDG5FOH886kBU
+	H3xoTIbiROn28XKpKgIprX5YLMcNKm8qaxxSq6ZUTYbJXFnca5BfQclVmPIp1Xbt
+	ZXc3CACbCOz4d7IIgvYuqPDb7b/CXBdSjU17VzhJqds1qEjjqhLhC8QbttI3xFn/
+	OjzovI4FnGt+qalacl8K/A==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Priya Raghunathan <priya.raghunathan@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-7986-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Priya Raghunathan,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-7986
+Grade: Junior
+Period: 2026-10
+Gross pay (month): EUR 2,508.33
+
+Harbour Courier Payroll (synthetic demo data)

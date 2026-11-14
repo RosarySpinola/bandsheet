@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=xlLSzWtwqBAn8mQBLqHWRTLm+HLz2NA+CpOQGg/hDA8=;
+	b=SGCu6zsCeljfGW5XkYcFUfdzB5waQr6vC1io0fWPDCVvz+gyv5JJKIYVcPBGBN6z
+	V/si5HOJGt5vq4mEMUlz3Bi3bK3ia9ajhkdhOEbeuJjTVx9osTFN+Hp8o+kj6Kfi
+	4XGM3v5dBvjvX129lroiR3gSeYx0Z6LdRm8xedQFMcv20qIBqd7vbpkj5g5a4fvX
+	ZtjWCDdwHSFiPOfUSENr03TZMzTqJih6JB9Mmq1XmYTZ7xvFxrHVqXHElzerNTRI
+	6NdONSt7Og267XYc0khLhs6TBM+tjLSoGRn9Kkxlgp71JqWiOOmYWVDY6yrwmPhD
+	cwDwL6HiRzNN9RPvKhJ8Ew==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Hannah Weiss <hannah.weiss@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-2177-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Hannah Weiss,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-2177
+Grade: Reporter
+Period: 2026-10
+Gross pay (month): EUR 3,408.33
+
+Harbour Courier Payroll (synthetic demo data)

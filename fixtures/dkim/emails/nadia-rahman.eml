@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=brmn08vPSk6Ws2WRXi8MKOY4h0+M0ovYAzDfcLxepWg=;
+	b=dHnSGaLGxIKyPf2C58ov3dQiJ2grA/mhyAHrN2LIPhfQhkAF5N9rLWBP1ZrPfVSJ
+	od3RBCr02LlZGWTLQFGfqiapEuFEa5wAgdau/4jgSOKQQbQjZNsiXOV9k7f76gou
+	Bfz3Dfw+8Q1soI8aigtImcxlWw+fUrDjWcwfaLhcJuVbDC8nQa/Tfmlnoj6ODz4J
+	93oTQhquS7njlkH4vJ+9zyRqpt16EqmM9kko18gPHpSynfq6j99cYorBbXYzQ/CB
+	suiQ34Kt4OjVKQDgdHQQxjvf6Gk+LgtdvmVVbhdqdGqBDjn5IuVAVUT2EyaEXBH1
+	smV/hTZ5z0djcCQhAsLNLQ==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Nadia Rahman <nadia.rahman@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-3538-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Nadia Rahman,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-3538
+Grade: Senior
+Period: 2026-10
+Gross pay (month): EUR 5,041.67
+
+Harbour Courier Payroll (synthetic demo data)

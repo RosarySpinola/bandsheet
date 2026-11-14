@@ -1,5 +1,5 @@
 [workspace]
-members = ["audit", "module"]
+members = ["audit", "dkim", "module"]
 resolver = "2"
 
 [profile.release]

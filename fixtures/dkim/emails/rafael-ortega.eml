@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=O8cVNGzmWBB95BRciDMVNPINy39tHoPoWQPsF7fGjUg=;
+	b=VfMETg0SnMZZNJzxwqVBvOs0pu6kEbp65mpTqJrp+DWQiJzocZlGjP7DkLAxb47J
+	EAWDq4Q6rWxtLJjs/2QJKKHboBUYD6F6UxVuovusuOiSJhw8465b2qPwQbki859j
+	x0DutXO+qAOGuj37wPG9nZhbf8sASHiohQXxZf8F6ZBdaK1yzu+yIb7EzGmkR2+p
+	AEwiTmhxuAKtWBKFWJFMKzPcmTdnVAPUXLq0L0MX5HZKK7swkRKGP0rEm0Fv9c6I
+	a4P//m7hvA+LwMHaD6O03BsD/8cMEVpOL5ZjcK9R1YuCbsjlLRHubjbsYnHeqTFw
+	XhRgExxiECBXXm4tPhBN+Q==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Rafael Ortega <rafael.ortega@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-4830-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Rafael Ortega,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-4830
+Grade: Reporter
+Period: 2026-10
+Gross pay (month): EUR 3,658.33
+
+Harbour Courier Payroll (synthetic demo data)

@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=578WOXvIhYMydRRmukpE6cSori+CuQR3ndCowGguC5c=;
+	b=rC7fxj2xdNLPGxn8KDJ4ETZez8pOy3+QVi2q74eJEm8GN2QcbHJA/fjYupHB1s/6
+	l7pkLhNCGEORzAGWuESR5mrW4OfCfUFVFFPIfF1iV/msaTdsEEcAumg1opdkELt6
+	76vVzjhzU5mG+4BsG75O7lJ7sROhKoZHJBYl3rgHDgzU5xxMZsyvAB33m3T9Qlin
+	dhHHKP+wr8/UWVAYtl493Nscw74kqWqWZ8ghjGLKr1i/PgWOV/uGPl2ANsv7FVvW
+	DqX4cudtB4uEosty/Ue8CCPftMwaiHbqUJSThjb/h09ZWYyxyG2rPlw+tklHoY5U
+	N1rxI1K5cWpWpVUxcaDjSQ==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Chiara Moretti <chiara.moretti@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-3229-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Chiara Moretti,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-3229
+Grade: Reporter
+Period: 2026-10
+Gross pay (month): EUR 3,508.33
+
+Harbour Courier Payroll (synthetic demo data)

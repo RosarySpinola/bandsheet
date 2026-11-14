@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=eOGjF+BE2zoBIy1qKV+mPUXbQFdC5jCJxxnEDaVAjds=;
+	b=Q4rBjGLGsynEEjzvx2XlEE+Bo9CU0+n7BAG+yk9EDoeP1SplxCZJhEjBlDdmhs0Z
+	dn5Izcl+lO6qkqvhqeVbIeuZAf0rlM9EHTv7xtDDMooSxXVcGPeQB9NEPIaqyZVW
+	x4/JgPBABeN1CMOzKWt8FmzHowSi/W0AZCqLOWEmO/4ySmjVhZJRgIGys5ywriS1
+	MdkouljZGGIm8vQ4x7GusJEQELEduwT2CtRkxLYIbmtxaQ1wNGhNcR4FV4PrSBfH
+	ZCv7udjEu04+Ke6f8ImWPYf+YQQtFoKzbfmTH5VWR1AAmWJ8+TaLVyXxFGl9A6TZ
+	HETlGD0HKHG11ohgY59Htw==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Fatima Al-Sayed <fatima.al.sayed@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-9710-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Fatima Al-Sayed,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-9710
+Grade: Editor
+Period: 2026-10
+Gross pay (month): EUR 6,433.33
+
+Harbour Courier Payroll (synthetic demo data)

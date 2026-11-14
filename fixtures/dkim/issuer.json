@@ -1,0 +1,12 @@
+{
+  "synthetic": true,
+  "domain": "harbourcourier.example",
+  "selector": "payroll2026",
+  "rsa_pubkey_spki_b64": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu+o9KlHr5EhnqKyR4j7cm8WcTy+7c+K3OlkjLlHFymCxO5WIlgYFWLyUYjFbY2ICwNWA+Ta5OOeM+9pN3jhlbXxwAzm4rPEgTIpFDCfMAMukF3x35uT/K9BnO616Ew1whLMctleNGPWcliSwTuR+CLEVcox2CPCr2qyNJ28BYQbVuAjNIz1Yor13XK0pDZjhsI3cU7vdEjzsF8M1R/H4cA2Bf6QTlL/wgQOd3/xA++D8HWh+oUgGIKI7g+PBEkz4fWmhbgIZlqi5MmBxIBmY8n6b/FJ1bqVTfVhAN8ILbEzKZegIWuPu6EBpuMSdjdC5AC4qfppz+sWONSgsefpfMwIDAQAB",
+  "key_bits": 2048,
+  "other_issuer": {
+    "domain": "harbourcourier-payroll.example",
+    "selector": "s1",
+    "rsa_pubkey_spki_b64": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoukCNXUBJUmN7l6V3zFBznoc9IfTLXqMsZYIMzLv0LHpfnvIi6wUX0XdIY6lHN6XQtT26LqLFBjyRzrWy/CdZE5JTHCq7Azb+zPKiq2PiUQAhtxrln7DN5eANlwxDZJGiCk5LtcSpmk45YaiQQT+250XgS5cgBO7ctbUG0xbGOZo+Y9N7n3EnByAnnzY3QuQlrcQfdXSM5rSHlWql2yElhpvdC9MX3xRZWgNqZpEjvzNDDz54YOcQj1hlwd7auOKmCAVZkZw9mU/30APqpydUG4WMpqVqzjVSZJT2XHPqXIofJPxGBiIG2tOdBQTSZ1gVjsTWd4YMDDOakVN/eSVTQIDAQAB"
+  }
+}

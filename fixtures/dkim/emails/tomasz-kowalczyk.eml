@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=LlnXF6Fssj9pdvN2OslJMFaz6bkxoYaMXtwHBXarcPY=;
+	b=iTX+xkt1U9fQ/wO87Icr5d9X71ecsGhoYoZb4r3ZlkE+IYoNH1mc6ZdKtm8v7Df8
+	SMic4tbsD205Mlndb1M1m/3ykjFWnfIN9LveCj/7Qg+DmLJzmSHTgZyLzAN23FYg
+	jdU+S7dF9FW1MwdeejRN9IS3zs9tQeAGC7NWrrOO+IciB2XuzksLlGU8jERf3/ch
+	10vBjIUPKGV2yOVku35t8iw5yZWKlrewnPfhYvAoCFfVueQTUCabl2ONEjzYyoV8
+	q2+zllKzqGHOeTJDrN0igmaJmsWC+wuUdtmbq6f4DFKL64QBiiU5Nduic1iBe7mj
+	ToTht5jkb3WCerBouhz1Iw==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Tomasz Kowalczyk <tomasz.kowalczyk@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-8169-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Tomasz Kowalczyk,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-8169
+Grade: Junior
+Period: 2026-10
+Gross pay (month): EUR 2,600.00
+
+Harbour Courier Payroll (synthetic demo data)

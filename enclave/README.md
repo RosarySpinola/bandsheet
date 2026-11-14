@@ -6,6 +6,7 @@ bands only where no member's pay can be solved. All data in tests and demos is s
 
 ```
 audit/    bandsheet-audit: pure library, no I/O. The release audit, witnesses, history, naive baseline.
+dkim/     bandsheet-dkim: pure library. DKIM (RSA-SHA256, relaxed/simple) verification and payslip parsing.
 module/   bandsheet-enclave: WASI binary. Decrypt, validate, call the audit, seal the history, hash.
 test-vectors/  TypeScript <-> Rust crypto vectors.   evaluation/  results of the 100-case comparison.
 proof/    testnet outputs and OutLayer attestation records.   scripts/  input builder and invoker.
@@ -76,16 +77,51 @@ history {epk,nonce,ct} (pass back unchanged next time), input_hash, output_hash`
   `submitted_at` wins. An error is `{"error","code"}` (E_INPUT, E_KEY, E_HISTORY, E_QUERY) with no `status` field.
 - Crypto: see CRYPTO.md. The enclave X25519 key is `PROTECTED_ENCLAVE_SEED`, generated inside the TEE; nobody sees it.
 
+## DKIM-verified payslips
+
+Goal: a forged or edited payslip cannot poison the bands. The employer's payroll system emails each payslip
+DKIM-signed; the chapel's DAO trusts the employer's key (on NEAR); the enclave verifies every entry's email before
+counting it. Fictional employer: Harbour Courier Ltd, `harbourcourier.example`, selector `payroll2026`.
+
+Policy (`policy` in the enclave input): `{"k":3,"require_dkim":true,"trusted_issuers":[{"domain","selector","rsa_pubkey_spki_b64"}]}`.
+`require_dkim` defaults to false: then `trusted_issuers` and every entry's `eml_b64` are ignored (not even validated) and
+the output is byte-for-byte what the 0.1.0 engine produced (golden test `module/tests/legacy_replay.rs`, captured from the old build).
+
+Entry plaintext gains optional `eml_b64` (raw .eml, base64, at most 256 KB). With `require_dkim`, per entry:
+
+1. no email, or not base64 -> `no_email`.
+2. A DKIM-Signature whose `d=` and `s=` match a trusted issuer and whose From domain equals `d=`; none -> `untrusted_issuer`
+   (an unsigned email, an unknown domain or selector, or a From address that does not match the signer).
+3. That signature must verify: `v=1`, `a=rsa-sha256`, `h=` includes `from`, no `l=` tag, body hash `bh` over the canonical
+   body, RSA PKCS#1 v1.5 over the canonical headers. Otherwise `dkim_bad_signature`.
+4. The signed text is parsed (labelled lines, each exactly once): `Employee ID:`, `Grade:`, `Period:`, `Gross pay (month): EUR 5,833.33`.
+   Grade must equal the entry's grade and annual = month x 12 must be within EUR 1 of the entry's `gross_annual_eur`, else `body_mismatch`.
+5. One entry per member slot (latest `submitted_at` wins; counted in `entries_superseded`), then one per nullifier
+   `sha256(domain|employee_id|period)` (latest wins, ties by larger slot): the rest are `duplicate_payslip`.
+
+Output gains `rejections: [{"reason","count"}]` (reasons and counts only, never an identity; zero counts omitted),
+`entries_verified` (entries counted = `entries_used`) and `engine: "bandsheet-enclave/0.2.0+dkim"`. They appear only when
+`require_dkim` is true. No DNS and no clock: keys come from the policy; `x=` expiry is not enforced; line endings are
+normalised to CRLF before verification; only the first verifying signature is used.
+
+Fixtures (all synthetic) are in `../fixtures/dkim/`: `issuer.json`, `manifest.json`, `emails/<slug>.eml` for the 36 seeded members and
+Noor Haddad (HC-0412, Senior, EUR 5,833.33/month), negatives `forged` (one digit changed after signing), `untrusted`
+(other domain and key), `wrongkey` (trusted domain, different key), `unsigned`, `duplicate` (re-issued payslip, new signature),
+and variants `variant-simple-canon` and `variant-with-pdf`. Regenerate with `make fixtures`; the private keys live only in
+`../keys/dkim/` (gitignored) and are reused if present, so the emails reproduce byte for byte. The signer
+(`scripts/dkim-sign.mjs`) shares no code with the Rust verifier, and `make crosscheck` verifies every fixture with dkimpy
+(a third implementation) using the key directly, no DNS. Build a test input with `scripts/make-dkim-input.mjs`.
+
 ## Deployed (TESTNET)
 
 | | |
 |---|---|
 | Project | `bandsheet-enclave.testnet/bandsheet-enclave` (owner account `bandsheet-enclave.testnet`) |
-| WASM sha256 | `a1dd40549adacc6183e140cc34ae7ed5c6af63eb646ab7978e4d50a371073f57` (374,198 bytes) |
-| FastFS | `https://test.fastfs.io/bandsheet-enclave.testnet/outlayer.testnet/a1dd40549adacc6183e140cc34ae7ed5c6af63eb646ab7978e4d50a371073f57.wasm`, upload tx `A1yGjLVej4e8K8BgSHSDwHwcYrzqeykFFG3Mo6rp3vvv` |
+| WASM sha256 | `69d5616cacc61ce82d3b412ffaf76399f8bbfb6bbd853f604283316ce4643b26` (513,986 bytes; DKIM engine `0.2.0+dkim`). Previous build `a1dd4054...3f57` (374,198 bytes) is still a project version but no longer holds the secret |
+| FastFS | `https://test.fastfs.io/bandsheet-enclave.testnet/outlayer.testnet/69d5616cacc61ce82d3b412ffaf76399f8bbfb6bbd853f604283316ce4643b26.wasm`, upload tx `Dt9p6R6PF5VyUjG2jtE5gggDWWgDGUTwaoSgEE7KWHYZ` |
 | Enclave public key | hex `2a7d1b5606126e98b903777f95d1a0795a1442bff3c5371cc9bb988c2d891346`, base64 `Kn0bVgYSbpi5A3d/ldGgeVoUQr/zxTccybuYjC2JE0Y=` |
-| Secret | profile `default`, `PROTECTED_ENCLAVE_SEED` (TEE-generated), locked to this exact build hash |
-| Executions | pubkey `CfDKSJ96M7KSTGkiht89BCLWPJWSWzjqyE89PSkCJpoM`; release #1 `82YcfbFjeCp3WD7oVSuztUv8DDey6dLGLahF38DqwFsV`; release #2 `BVySfrKeJzF2jQegQptQXeMogS4XffYZMsLp1GgRBr88` |
+| Secret | profile `default`, `PROTECTED_ENCLAVE_SEED` (TEE-generated), lock moved to the new build hash with `secrets access --build` (ciphertext untouched; the public key above was re-read from the new build and is unchanged) |
+| Executions | old build: pubkey `CfDKSJ96M7KSTGkiht89BCLWPJWSWzjqyE89PSkCJpoM`; release #1 `82YcfbFjeCp3WD7oVSuztUv8DDey6dLGLahF38DqwFsV`; release #2 `BVySfrKeJzF2jQegQptQXeMogS4XffYZMsLp1GgRBr88`. New build: pubkey `E6kzPRy7bx9YnZnHTYRgEzzuwNxkba5jRtgb9v1Ri5gv`; DKIM release (require_dkim, 12 members + 5 negative fixtures) `2wVTjJN55SSTrzAFnyi7DdxpAzEtDQ3ra5jqr2zC4Bhs` (`proof/dkim-release-*.json`: 13 verified, rejections 2 bad signature + 2 untrusted issuer) |
 
 Explorer: `https://testnet.nearblocks.io/txns/<hash>`. Attestation record (TDX quote, worker measurement, wasm hash,
 input and output hash, request id): `https://testnet-api.outlayer.ai/attestations/by-tx/<hash>`; saved copies in `proof/`.
@@ -118,7 +154,10 @@ node scripts/make-input.mjs --pubkey <hex> --release 2 --history <history envelo
  "response_format":"Json","payer_account_id":null,"params":null}
 ```
 
-Attach 0.05 NEAR (the run is charged about 0.002 NEAR; the rest is refunded to the caller or `payer_account_id`);
+Attach 0.05 NEAR for inputs up to 32,768 bytes (the run is charged about 0.002 NEAR; the rest is refunded to the caller or `payer_account_id`).
+Input beyond 32,768 bytes is held at about 1e19 yoctoNEAR per extra byte and refunded afterwards (a 38,565-byte input needed 0.065 NEAR attached
+and cost 0.0024 NEAR net); DKIM entries carry their email, about 2.5 KB sealed each, so a 37-member release is about 95 KB and needs roughly 0.7 NEAR
+attached. The call is rejected with a panic and a full refund if the deposit is short;
 attach at least 100 TGas, 200 recommended (the settlement callback takes 50 TGas). `input_data` over 10,000 bytes is
 stored by OutLayer and handled for you (a 36-member input is about 12 KB). The callback receives the guest's JSON
 output as a JSON value; `null` means the run failed. Pin the version by passing `version_key` = the wasm sha256.

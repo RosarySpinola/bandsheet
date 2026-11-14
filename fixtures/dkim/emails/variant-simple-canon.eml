@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=cjMAcvvP5TxD60hurVTwFxrXqCof5kcrC/VOjrFuOoo=;
+	b=qG7CXh+wEWU/hyea2RYLIoU84+8iwez77f7hfWtE2o9DJuKV5dNiJJXY3gq8EI+6
+	H4yoXBZIf6+mctMvWmO++V3jSlbWH4cqksvagZMSl5PzRMTi+h2vNJVZck6BVRoC
+	qGT0js2dtgigpYhywcmnmwfiz4k0pzZoYVl+btviljefLxgosrZpjl1FkchElZfh
+	5up4t3Y1I5AXMRA15N3hWErT2R/UQSfmfqkG/OzPIbwIwQ4pv7VCxpCKqwjLLkmY
+	EkqcXqJbAoRPZlI6wPe9DLNoA9f4NSZmmoUg65YSfUM1YdvRnhPlfJ5m/sZ/YTno
+	5TLv/6WYqctx45gCK2iEiQ==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Noor Haddad <noor.haddad@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-0412-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Noor Haddad,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-0412
+Grade: Senior
+Period: 2026-10
+Gross pay (month): EUR 5,833.33
+
+Harbour Courier Payroll (synthetic demo data)

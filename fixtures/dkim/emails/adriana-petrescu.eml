@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=zdGWI3iQv7PZQ0q5tRacsV7w+Rgc5fWlR++dnJqWY2U=;
+	b=spRe83ZhhNd9knMBVckaqUWufX5o+1hiN7Kwy9thF3/4t9o3XKzM1FSy7xyBLM/a
+	Xkr01pUOAt7PJOpXzm1itUTye9036zVT4xQoFKO29ZcmgdFUPIrVjwwRIBxR/oVt
+	KZP16D20ASEOmDyUi+KE6rovaUpKKUAuffEO2idd7nguDOW0ZdQTXS7o/+Wvpnrm
+	R54uZ+7jbULiiJoGa+b2vm7N5b3oCUkun7B0XFL7GIXFhSVUkDeCSVCE6J0/VRaA
+	dxnDdZl61rWwsfHQi1JykzR3F7ABcjYYSGXlqBgXtl+WSpeGnlI3I5vegtCUyJ7N
+	jpzlp8++ca2bAT9ZKUTG7A==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Adriana Petrescu <adriana.petrescu@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-7146-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Adriana Petrescu,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-7146
+Grade: Chief
+Period: 2026-10
+Gross pay (month): EUR 8,666.67
+
+Harbour Courier Payroll (synthetic demo data)

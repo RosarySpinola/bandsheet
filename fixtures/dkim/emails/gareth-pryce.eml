@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=mNWbJxea43CtzReM+BIko4fdyGeQUw0erJAbzwEpTPo=;
+	b=LFl9Y1W8qUjusFDQn7O3B+EggVevUGvGEvs4dDplbqKFMcfYZh8er1IpEXSvX0Zs
+	wTGSxEt2FLcVNb5Yqy7QieJWBpsP5KqyyELzDgaDmHIXnoeWBiSreen46OhYIUv2
+	Bil9scWOJK6NqPn5uBRxoZHAuIg2slnLBF4XbTWMa+MnVD77I2yB6pWBiYtL7Bu/
+	kjIDyZ6+iA8fg5JwHt4fPfFOJhDOfsOYloWTDKQL6rlTAc7eiLlAMyPbGxzWPoce
+	4psFXtniMtBlD0UiO3Gu1ZpYJFUD0H1fooXQYOg6zQjBhbkGGTb9OOZZNuaYx1jj
+	lJNnzC982vNVA02PEWneiQ==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Gareth Pryce <gareth.pryce@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-3667-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Gareth Pryce,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-3667
+Grade: Editor
+Period: 2026-10
+Gross pay (month): EUR 7,041.67
+
+Harbour Courier Payroll (synthetic demo data)

@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=RLFi20H+cseXeZxbqBIIEETrzwbZ7kuaErmdEKq+DME=;
+	b=bw74MEJSN5ssFeQ0h60v4dKU5U5jDp4DzI9OjC93QSzXd8n5Mohu2go26HzRr/Wh
+	pWNe2rIy4/c6tC1Yb8VWgQ6JHNjL20mfrdCwdLrGSBvFGGTTcExBBegDKMhR7Z/d
+	Ei/u50zZcd/a4Brf40VvKhqe64Va5JEK5HR8pxQVUAuLeiJoK2yOsftQ/VrRpGi0
+	aEIMF43OAR/RjBQ2JesHYXNZ2ZQddg4WWYOkhwV0RnmlJIlwlgSYhbEuEnEcN3+0
+	h9+tc96KOK7crK37q3j3I8bvUo271Yo6ZbL24byWritwsoDUFIcVK7cot8yhcqGa
+	24CkakNL2jrZr68GhOI2Pg==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Idris Mahmoud <idris.mahmoud@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-1951-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Idris Mahmoud,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-1951
+Grade: Reporter
+Period: 2026-10
+Gross pay (month): EUR 3,800.00
+
+Harbour Courier Payroll (synthetic demo data)

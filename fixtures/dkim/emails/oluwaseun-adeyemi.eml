@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=rPgz/orG0Qbse6KypOOG6b/xP/z1r+IdS5z1xKn9Kxk=;
+	b=bCUZMEVdcaMnF0fzsLelibHFyKVD+fYijyMhle7iH/j9Ex13fYSHoDBYmGIcjXsg
+	yW9oXji5MdyvWYzKE82nJ+REYuSzV+B6ejStZXn4GWphPe/TqxWk1W7lyzgJCf0p
+	VSqYp7t1IzOKDNX46QPEuReBSz3qoYq7xpuOTPUUn7jf/JD4CLA1xtfOlspBRCo8
+	4MEFmoC3zDkfRyGwvXyOS3NPWCh+PaKNgLugRzYisdh4SGHyI8cKyMGfoJ5TGblV
+	ipTGToSF6yo8xius4PfZyarGuS1OSTx+X8m0YegIX77t7miyuznqGCKcCc/o2Zhi
+	2qB1/HlJy7PiFXhNARm0Hw==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Oluwaseun Adeyemi <oluwaseun.adeyemi@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-3116-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Oluwaseun Adeyemi,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-3116
+Grade: Reporter
+Period: 2026-10
+Gross pay (month): EUR 3,691.67
+
+Harbour Courier Payroll (synthetic demo data)

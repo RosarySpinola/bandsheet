@@ -1,0 +1,432 @@
+{
+  "release_1": {
+    "cells": [
+      {
+        "key": {
+          "grade": "Editor"
+        },
+        "mean_eur": 75015,
+        "n": 4
+      },
+      {
+        "key": {
+          "grade": "Junior"
+        },
+        "mean_eur": 30035,
+        "n": 8
+      },
+      {
+        "key": {
+          "grade": "Reporter"
+        },
+        "mean_eur": 42050,
+        "n": 11
+      },
+      {
+        "key": {
+          "grade": "Senior"
+        },
+        "mean_eur": 68053,
+        "n": 12
+      }
+    ],
+    "engine": "bandsheet-enclave/0.1.0",
+    "entries_rejected": {},
+    "entries_superseded": 0,
+    "entries_used": 36,
+    "history_plain": {
+      "cols": [
+        {
+          "fp": "7291f71a81b3ff81",
+          "slot": "2e7eb8ce0043189ad37e639425b31b3edabf6ae7b2a8c7e0ebe24bafaba48c2f"
+        },
+        {
+          "fp": "844ae2c3b103b4d2",
+          "slot": "35c712a170f5f32f69610693b737f7464e6adaeed7597872d8f45ce6df3a665d"
+        },
+        {
+          "fp": "963469a2b8e4bde4",
+          "slot": "4418816d8e7b58a57991e25bd822069fa1e94c5abe80f77bfc5062d30e4758c3"
+        },
+        {
+          "fp": "823c25fca3816fde",
+          "slot": "4c055f5bfb7c79909fde976d168c83b8ade7a813c51691b8d710b6c360b2a8ed"
+        },
+        {
+          "fp": "9ac1c93c794641c9",
+          "slot": "53c65b0b68c52b37530c6682e59ee92148e1088321c31c60db8d9ff2754b1027"
+        },
+        {
+          "fp": "3b83c524257a05cc",
+          "slot": "5524687ab31eeec369ded0344d0a8b00973e3280e6ee8835939cc3ad0a6096d5"
+        },
+        {
+          "fp": "dca739b2f2ea11b6",
+          "slot": "60a9152c8a28ccd09b6c3744e21ead89a40e87daa94f4c7c01a58d4eaad125cd"
+        },
+        {
+          "fp": "bdc0cd3b29cafe5a",
+          "slot": "60d892d9f94cfcfe688c7dffaa467a2e6e01a7cdb83cf9946406a313817b54a4"
+        },
+        {
+          "fp": "ed5b98c3fbb0f1b4",
+          "slot": "63def2699f0843ac2d3f02866c169353a7d0a722f1ad2e63c1813955d5f221da"
+        },
+        {
+          "fp": "91ca27e9892362e7",
+          "slot": "7322481dd8a5ce71c00bdb4917b163c1e0583bbf858a82ad942d47fc56438faa"
+        },
+        {
+          "fp": "5db836a4a9a46add",
+          "slot": "76f3babda015279e5d4b3463a5d7c80a001e548e77eae5e7f52e8c155c88c478"
+        },
+        {
+          "fp": "b869edbbb7522671",
+          "slot": "83273fe942492ccba22612294a10e00e0a27495042bef94e0bf6734d3c5098ce"
+        },
+        {
+          "fp": "6356e81015e84dde",
+          "slot": "8dfe0fc58e794f5fc5c6ec5bc2d2f3550e0945b962f8ff41c1ff7d2872ee2523"
+        },
+        {
+          "fp": "3f941f95e9e50f73",
+          "slot": "92ca6643a8a60f26df70deaf7fffb9b114dc0c414f1c7856b57a52836b49b3a1"
+        },
+        {
+          "fp": "d2d5a6c46a40cbd1",
+          "slot": "93fd00e5c77c5cdcb6b513b2b108440c5a77863ab51063977966176dd3e397d2"
+        },
+        {
+          "fp": "5e1c2af1308b10a0",
+          "slot": "a9b97431dacf99a063d16fbe6798097e0948fd62334a629350d73bef8019a383"
+        },
+        {
+          "fp": "d690b64a59bdc41c",
+          "slot": "acccc9229646402e758d4a4a5b804fdab0ac38aa8755e86a06ab2f5c8513336e"
+        },
+        {
+          "fp": "16e41e17d5fa472d",
+          "slot": "b27fac398223247c480b34eadec1e146923a20c83ec5a558cbbcd7f1e32539a6"
+        },
+        {
+          "fp": "a2912b21647bd98d",
+          "slot": "b2c9d922eb3aa11fcff9f909168edb93381315ea2640b96032730b9ccd770f6e"
+        },
+        {
+          "fp": "95142e2046872c17",
+          "slot": "bbefa8e891c34f5d2f03ea09a0af81512d5a8af09676dbdc990782984d1c854a"
+        },
+        {
+          "fp": "8e13bf8470790acb",
+          "slot": "bbf3f0e143a9ab5afb4a9de0dd54592d9552b57993cd4048647e6930704a7098"
+        },
+        {
+          "fp": "bec95af3538e4f50",
+          "slot": "c2fdaf7e949cd2fe0a5d473be33cc125fcda9101875c9c61db64656f72ce890d"
+        },
+        {
+          "fp": "d1b4d14eb7da17ab",
+          "slot": "c7aa5023bb6698a5534a32e09c15c3b9ed6b0deb0d8375cebe3c95c9148a35da"
+        },
+        {
+          "fp": "30add8c9abcbf736",
+          "slot": "c8ca453227740824af580f0e14891056590b64f52eef4c1df5d1ad6cf08334d8"
+        },
+        {
+          "fp": "7c7cddccf673779a",
+          "slot": "c918761f1bdfea16a9b37699950fdcd058202ae8ada2f98a0e1231260d9e2dc5"
+        },
+        {
+          "fp": "0d8e75907236b01e",
+          "slot": "cc3707c42ef1d64edffdd0e277f9b6e9f919f6323d530afa172f87e13fad6dfb"
+        },
+        {
+          "fp": "bdd1d10a7b635f85",
+          "slot": "e1d27b8c0e72871a30e89fc401a06324ba30f47ea44761d29b31dd443285cd18"
+        },
+        {
+          "fp": "85472949c595f625",
+          "slot": "ec80bfe3d34bb6f0be84f5b497fa4383505a52568d8afca189bcf9aee0ef19ca"
+        },
+        {
+          "fp": "877cdd750f326442",
+          "slot": "ed63c74bc455041fda8fe5dcbe11d8f39718dee6e317ac112ebc3315e5973d8f"
+        },
+        {
+          "fp": "7b677be4fd80b8cc",
+          "slot": "f0f721bf1b1db2fba604485bfde7368362408446949194f314848b36ff3ba63d"
+        },
+        {
+          "fp": "73c059f3d9805f29",
+          "slot": "f211d26fe00e0f6cab035e2213d43c3cec2dbad4c211d4e82408e27562d9bc3a"
+        },
+        {
+          "fp": "942d6277b913f773",
+          "slot": "f2af7aaeb7d98a51caafe194f55aff7b678e0e7322183c6cfa22c2207699267f"
+        },
+        {
+          "fp": "e6e3254b3ceb6e0f",
+          "slot": "f3986cbf3d286eff62eda9fae7c07953cada762ea1150955aa674bcafb49e500"
+        },
+        {
+          "fp": "5c32a96f3d3933d6",
+          "slot": "f62bc464798af401943bf217b753285711ca1c204b093518a38d73e5cd9be1ab"
+        },
+        {
+          "fp": "5cdaa8b5e65c780a",
+          "slot": "f683a749dbdc4abccb09ca379159c61f893a5b9c54e7dd34f4ddac359204057b"
+        }
+      ],
+      "rows": [
+        {
+          "label": "Senior",
+          "members": "EMkaRwA=",
+          "release": 1
+        },
+        {
+          "label": "Reporter",
+          "members": "7RBAMAQ=",
+          "release": 1
+        },
+        {
+          "label": "Junior",
+          "members": "ACQliAE=",
+          "release": 1
+        },
+        {
+          "label": "Editor",
+          "members": "AgKAAAI=",
+          "release": 1
+        }
+      ],
+      "v": 1
+    },
+    "input_hash": "<varies with random sealing>",
+    "release_id": 1,
+    "status": "partially_released",
+    "suppressed": [
+      {
+        "key": {
+          "grade": "Chief"
+        },
+        "reason": "small_cell",
+        "witness": "fewer than 3 members in this group"
+      }
+    ]
+  },
+  "release_2": {
+    "cells": [
+      {
+        "key": {
+          "grade": "Editor"
+        },
+        "mean_eur": 75015,
+        "n": 4
+      },
+      {
+        "key": {
+          "grade": "Junior"
+        },
+        "mean_eur": 30035,
+        "n": 8
+      },
+      {
+        "key": {
+          "grade": "Reporter"
+        },
+        "mean_eur": 42050,
+        "n": 11
+      }
+    ],
+    "engine": "bandsheet-enclave/0.1.0",
+    "entries_rejected": {},
+    "entries_superseded": 0,
+    "entries_used": 37,
+    "history_plain": {
+      "cols": [
+        {
+          "fp": "7291f71a81b3ff81",
+          "slot": "2e7eb8ce0043189ad37e639425b31b3edabf6ae7b2a8c7e0ebe24bafaba48c2f"
+        },
+        {
+          "fp": "844ae2c3b103b4d2",
+          "slot": "35c712a170f5f32f69610693b737f7464e6adaeed7597872d8f45ce6df3a665d"
+        },
+        {
+          "fp": "963469a2b8e4bde4",
+          "slot": "4418816d8e7b58a57991e25bd822069fa1e94c5abe80f77bfc5062d30e4758c3"
+        },
+        {
+          "fp": "823c25fca3816fde",
+          "slot": "4c055f5bfb7c79909fde976d168c83b8ade7a813c51691b8d710b6c360b2a8ed"
+        },
+        {
+          "fp": "9ac1c93c794641c9",
+          "slot": "53c65b0b68c52b37530c6682e59ee92148e1088321c31c60db8d9ff2754b1027"
+        },
+        {
+          "fp": "3b83c524257a05cc",
+          "slot": "5524687ab31eeec369ded0344d0a8b00973e3280e6ee8835939cc3ad0a6096d5"
+        },
+        {
+          "fp": "dca739b2f2ea11b6",
+          "slot": "60a9152c8a28ccd09b6c3744e21ead89a40e87daa94f4c7c01a58d4eaad125cd"
+        },
+        {
+          "fp": "bdc0cd3b29cafe5a",
+          "slot": "60d892d9f94cfcfe688c7dffaa467a2e6e01a7cdb83cf9946406a313817b54a4"
+        },
+        {
+          "fp": "ed5b98c3fbb0f1b4",
+          "slot": "63def2699f0843ac2d3f02866c169353a7d0a722f1ad2e63c1813955d5f221da"
+        },
+        {
+          "fp": "91ca27e9892362e7",
+          "slot": "7322481dd8a5ce71c00bdb4917b163c1e0583bbf858a82ad942d47fc56438faa"
+        },
+        {
+          "fp": "5db836a4a9a46add",
+          "slot": "76f3babda015279e5d4b3463a5d7c80a001e548e77eae5e7f52e8c155c88c478"
+        },
+        {
+          "fp": "b869edbbb7522671",
+          "slot": "83273fe942492ccba22612294a10e00e0a27495042bef94e0bf6734d3c5098ce"
+        },
+        {
+          "fp": "6356e81015e84dde",
+          "slot": "8dfe0fc58e794f5fc5c6ec5bc2d2f3550e0945b962f8ff41c1ff7d2872ee2523"
+        },
+        {
+          "fp": "3f941f95e9e50f73",
+          "slot": "92ca6643a8a60f26df70deaf7fffb9b114dc0c414f1c7856b57a52836b49b3a1"
+        },
+        {
+          "fp": "d2d5a6c46a40cbd1",
+          "slot": "93fd00e5c77c5cdcb6b513b2b108440c5a77863ab51063977966176dd3e397d2"
+        },
+        {
+          "fp": "5e1c2af1308b10a0",
+          "slot": "a9b97431dacf99a063d16fbe6798097e0948fd62334a629350d73bef8019a383"
+        },
+        {
+          "fp": "d690b64a59bdc41c",
+          "slot": "acccc9229646402e758d4a4a5b804fdab0ac38aa8755e86a06ab2f5c8513336e"
+        },
+        {
+          "fp": "16e41e17d5fa472d",
+          "slot": "b27fac398223247c480b34eadec1e146923a20c83ec5a558cbbcd7f1e32539a6"
+        },
+        {
+          "fp": "a2912b21647bd98d",
+          "slot": "b2c9d922eb3aa11fcff9f909168edb93381315ea2640b96032730b9ccd770f6e"
+        },
+        {
+          "fp": "95142e2046872c17",
+          "slot": "bbefa8e891c34f5d2f03ea09a0af81512d5a8af09676dbdc990782984d1c854a"
+        },
+        {
+          "fp": "8e13bf8470790acb",
+          "slot": "bbf3f0e143a9ab5afb4a9de0dd54592d9552b57993cd4048647e6930704a7098"
+        },
+        {
+          "fp": "bec95af3538e4f50",
+          "slot": "c2fdaf7e949cd2fe0a5d473be33cc125fcda9101875c9c61db64656f72ce890d"
+        },
+        {
+          "fp": "d1b4d14eb7da17ab",
+          "slot": "c7aa5023bb6698a5534a32e09c15c3b9ed6b0deb0d8375cebe3c95c9148a35da"
+        },
+        {
+          "fp": "30add8c9abcbf736",
+          "slot": "c8ca453227740824af580f0e14891056590b64f52eef4c1df5d1ad6cf08334d8"
+        },
+        {
+          "fp": "7c7cddccf673779a",
+          "slot": "c918761f1bdfea16a9b37699950fdcd058202ae8ada2f98a0e1231260d9e2dc5"
+        },
+        {
+          "fp": "0d8e75907236b01e",
+          "slot": "cc3707c42ef1d64edffdd0e277f9b6e9f919f6323d530afa172f87e13fad6dfb"
+        },
+        {
+          "fp": "bdd1d10a7b635f85",
+          "slot": "e1d27b8c0e72871a30e89fc401a06324ba30f47ea44761d29b31dd443285cd18"
+        },
+        {
+          "fp": "85472949c595f625",
+          "slot": "ec80bfe3d34bb6f0be84f5b497fa4383505a52568d8afca189bcf9aee0ef19ca"
+        },
+        {
+          "fp": "877cdd750f326442",
+          "slot": "ed63c74bc455041fda8fe5dcbe11d8f39718dee6e317ac112ebc3315e5973d8f"
+        },
+        {
+          "fp": "7b677be4fd80b8cc",
+          "slot": "f0f721bf1b1db2fba604485bfde7368362408446949194f314848b36ff3ba63d"
+        },
+        {
+          "fp": "73c059f3d9805f29",
+          "slot": "f211d26fe00e0f6cab035e2213d43c3cec2dbad4c211d4e82408e27562d9bc3a"
+        },
+        {
+          "fp": "942d6277b913f773",
+          "slot": "f2af7aaeb7d98a51caafe194f55aff7b678e0e7322183c6cfa22c2207699267f"
+        },
+        {
+          "fp": "e6e3254b3ceb6e0f",
+          "slot": "f3986cbf3d286eff62eda9fae7c07953cada762ea1150955aa674bcafb49e500"
+        },
+        {
+          "fp": "5c32a96f3d3933d6",
+          "slot": "f62bc464798af401943bf217b753285711ca1c204b093518a38d73e5cd9be1ab"
+        },
+        {
+          "fp": "5cdaa8b5e65c780a",
+          "slot": "f683a749dbdc4abccb09ca379159c61f893a5b9c54e7dd34f4ddac359204057b"
+        }
+      ],
+      "rows": [
+        {
+          "label": "Senior",
+          "members": "EMkaRwA=",
+          "release": 1
+        },
+        {
+          "label": "Reporter",
+          "members": "7RBAMAQ=",
+          "release": 1
+        },
+        {
+          "label": "Junior",
+          "members": "ACQliAE=",
+          "release": 1
+        },
+        {
+          "label": "Editor",
+          "members": "AgKAAAI=",
+          "release": 1
+        }
+      ],
+      "v": 1
+    },
+    "input_hash": "<varies with random sealing>",
+    "release_id": 2,
+    "status": "partially_released",
+    "suppressed": [
+      {
+        "key": {
+          "grade": "Chief"
+        },
+        "reason": "small_cell",
+        "witness": "fewer than 3 members in this group"
+      },
+      {
+        "key": {
+          "grade": "Senior"
+        },
+        "reason": "differencing",
+        "witness": "Release #2 Senior - Release #1 Senior isolates 1 member"
+      }
+    ]
+  }
+}

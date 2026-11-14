@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=33hPKGMWYifATvINuCwZibs1mC4uJ1rg91oSU0OaqxM=;
+	b=R+HC/aMjhOc9RFHVKTUgUnmDu/+HrCJUT17lRQQHJ1vDUdbMgrIAWIEWe8jzT0vF
+	aSwKYAyhtf0/ArLUijQNmfgKhnwmm5l5bo8Rfo0DKRb+IHAMyBYS+VW9hhIIqG9y
+	GoGD1pslONjRorZ5q8wwVnggBO6KoB+xvaJGtdR1LO1EFREjHANb1kQGUuRJc7OF
+	6uwLSwRprVEyFDLxyDk5pa6V4+8Q7aFUj7iqBp1dAO9hcNOZ/20nTynFKMGXgoH3
+	b4DuCQ35b3+HwoHBVt9vti7gBE6zE5vbARqWvsP1DJW64Zysm9oxJ3oKipy4wN85
+	13hKuNNKkYqc3nY0Z985XA==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Lukas Meier <lukas.meier@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-1804-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Lukas Meier,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-1804
+Grade: Editor
+Period: 2026-10
+Gross pay (month): EUR 7,233.33
+
+Harbour Courier Payroll (synthetic demo data)

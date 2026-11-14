@@ -1,0 +1,27 @@
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=harbourcourier.example; s=payroll2026; t=1761811200;
+	h=from:to:subject:date:message-id;
+	bh=gYXAdJzYMvXuLzAzxGwoByoAN3gmPTNtQMsH5ocDNNA=;
+	b=n24k8rqNi9WJC4NKQWYCckEn8K/MQnHnv7VZvCypwDo52O9Rk90+9/rL5E+Gaftu
+	FMmgnO25pwlHFyLSTPyvDpvomgv7frOfJ1XFrSiLlnX6HJP3L2VfqEZCtREpiLfl
+	3XdOOs1w2x/WV9ZvAtwanU7D8TKC+MCMRxB79jCvEYe836xhCUf6/R91xeyICP3v
+	3uqPH1JScf89/qiwbMqlg/zWKCdsRnDHHo9Gz/ccao4vVhhbP/aU794zp/DPj1PG
+	nDpCvw+tpy7B1H/elx5X/QfUYWelwo/F7wJokSe2xhQ4ucQ08pc4eyyHPmyCUZl5
+	/TV1fE1vDyOj68n2U4Wc6Q==
+From: Harbour Courier Payroll <payroll@harbourcourier.example>
+To: Callum Hendry <callum.hendry@harbourcourier.example>
+Subject: Your payslip for October 2026
+Date: Fri, 30 Oct 2026 08:00:00 +0000
+Message-ID: <hc-3660-2026-10@harbourcourier.example>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+
+Dear Callum Hendry,
+
+Your payslip for October 2026 is ready.
+
+Employee ID: HC-3660
+Grade: Junior
+Period: 2026-10
+Gross pay (month): EUR 2,666.67
+
+Harbour Courier Payroll (synthetic demo data)

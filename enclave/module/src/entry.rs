@@ -16,6 +16,9 @@ pub struct Entry {
     pub gender: String,
     pub site: String,
     pub submitted_at: u64,
+    /// The raw payslip .eml, base64. Read only when the policy sets `require_dkim`.
+    #[serde(default)]
+    pub eml_b64: Option<String>,
 }
 
 /// Parses and validates one decrypted entry. The error is a short code, never the content.
