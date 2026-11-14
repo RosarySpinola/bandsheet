@@ -12,6 +12,8 @@ const LINKS = [
   { href: "/pricing", label: "Pricing" },
 ]
 
+const CHIP = "bg-white/90 px-[calc(var(--gl)*1.5)] py-[calc(var(--gl)*0.875)] backdrop-blur-md"
+
 /** Greenlock header: transparent over the hero, white past 59% of it (2% on mobile). */
 export function SiteHeader() {
   const [solid, setSolid] = useState(false)
@@ -42,14 +44,16 @@ export function SiteHeader() {
       <header
         className={cn(
           "fixed inset-x-0 top-0 z-[999] transition-colors duration-150 ease-gl",
-          solid || panel ? "bg-white" : "bg-transparent",
+          // Mobile keeps a paper bar even at the top: the hero art's vertex sits right behind the logo and burger.
+          solid || panel ? "bg-white" : "bg-transparent max-[991px]:bg-white/90 max-[991px]:backdrop-blur-md",
         )}
       >
         <div className="grid h-[46px] grid-cols-[1fr_auto] items-center px-4 min-[992px]:h-auto min-[992px]:grid-cols-[1fr_auto_1fr] min-[992px]:px-[calc(var(--gl)*2)] min-[992px]:py-[var(--gl)]">
           <Link to="/" className="font-serif text-[calc(var(--gl)*2.4)] leading-none font-medium text-ink max-[991px]:text-[1.45rem]">
             Bandsheet
           </Link>
-          <nav className="hidden items-center gap-[calc(var(--gl)*2)] min-[992px]:flex" aria-label="Primary">
+          {/* Paper chips keep ink-on-paper contrast while the header is transparent over the hero's dark shards. */}
+          <nav className={cn("hidden items-center gap-[calc(var(--gl)*2)] min-[992px]:flex", CHIP)} aria-label="Primary">
             <button
               type="button"
               className="gl-nav wipe cursor-pointer"
@@ -68,8 +72,8 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="flex items-center justify-end gap-4">
-            <Link to="/unit" className="gl-nav wipe hidden min-[992px]:inline-block">
-              Open the demo unit
+            <Link to="/unit" className={cn("group hidden min-[992px]:inline-flex", CHIP)}>
+              <span className="gl-nav wipe font-medium text-ink! group-hover:after:scale-x-100">Open the demo unit</span>
             </Link>
             <MobileMenu />
           </div>
