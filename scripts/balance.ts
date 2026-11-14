@@ -1,0 +1,3 @@
+// Print an account's testnet balance in NEAR (or "none"). Usage: tsx balance.ts <account>...
+import { balanceNear } from "./lib";
+for (const a of process.argv.slice(2)) console.log(a, await balanceNear(a).catch(() => "none"));

@@ -1,0 +1,29 @@
+[package]
+name = "bandsheet"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.86"
+description = "Bandsheet: a union's pay-band box. The contract account is the union unit."
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { version = "~5.27", features = ["unstable"] }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+
+[dev-dependencies]
+near-sdk = { version = "~5.27", features = ["unstable", "unit-testing"] }
+
+# mock-outlayer is a testnet / sandbox stand-in for outlayer.testnet.
+[workspace]
+members = [".", "mock-outlayer"]
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true
