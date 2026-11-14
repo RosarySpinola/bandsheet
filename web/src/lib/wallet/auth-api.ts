@@ -8,9 +8,10 @@ export type Method = "near-auth" | "near-connect"
 
 /** What the account signed: a wallet's NEP-413 message, or the NEAR Auth statement transaction. */
 export type SignedClaim = {
-  scheme: "nep413" | "near-tx"
+  scheme: "nep413" | "near-tx" | "eip191"
   account_id: string
-  public_key: string
+  /** The NEAR key that signed; absent for an Ethereum wallet (eip191), whose 0x account is the proof. */
+  public_key?: string
   signature: string
   nonce: string
 }

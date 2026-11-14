@@ -2,11 +2,12 @@ import type { NearConnector, NearWalletBase } from "@hot-labs/near-connect"
 import { ApiError } from "@/lib/api"
 import { CONTRACT } from "@/lib/chain"
 import { getNonce, nonceBytes, statementText, type Purpose, type SignedClaim } from "./auth-api"
+import { EVM_WALLET, evmPersonalSign, evmStatement } from "./evm"
 
 /**
  * NEAR Connect (@hot-labs/near-connect) on testnet. Wallet code runs in sandboxed iframes loaded from the shared
- * manifest. Joining needs NEP-413 signMessage, so its modal lists only wallets with signInAndSignMessage; voting
- * needs signAndSendTransaction, so its modal also lists the Ethereum-wallets executor (no signMessage on testnet).
+ * manifest; every testnet wallet in it is offered. NEAR wallets sign NEP-413. The Ethereum Wallets executor has no
+ * signMessage, so after it signs in (its 0x account) the same Ethereum wallet signs the statement with personal_sign.
  */
 const RPCS = ["https://test.rpc.fastnear.com", "https://near-testnet.drpc.org"]
 
@@ -31,10 +32,28 @@ export class WalletCancelled extends Error {
 
 const cancelled = (e: unknown) => /reject|cancel|closed|denied|user/i.test(e instanceof Error ? e.message : String(e))
 
-/** Join: connect a wallet and have it sign the NEP-413 join statement in the same step. */
+/** Join: pick any testnet wallet; it signs the join statement (NEP-413, or EIP-191 for an Ethereum wallet). */
 export async function walletJoinClaim(memberPublicKey: string): Promise<SignedClaim & { walletId: string }> {
   const [c, issued] = await Promise.all([getConnector(), getNonce("join")])
   if (issued.recipient !== CONTRACT) throw new ApiError("The server named a different contract.", "RECIPIENT_MISMATCH")
+  let walletId: string
+  try {
+    walletId = await c.selectWallet({})
+  } catch (e) {
+    throw cancelled(e) ? new WalletCancelled() : e
+  }
+  if (walletId === EVM_WALLET) {
+    let accountId: string | undefined
+    try {
+      const wallet = await c.connect({ walletId })
+      accountId = (await wallet.getAccounts({ network: "testnet" }))[0]?.accountId?.toLowerCase()
+    } catch (e) {
+      throw cancelled(e) ? new WalletCancelled() : e
+    }
+    if (!accountId) throw new ApiError("The Ethereum wallet returned no account.", "WALLET_NO_ACCOUNT")
+    const signature = await evmPersonalSign(accountId, evmStatement("join", memberPublicKey, CONTRACT, issued.nonce))
+    return { scheme: "eip191", account_id: accountId, signature, nonce: issued.nonce, walletId }
+  }
   const got = new Promise<{ accountId: string; publicKey: string; signature: string; walletId: string }>((resolve, reject) => {
     c.once("wallet:signInAndSignMessage", (e) => {
       const a = e.accounts[0]
@@ -43,7 +62,7 @@ export async function walletJoinClaim(memberPublicKey: string): Promise<SignedCl
     })
   })
   try {
-    await c.connect({ signMessageParams: { message: statementText("join", memberPublicKey), recipient: CONTRACT, nonce: nonceBytes(issued.nonce) } })
+    await c.connect({ walletId, signMessageParams: { message: statementText("join", memberPublicKey), recipient: CONTRACT, nonce: nonceBytes(issued.nonce) } })
   } catch (e) {
     c.removeAllListeners("wallet:signInAndSignMessage")
     throw cancelled(e) ? new WalletCancelled() : e
@@ -52,9 +71,13 @@ export async function walletJoinClaim(memberPublicKey: string): Promise<SignedCl
   return checked({ scheme: "nep413", account_id: s.accountId, public_key: s.publicKey, signature: s.signature, nonce: issued.nonce }, s.walletId)
 }
 
-/** Entry binding: the connected wallet signs "Bandsheet entry: <hash>" (NEP-413). */
+/** Entry signing: the member's wallet signs "Bandsheet entry: <hash>" (NEP-413, or EIP-191 for an Ethereum wallet). */
 export async function walletSignStatement(walletId: string, purpose: Purpose, subject: string, accountId: string): Promise<SignedClaim> {
   const [c, issued] = await Promise.all([getConnector(), getNonce(purpose)])
+  if (walletId === EVM_WALLET) {
+    const signature = await evmPersonalSign(accountId, evmStatement(purpose, subject, CONTRACT, issued.nonce))
+    return { scheme: "eip191", account_id: accountId, signature, nonce: issued.nonce }
+  }
   const wallet = await c.wallet(walletId)
   try {
     const s = await wallet.signMessage({ message: statementText(purpose, subject), recipient: CONTRACT, nonce: nonceBytes(issued.nonce), network: "testnet", signerId: accountId })

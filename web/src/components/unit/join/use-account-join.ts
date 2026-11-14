@@ -1,97 +1,54 @@
 import { useCallback, useEffect, useState } from "react"
 import { CONTRACT } from "@/lib/chain"
-import { joinWithAccount, type JoinResult, type Method } from "@/lib/wallet/auth-api"
+import { joinWithAccount, type JoinResult, type SignedClaim } from "@/lib/wallet/auth-api"
 import { setIdentity } from "@/lib/wallet/identity"
-import { approveStatement, nearAuthLogin, preloadNearAuth, prepareStatement, type NearAuthAccount, type PreparedStatement } from "@/lib/wallet/near-auth"
 import { WalletCancelled, getConnector, walletJoinClaim } from "@/lib/wallet/near-connect"
 import { nearLib } from "../key-check"
 import { setMember } from "../session"
 
-type MemberKey = { privateKey: string; publicKey: string; slot: string }
+type PostingKey = { privateKey: string; publicKey: string; slot: string }
 
 export type JoinPhase =
   | { s: "idle" }
-  | { s: "auth-login" }
-  | { s: "auth-preparing"; account: NearAuthAccount }
-  | { s: "auth-ready"; account: NearAuthAccount; prepared: PreparedStatement }
-  | { s: "auth-approving"; account: NearAuthAccount }
   | { s: "wallet" }
-  | { s: "joining"; via: Method; account: string }
-  | { s: "done"; via: Method; result: JoinResult; relayTx?: string }
-  | { s: "cancelled"; via: Method; timedOut: boolean }
-  | { s: "error"; via: Method; error: unknown }
-
-const newKey = async (): Promise<MemberKey> => (await nearLib()).generateMemberKey()
+  | { s: "joining"; account: string }
+  | { s: "done"; result: JoinResult }
+  | { s: "cancelled" }
+  | { s: "error"; error: unknown }
 
 /**
- * Join with a NEAR account. The browser makes the member key (it never leaves this tab); the account signs one
- * statement naming that key; the server checks it and registers the key on the unit. Two routes:
- *  - NEAR Auth: Auth0 login popup, then a consent popup for the statement (each straight from a click);
- *  - NEAR Connect: the wallet modal signs in and signs the NEP-413 statement in one step.
+ * Join with the member's own wallet (NEAR Connect). The browser makes a posting key (it never leaves this tab); the
+ * wallet signs one statement naming that key (NEP-413, or EIP-191 for an Ethereum wallet); the server checks it and
+ * registers the posting key on the unit.
  */
 export function useAccountJoin() {
   const [phase, setPhase] = useState<JoinPhase>({ s: "idle" })
-  const [key, setKey] = useState<MemberKey | null>(null)
 
-  // Load the SDKs early so the popups open inside the click and are not blocked.
+  // Load NEAR Connect and its wallet manifest early, so the modal opens straight from the click.
   useEffect(() => {
-    void preloadNearAuth().catch(() => undefined)
     void getConnector().catch(() => undefined)
   }, [])
 
-  const finish = useCallback(async (via: Method, account: string, claim: Parameters<typeof joinWithAccount>[0] & { relayTx?: string }, k: MemberKey, walletId?: string) => {
-    setPhase({ s: "joining", via, account })
-    const result = await joinWithAccount(claim, k.publicKey, via)
+  const finish = useCallback(async (claim: SignedClaim & { walletId: string }, k: PostingKey) => {
+    setPhase({ s: "joining", account: claim.account_id })
+    const result = await joinWithAccount(claim, k.publicKey, "near-connect")
     setMember({ invite: { account_id: CONTRACT, contract_id: CONTRACT, private_key: k.privateKey }, slot: result.slot, publicKey: k.publicKey, demo: false, joinedAt: Date.now() })
-    setIdentity({ account_id: result.account_id, method: via, public_key: claim.public_key, wallet_id: walletId, slot: result.slot })
-    setPhase({ s: "done", via, result, relayTx: claim.relayTx })
+    setIdentity({ account_id: result.account_id, method: "near-connect", public_key: claim.public_key ?? "", wallet_id: claim.walletId, slot: result.slot })
+    setPhase({ s: "done", result })
   }, [])
-
-  /** Closing a popup or declining in the wallet is a cancel, not an error; a blocked popup stays an error. */
-  const fail = (via: Method, error: unknown) => {
-    const msg = String((error as Error)?.message ?? error)
-    const cancel = error instanceof WalletCancelled || /popup closed|cancelled|user rejected|access_denied|timeout/i.test(msg)
-    setPhase(cancel ? { s: "cancelled", via, timedOut: /timeout/i.test(msg) } : { s: "error", via, error })
-  }
-
-  /** Step 1 of NEAR Auth: sign in (popup), then prepare the statement for the approve click. */
-  const startNearAuth = useCallback(() => {
-    setPhase({ s: "auth-login" })
-    nearAuthLogin()
-      .then(async (account) => {
-        setPhase({ s: "auth-preparing", account })
-        const k = await newKey()
-        setKey(k)
-        const prepared = await prepareStatement("join", k.publicKey, account)
-        setPhase({ s: "auth-ready", account, prepared })
-      })
-      .catch((e) => fail("near-auth", e))
-  }, [])
-
-  /** Step 2 of NEAR Auth: approve the statement (consent popup), relay it, then join. */
-  const approveNearAuth = useCallback(() => {
-    if (phase.s !== "auth-ready" || !key) return
-    const { account, prepared } = phase
-    setPhase({ s: "auth-approving", account })
-    approveStatement(prepared)
-      .then((claim) => finish("near-auth", account.accountId, claim, key))
-      .catch((e) => fail("near-auth", e))
-  }, [phase, key, finish])
 
   const startWallet = useCallback(() => {
     setPhase({ s: "wallet" })
     void (async () => {
       try {
-        const k = await newKey()
-        setKey(k)
-        const claim = await walletJoinClaim(k.publicKey)
-        await finish("near-connect", claim.account_id, claim, k, claim.walletId)
+        const k = (await nearLib()).generateMemberKey()
+        await finish(await walletJoinClaim(k.publicKey), k)
       } catch (e) {
-        fail("near-connect", e)
+        setPhase(e instanceof WalletCancelled ? { s: "cancelled" } : { s: "error", error: e })
       }
     })()
   }, [finish])
 
   const reset = useCallback(() => setPhase({ s: "idle" }), [])
-  return { phase, startNearAuth, approveNearAuth, startWallet, reset }
+  return { phase, startWallet, reset }
 }
