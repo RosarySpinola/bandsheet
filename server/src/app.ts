@@ -10,8 +10,9 @@ import { demoRoutes } from "./routes/demo";
 import { extractRoutes } from "./routes/extract";
 import { releasesRoutes } from "./routes/releases";
 import { standRoutes } from "./routes/stand";
+import { authRoutes } from "./routes/auth";
 
-/** Stateless by design: nothing from a request is written anywhere except the token/cost ledger. */
+/** Nothing from a request is written anywhere except the token/cost ledger and the sign-in store (/api/auth, D1). */
 export function createApp(deps: Deps): Hono {
   const app = new Hono();
   app.use("/api/*", cors({ origin: deps.config.corsOrigin }));
@@ -33,6 +34,10 @@ export function createApp(deps: Deps): Hono {
   const ai = rateLimit({ limit: 20 });
   for (const path of ["/api/dao/propose", "/api/dao/vote", "/api/demo/submit"]) app.use(path, writes);
   for (const path of ["/api/extract", "/api/stand"]) app.use(path, ai);
+  // Sign-in: joins and NEAR Auth relays spend the owner's testnet gas, so they get the tightest bucket.
+  app.use("/api/auth/nonce", rateLimit({ limit: 20 }));
+  for (const path of ["/api/auth/join", "/api/auth/near-auth/sign"]) app.use(path, rateLimit({ limit: 5 }));
+  app.use("/api/auth/entry", rateLimit({ limit: 10 }));
 
   app.route("/api", chainRoutes(deps));
   app.route("/api", contextRoutes());
@@ -40,6 +45,7 @@ export function createApp(deps: Deps): Hono {
   app.route("/api/extract", extractRoutes(deps));
   app.route("/api/stand", standRoutes(deps));
   app.route("/api/releases", releasesRoutes(deps));
+  app.route("/api/auth", authRoutes(deps));
 
   app.notFound((c) => c.json({ error: "not found", code: "NOT_FOUND" }, 404));
   app.onError((err, c) => {

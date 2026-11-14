@@ -11,15 +11,20 @@ import { createPriceSource } from "./nearai/models";
 import { DEFAULT_ACCEPTED_TCB } from "./nearai/verify";
 import { SpendGuard } from "./spend";
 import { D1LedgerStore, type D1Like } from "./spend-d1";
+import { createKeyLookup } from "./auth/keys";
+import { loadOwnerSigner } from "./auth/owner";
+import { type AuthD1, D1AuthStore } from "./auth/store";
 
 /**
  * Cloudflare worker entry (Pages Functions mount this). Bindings:
  *  - DB: D1 database holding the NEAR AI spend ledger
+ *  - AUTH_DB (optional): D1 database for sign-in nonces and account -> slot rows (deploy/migrations-auth); secret OWNER_KEY_JSON
  *  - secrets/vars (strings): NEARAI_API_KEY, COUNCIL_KEYS_JSON, DEMO_INVITE_JSON, BANDSHEET_CONTRACT,
  *    BANDSHEET_DAO, BANDSHEET_COUNCIL, optional NEAR_RPC_URLS, CORS_ORIGIN
  */
 export interface WorkerEnv {
   DB?: D1Like;
+  AUTH_DB?: AuthD1;
   [k: string]: unknown;
 }
 
@@ -72,6 +77,9 @@ function build(env: WorkerEnv): NonNullable<typeof cached> {
     chain,
     chainCfg,
     view: (contractId, method, args) => chain.view(contractId, method, args),
+    auth: env.AUTH_DB
+      ? { store: new D1AuthStore(env.AUTH_DB), keys: createKeyLookup(strings.NEAR_RPC_URLS?.split(",").map((u) => u.trim())), owner: loadOwnerSigner(strings as NodeJS.ProcessEnv) }
+      : undefined,
   };
   return { deps, app: createApp(deps), timings };
 }

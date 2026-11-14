@@ -1,3 +1,4 @@
+import type { AuthDeps } from "./routes/auth";
 import type { ChainConfig } from "./chain/config";
 import type { ChainPort } from "./chain/port";
 import type { Config } from "./env";
@@ -15,4 +16,6 @@ export interface Deps {
   guard: SpendGuard;
   chain: ChainPort;
   chainCfg: ChainConfig;
+  /** Sign-in (NEAR Auth / NEAR Connect); undefined when the host has no auth store. */
+  auth?: AuthDeps;
 }
