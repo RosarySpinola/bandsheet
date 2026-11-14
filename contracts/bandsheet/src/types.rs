@@ -52,6 +52,29 @@ pub struct ReleaseRecord {
     pub block_timestamp: U64,
 }
 
+/// A trusted employer DKIM key: the chapel's DAO votes these in.
+#[near(serializers=[borsh, json])]
+#[derive(Clone)]
+pub struct Issuer {
+    pub domain: String,
+    pub selector: String,
+    pub rsa_pubkey_spki_b64: String,
+}
+
+/// Fields added with the DKIM upgrade. Kept in their own storage map so records written before the upgrade
+/// (which have none) still read back unchanged.
+#[near(serializers=[borsh, json])]
+#[derive(Clone)]
+pub struct ReleaseExtra {
+    /// JSON array exactly as the enclave returned it: [{"reason","count"}], no identities.
+    pub rejections: String,
+    pub entries_verified: Option<u32>,
+    /// The engine build in effect when this release ran.
+    pub wasm_sha256: String,
+    pub require_dkim: bool,
+    pub issuers: u32,
+}
+
 #[near(serializers=[json])]
 pub struct ReleaseView {
     pub id: u32,
@@ -67,10 +90,15 @@ pub struct ReleaseView {
     pub proof: Value,
     pub note: String,
     pub block_timestamp: U64,
+    pub rejections: Value,
+    pub entries_verified: Option<u32>,
+    pub wasm_sha256: Option<String>,
+    pub require_dkim: Option<bool>,
+    pub issuers: Option<u32>,
 }
 
 impl ReleaseRecord {
-    pub fn view(&self) -> ReleaseView {
+    pub fn view(&self, extra: Option<ReleaseExtra>) -> ReleaseView {
         let j = |s: &str| serde_json::from_str(s).unwrap_or(Value::Null);
         ReleaseView {
             id: self.id,
@@ -86,6 +114,11 @@ impl ReleaseRecord {
             proof: j(&self.proof),
             note: self.note.clone(),
             block_timestamp: self.block_timestamp,
+            rejections: extra.as_ref().map(|e| j(&e.rejections)).unwrap_or(Value::Array(vec![])),
+            entries_verified: extra.as_ref().and_then(|e| e.entries_verified),
+            wasm_sha256: extra.as_ref().map(|e| e.wasm_sha256.clone()),
+            require_dkim: extra.as_ref().map(|e| e.require_dkim),
+            issuers: extra.as_ref().map(|e| e.issuers),
         }
     }
 }

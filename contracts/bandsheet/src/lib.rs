@@ -8,17 +8,20 @@ use near_sdk::json_types::{U128, U64};
 use near_sdk::store::{IterableMap, IterableSet, Vector};
 use near_sdk::{env, near, require, AccountId, NearToken, PanicOnDefault};
 
+mod dkim;
 mod events;
 mod members;
 mod outlayer;
 mod release;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_dkim;
 mod types;
 
 pub use types::*;
 
-pub const MAX_CIPHERTEXT: usize = 4096;
+pub const MAX_CIPHERTEXT: usize = 16_384;
 
 #[near(contract_state)]
 #[derive(PanicOnDefault)]

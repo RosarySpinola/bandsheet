@@ -7,18 +7,38 @@ const RELEASE_GAS = "200000000000000"; // 200 Tgas for request_release (it forwa
 export type Query = { id?: number; group_by: string[]; filter?: Record<string, string>; stat?: "mean" };
 
 interface ProposalView { id: number; status: string; kind: unknown; votes: Record<string, string> }
-export const releaseKind = (unit: string, query: Query) => ({
+/** A FunctionCall proposal kind: the DAO calls `method` on the union with `args`. */
+export const callKind = (unit: string, method: string, args: object, gas = RELEASE_GAS) => ({
   FunctionCall: {
     receiver_id: unit,
-    actions: [{ method_name: "request_release", args: Buffer.from(JSON.stringify({ query: JSON.stringify(query) })).toString("base64"), deposit: "0", gas: RELEASE_GAS }],
+    actions: [{ method_name: method, args: Buffer.from(JSON.stringify(args)).toString("base64"), deposit: "0", gas }],
   },
 });
+export const releaseKind = (unit: string, query: Query) => callKind(unit, "request_release", { query: JSON.stringify(query) });
 
-export async function propose(query: Query, description: string): Promise<{ id: number; sent: Sent }> {
+export async function proposeKind(kind: unknown, description: string): Promise<{ id: number; sent: Sent }> {
   const st = loadState();
-  const sent = await callTx(account(st.council[0]!), st.dao, "add_proposal", { proposal: { description, kind: releaseKind(st.unit, query) } }, 60);
+  const sent = await callTx(account(st.council[0]!), st.dao, "add_proposal", { proposal: { description, kind } }, 60);
   if (!sent.ok || typeof sent.value !== "number") throw new Error(`add_proposal failed: ${sent.error}`);
   return { id: sent.value, sent };
+}
+export const propose = (query: Query, description: string) => proposeKind(releaseKind(loadState().unit, query), description);
+
+/** Propose any union call and let seats 1 and 2 approve it (a 2-of-3 majority executes). Returns every tx link. */
+export async function runProposal(kind: unknown, description: string): Promise<{ id: number; links: string[]; status: string }> {
+  const links: string[] = [];
+  const p = await proposeKind(kind, description);
+  step(`Proposal #${p.id}: ${description}`, p.sent);
+  links.push(p.sent.link);
+  for (const i of [1, 2]) {
+    const v = await vote(p.id, i);
+    step(`Council seat ${i} votes approve (proposal #${p.id})`, v);
+    links.push(v.link);
+    if (!v.ok) throw new Error(`vote failed: ${v.error}`);
+  }
+  const status = await proposalStatus(p.id);
+  say(`proposal #${p.id} status: ${status}`);
+  return { id: p.id, links, status };
 }
 
 export async function vote(id: number, councilIndex: number, action: "VoteApprove" | "VoteReject" = "VoteApprove"): Promise<Sent> {

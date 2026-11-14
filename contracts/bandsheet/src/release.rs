@@ -3,9 +3,10 @@ use near_sdk::json_types::U64;
 use near_sdk::serde_json::{self, Map, Value};
 use near_sdk::{env, near, require, AccountId, Gas, NearToken};
 
+use crate::dkim;
 use crate::events::emit;
 use crate::outlayer::{self, Out};
-use crate::types::{InFlight, ReleaseRecord, ReleaseView};
+use crate::types::{InFlight, ReleaseExtra, ReleaseRecord, ReleaseView};
 use crate::{Bandsheet, BandsheetExt};
 
 const MIN_REQUEST_GAS: Gas = Gas::from_tgas(60);
@@ -57,7 +58,7 @@ impl Bandsheet {
         let id = self.releases.len() + 1;
         let query = stamp_query(&query, id);
         let entries: Vec<&String> = self.entries.values().collect();
-        let input = outlayer::build_input(self.policy.k, &query, &entries, self.history.as_ref());
+        let input = outlayer::build_input(&dkim::policy_json(self.policy.k), &query, &entries, self.history.as_ref());
         let input_sha256 = hex::encode(env::sha256(input.as_bytes()));
         let gas = outlayer::request_gas();
         require!(gas >= MIN_REQUEST_GAS, "Attach at least 200 Tgas to the call");
@@ -89,6 +90,7 @@ impl Bandsheet {
             note: String::new(),
             block_timestamp: U64(env::block_timestamp()),
         };
+        let (mut extra_rejections, mut entries_verified) = ("[]".to_string(), None);
         match outlayer::read_result() {
             Out::Failed => rec.note = "The OutLayer request failed".to_string(),
             Out::Unreadable(bytes, why) => {
@@ -108,6 +110,8 @@ impl Bandsheet {
                 }
                 rec.cells = json_of(&v, "cells", "[]");
                 rec.suppressed = json_of(&v, "suppressed", "[]");
+                extra_rejections = dkim::rejections_json(&v);
+                entries_verified = v.get("entries_verified").and_then(Value::as_u64).map(|n| n as u32);
                 rec.input_hash = text(&v, "input_hash");
                 rec.output_hash = text(&v, "output_hash");
                 let mut proof = Map::new();
@@ -134,6 +138,14 @@ impl Bandsheet {
             ),
         );
         let status = rec.status.clone();
+        let extra = ReleaseExtra {
+            rejections: extra_rejections,
+            entries_verified,
+            wasm_sha256: self.policy.wasm_sha256.clone(),
+            require_dkim: dkim::require_dkim(),
+            issuers: dkim::issuers().len() as u32,
+        };
+        dkim::extras().insert(id, extra);
         self.releases.push(rec);
         status
     }
@@ -144,10 +156,12 @@ impl Bandsheet {
 
     pub fn get_releases(&self, from: Option<u64>, limit: Option<u64>) -> Vec<ReleaseView> {
         let (from, limit) = (from.unwrap_or(0) as usize, limit.unwrap_or(20).min(50) as usize);
-        self.releases.iter().skip(from).take(limit).map(ReleaseRecord::view).collect()
+        let extras = dkim::extras();
+        self.releases.iter().skip(from).take(limit).map(|r| r.view(extras.get(&r.id).cloned())).collect()
     }
 
     pub fn get_release(&self, id: u32) -> Option<ReleaseView> {
-        id.checked_sub(1).and_then(|i| self.releases.get(i)).map(ReleaseRecord::view)
+        let extras = dkim::extras();
+        id.checked_sub(1).and_then(|i| self.releases.get(i)).map(|r| r.view(extras.get(&r.id).cloned()))
     }
 }

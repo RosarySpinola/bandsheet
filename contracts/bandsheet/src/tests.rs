@@ -6,15 +6,15 @@ use near_sdk::{env, testing_env, AccountId, CurveType, Gas, NearToken, PromiseRe
 
 use crate::*;
 
-fn acct(s: &str) -> AccountId {
+pub(crate) fn acct(s: &str) -> AccountId {
     s.parse().unwrap()
 }
 
-fn key(n: u8) -> PublicKey {
+pub(crate) fn key(n: u8) -> PublicKey {
     PublicKey::from_parts(CurveType::ED25519, vec![n; 32]).unwrap()
 }
 
-fn ctx(predecessor: &str, signer_pk: Option<PublicKey>) -> VMContextBuilder {
+pub(crate) fn ctx(predecessor: &str, signer_pk: Option<PublicKey>) -> VMContextBuilder {
     let mut b = VMContextBuilder::new();
     b.current_account_id(acct("union.testnet"))
         .predecessor_account_id(acct(predecessor))
@@ -27,7 +27,7 @@ fn ctx(predecessor: &str, signer_pk: Option<PublicKey>) -> VMContextBuilder {
     b
 }
 
-fn fresh() -> Bandsheet {
+pub(crate) fn fresh() -> Bandsheet {
     testing_env!(ctx("owner.testnet", None).build());
     let mut c = Bandsheet::new(acct("owner.testnet"), acct("dao.testnet"), 3, "enclavekey".into(), "ab".repeat(32), "cd".repeat(32));
     c.set_outlayer(
@@ -39,18 +39,18 @@ fn fresh() -> Bandsheet {
     c
 }
 
-fn with_members(n: u8) -> Bandsheet {
+pub(crate) fn with_members(n: u8) -> Bandsheet {
     let mut c = fresh();
     c.add_members((1..=n).map(key).collect());
     c
 }
 
 /// A member's own key signs a call on the union account.
-fn as_member(n: u8) {
+pub(crate) fn as_member(n: u8) {
     testing_env!(ctx("union.testnet", Some(key(n))).build());
 }
 
-fn ct(tag: &str) -> Value {
+pub(crate) fn ct(tag: &str) -> Value {
     json!({"epk": tag, "nonce": "n", "ct": "c"})
 }
 
@@ -142,7 +142,7 @@ fn malformed_ciphertext_is_refused() {
     c.submit(json!({"epk": "x", "nonce": "n"}));
 }
 
-fn seeded(n: u8) -> Bandsheet {
+pub(crate) fn seeded(n: u8) -> Bandsheet {
     let mut c = with_members(n);
     for i in 1..=n {
         as_member(i);
@@ -151,7 +151,7 @@ fn seeded(n: u8) -> Bandsheet {
     c
 }
 
-const QUERY: &str = r#"{"group_by":["grade"],"stat":"mean"}"#;
+pub(crate) const QUERY: &str = r#"{"group_by":["grade"],"stat":"mean"}"#;
 
 #[test]
 #[should_panic(expected = "only the union's DAO")]
@@ -197,12 +197,12 @@ fn bad_query_is_refused() {
     c.request_release(r#"{"stat":"mean"}"#.into());
 }
 
-fn callback(c: &mut Bandsheet, id: u32, result: PromiseResult) -> String {
+pub(crate) fn callback(c: &mut Bandsheet, id: u32, result: PromiseResult) -> String {
     testing_env!(ctx("union.testnet", None).build(), near_sdk::test_vm_config(), near_sdk::RuntimeFeesConfig::test(), Default::default(), vec![result]);
     c.on_release(id, QUERY.into(), "ff".repeat(32), acct("dao.testnet"))
 }
 
-fn ok_output(status: &str, cell_mean: u64) -> PromiseResult {
+pub(crate) fn ok_output(status: &str, cell_mean: u64) -> PromiseResult {
     let v = json!({
         "release_id": 1, "status": status,
         "cells": [{"key": {"grade": "Senior"}, "n": 4, "mean_eur": cell_mean}],
@@ -264,13 +264,13 @@ fn enclave_input_matches_the_brief() {
     let entries = [ct("a").to_string(), "YWJjZA==".to_string()];
     let refs: Vec<&String> = entries.iter().collect();
     let history = r#"{"v":1}"#.to_string();
-    let input: Value = serde_json::from_str(&outlayer::build_input(3, QUERY, &refs, Some(&history))).unwrap();
+    let input: Value = serde_json::from_str(&outlayer::build_input("{\"k\":3}", QUERY, &refs, Some(&history))).unwrap();
     assert_eq!(input["policy"]["k"], 3);
     assert_eq!(input["query"]["group_by"][0], "grade");
     assert_eq!(input["entries"][0]["epk"], "a");
     assert_eq!(input["entries"][1], "YWJjZA==");
     assert_eq!(input["history"]["v"], 1);
-    let none: Value = serde_json::from_str(&outlayer::build_input(3, QUERY, &refs, None)).unwrap();
+    let none: Value = serde_json::from_str(&outlayer::build_input("{\"k\":3}", QUERY, &refs, None)).unwrap();
     assert!(none["history"].is_null());
 }
 

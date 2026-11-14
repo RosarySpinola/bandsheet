@@ -33,7 +33,7 @@ fn ciphertext_text(ct: Value) -> String {
         }
         _ => env::panic_str("Ciphertext must be an object with base64 epk, nonce and ct"),
     };
-    require!(text.len() <= MAX_CIPHERTEXT, "Ciphertext is too large");
+    require!(text.len() <= MAX_CIPHERTEXT, "Ciphertext is too large (16 KB at most)");
     text
 }
 

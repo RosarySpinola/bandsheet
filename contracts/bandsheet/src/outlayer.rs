@@ -22,11 +22,11 @@ fn embed(ct: &str) -> String {
     }
 }
 
-/// Enclave input from the brief: {"policy":{"k":3},"query":Query,"entries":[Ciphertext...],"history":HistoryBlob|null}
-pub fn build_input(k: u32, query: &str, entries: &[&String], history: Option<&String>) -> String {
+/// Enclave input: {"policy":{"k":3,"trusted_issuers":[..],"require_dkim":bool},"query":Query,"entries":[Ciphertext...],"history":HistoryBlob|null}
+pub fn build_input(policy: &str, query: &str, entries: &[&String], history: Option<&String>) -> String {
     let list: Vec<String> = entries.iter().map(|c| embed(c)).collect();
     format!(
-        "{{\"policy\":{{\"k\":{k}}},\"query\":{query},\"entries\":[{}],\"history\":{}}}",
+        "{{\"policy\":{policy},\"query\":{query},\"entries\":[{}],\"history\":{}}}",
         list.join(","),
         history.map(String::as_str).unwrap_or("null")
     )
