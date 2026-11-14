@@ -88,9 +88,11 @@ function Seat({ n, account, vote, open, walletOnly, busy, disabled, onVote }: {
 }
 
 /** One Sputnik proposal: what it asks, the three council seats, the tally, and the release it produced. */
-export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
+export function ProposalCard({ p, council, serverSeats, release, waiting, vote, onVote }: {
   p: DaoProposal
   council: string[]
+  /** Seats whose keys the demo server holds; any other seat votes from its own wallet. */
+  serverSeats: string[]
   release: ReleaseRecord | undefined
   waiting: boolean
   vote: VoteState
@@ -139,6 +141,8 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {([1, 2, 3] as const).map((n) => {
             const account = council[n - 1] ?? `council seat ${n}`
+            // The demo server signs by its own seat index; map this seat's account to it.
+            const serverIndex = (serverSeats.indexOf(account) + 1) as 0 | 1 | 2 | 3
             return (
               <Seat
                 key={n}
@@ -146,10 +150,10 @@ export function ProposalCard({ p, council, release, waiting, vote, onVote }: {
                 account={account}
                 vote={p.votes[account]}
                 open={open}
-                walletOnly={!isRelease}
-                busy={mine && vote.pending?.member === n ? vote.pending.action : null}
+                walletOnly={!isRelease || !serverSeats.includes(account)}
+                busy={mine && serverIndex !== 0 && vote.pending?.member === serverIndex ? vote.pending.action : null}
                 disabled={vote.pending !== null}
-                onVote={(action) => onVote({ proposal_id: p.id, member: n, action })}
+                onVote={(action) => serverIndex !== 0 && onVote({ proposal_id: p.id, member: serverIndex, action })}
               />
             )
           })}

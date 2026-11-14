@@ -6,6 +6,8 @@ import type { ReleaseRecord } from "@bandsheet/core"
 import { Reveal } from "@/components/gl/reveal"
 import { AccountLink, EmptyState, ErrorState, Page, PageHeader, Shimmer } from "@/components/unit"
 import { DAO, useDeployed, usePolicy, useReleases } from "@/lib/chain"
+import { useQuery } from "@tanstack/react-query"
+import { councilMembers } from "@/lib/wallet/dao-seat"
 import { useDaoActions, type VoteInput } from "@/components/unit-b/dao-actions"
 import { useDaoProposals, type DaoProposal, type ProposeResult } from "@/components/unit-b/data"
 import { ProposalCard, type VoteState } from "@/components/unit-b/proposal-card"
@@ -76,12 +78,15 @@ export default function VotePage() {
   const [params] = useSearchParams()
   const mock = params.get("mock")
   const deployed = useDeployed()
-  const council = deployed.data?.council ?? []
+  /** Seats the demo server holds keys for (it can vote for these); the seat list itself is read from the DAO. */
+  const serverSeats = deployed.data?.council ?? []
+  const chainCouncil = useQuery({ queryKey: ["dao", "council"], queryFn: councilMembers, staleTime: 60_000 })
+  const council = chainCouncil.data?.length === 3 ? chainCouncil.data : serverSeats
   const policy = usePolicy()
   const releases = useReleases()
   const [polling, setPolling] = useState(false)
   const proposals = useDaoProposals({ frozen: Boolean(mock), poll: polling ? 8000 : false })
-  const { propose, vote } = useDaoActions({ mock, council })
+  const { propose, vote } = useDaoActions({ mock, council: serverSeats })
   const [voteErr, setVoteErr] = useState<VoteState["error"]>(null)
   const [lastTx, setLastTx] = useState<VoteState["lastTx"]>(null)
   const [proposed, setProposed] = useState<(ProposeResult & { mock: boolean }) | null>(null)
@@ -156,6 +161,7 @@ export default function VotePage() {
                     key={p.id}
                     p={p}
                     council={council}
+                    serverSeats={serverSeats}
                     release={links.get(p.id)}
                     waiting={p.kind === "release" && p.status === "Approved" && !links.has(p.id)}
                     vote={voteState}
