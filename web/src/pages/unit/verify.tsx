@@ -97,7 +97,7 @@ export default function Verify() {
               n={6}
               title="Chapel DAO"
               value={<AccountLink id={p.dao || DAO} />}
-              proves={`A release runs only after a Sputnik DAO proposal passes. ${deployed.data?.council.length ? `The council has ${deployed.data.council.length} synthetic members.` : ""}`}
+              proves={`A release runs only after a Sputnik DAO proposal passes. ${deployed.data?.council.length ? `The council has 3 seats (2 of 3 needed): two synthetic demo seats and one real Meteor wallet, rosaryspinola.testnet, which took seat 3 by a DAO vote.` : ""}`}
               command={`near view ${p.dao || DAO} get_proposals '{"from_index":0,"limit":10}' --networkId testnet`}
               links={deployed.data?.dao_create_tx ? [{ href: explorer.tx(deployed.data.dao_create_tx), label: "DAO creation transaction" }] : []}
             />

@@ -3,17 +3,28 @@ import { LegalLink, LegalPage, type LegalSection } from "@/components/gl/legal-p
 
 const SECTIONS: LegalSection[] = [
   {
-    title: "No accounts, no cookies",
-    body: <p>There is no sign-up and no password. Bandsheet sets no cookies and runs no analytics or tracking scripts.</p>,
-  },
-  {
-    title: "Your member key stays in this tab",
+    title: "No passwords, no cookies",
     body: (
       <p>
-        When you join the chapel, your member key is kept in this browser tab's session storage and nowhere else. Closing the tab clears it.
-        A key you paste is used in your browser to sign your entry. The shared demo member key is the one exception: our server holds it so
-        anyone can try the demo, and signs with it when you choose it.
+        There is no sign-up form and no password. You join with your own NEAR wallet, or try the judge demo with no wallet at all. Bandsheet
+        sets no cookies and runs no analytics or tracking scripts.
       </p>
+    ),
+  },
+  {
+    title: "Your wallet and your posting key",
+    body: (
+      <>
+        <p>
+          When you join with a wallet, it signs a one-time message that proves you hold the account. Your browser then makes a posting key:
+          it can only call submit on the union account and holds no funds. It is kept in this tab's session storage and nowhere else, and
+          closing the tab clears it.
+        </p>
+        <p>
+          Each entry is signed by your wallet and posted by the posting key, so your account never appears next to your entry on chain. The
+          shared judge-demo key is the one exception: our server holds it so anyone can try the demo, and signs with it when you choose it.
+        </p>
+      </>
     ),
   },
   {
@@ -40,6 +51,17 @@ const SECTIONS: LegalSection[] = [
     ),
   },
   {
+    title: "Which account holds which slot",
+    body: (
+      <p>
+        For members who join with a wallet, a second D1 database keeps the account name and its member slot (a hash of the posting key),
+        single-use sign-in nonces, and, for each wallet-signed entry, the account, slot, entry hash and time. This link is never written to
+        NEAR. It lets the chapel replace a member's old key when they join again and lets a member prove an entry is theirs. It never holds a
+        pay figure.
+      </p>
+    ),
+  },
+  {
     title: "Payslips and your figure",
     body: (
       <p>
@@ -62,7 +84,7 @@ const SECTIONS: LegalSection[] = [
     title: "Services involved",
     body: (
       <p>
-        NEAR AI Cloud reads payslips, OutLayer runs the sealed engine, NEAR testnet RPC providers serve chain reads, Eurostat supplies public
+        NEAR AI Cloud reads payslips, OutLayer runs the sealed engine, your own wallet (through NEAR Connect) signs, NEAR testnet RPC providers serve chain reads, Eurostat supplies public
         wage statistics and Cloudflare hosts the site and the spend ledger. See also the <Link to="/terms" className="wipe font-medium text-ink">terms</Link>.
       </p>
     ),

@@ -33,8 +33,10 @@ const GOVERNANCE_DONE: Record<string, { text: string; to: string; cta: string }>
   engine: { text: "Approved. The contract now runs releases on this engine build.", to: "/unit/verify", cta: "See the engine versions" },
 }
 
-function Seat({ n, account, vote, open, walletOnly, busy, disabled, onVote }: {
+function Seat({ n, label = "Seat", account, vote, open, walletOnly, busy, disabled, onVote }: {
   n: 1 | 2 | 3
+  /** "Seat" for the live council; "Vote" when listing who voted on a closed proposal. */
+  label?: string
   account: string
   vote: string | undefined
   open: boolean
@@ -48,7 +50,7 @@ function Seat({ n, account, vote, open, walletOnly, busy, disabled, onVote }: {
     <div className={cn("flex min-w-0 flex-col gap-1.5 border p-3 sm:gap-3 sm:p-4", vote === "Approve" ? "border-ink" : "border-border")}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col">
-          <span className="text-[0.8125rem] font-semibold tracking-[0.04em] text-ink uppercase">Seat {n}</span>
+          <span className="text-[0.8125rem] font-semibold tracking-[0.04em] text-ink uppercase">{label} {n}</span>
           <span className="truncate font-mono text-[0.75rem] text-muted-foreground" title={account}>{account.replace(/\.testnet$/, "")}</span>
         </div>
         <span
@@ -81,10 +83,20 @@ function Seat({ n, account, vote, open, walletOnly, busy, disabled, onVote }: {
           </div>
         )
       ) : (
-        <p className="text-[0.9375rem] text-muted-foreground">Did not vote</p>
+        <p className="text-[0.9375rem] text-muted-foreground">{label === "Vote" ? "No vote cast" : "Did not vote"}</p>
       )}
     </div>
   )
+}
+
+/**
+ * Seat order: keep each original seat's position (the demo's server-held seats) and put a member who replaced one in
+ * the freed position, so a swapped-in wallet shows as the seat it took.
+ */
+function seatOrder(council: string[], original: string[]): string[] {
+  if (original.length === 0) return council
+  const incoming = council.filter((a) => !original.includes(a))
+  return original.map((a) => (council.includes(a) ? a : (incoming.shift() ?? a)))
 }
 
 /** One Sputnik proposal: what it asks, the three council seats, the tally, and the release it produced. */
@@ -140,13 +152,17 @@ export function ProposalCard({ p, council, serverSeats, release, waiting, vote, 
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {([1, 2, 3] as const).map((n) => {
-            const account = council[n - 1] ?? `council seat ${n}`
+            // An open proposal shows today's council; a closed one shows who actually voted (the council may have
+            // changed since), so no seat is shown as "did not vote" on a proposal it could not have voted on.
+            const voters = Object.keys(p.votes)
+            const account = open ? (seatOrder(council, serverSeats)[n - 1] ?? `council seat ${n}`) : (voters[n - 1] ?? "—")
             // The demo server signs by its own seat index; map this seat's account to it.
             const serverIndex = (serverSeats.indexOf(account) + 1) as 0 | 1 | 2 | 3
             return (
               <Seat
                 key={n}
                 n={n}
+                label={open ? "Seat" : "Vote"}
                 account={account}
                 vote={p.votes[account]}
                 open={open}

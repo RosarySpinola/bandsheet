@@ -31,6 +31,13 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [overHero])
 
+  useEffect(() => {
+    if (!panel) return
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setPanel(false)
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [panel])
+
   const open = () => {
     window.clearTimeout(closeTimer.current)
     setPanel(true)
