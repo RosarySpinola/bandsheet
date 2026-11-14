@@ -46,8 +46,7 @@ export function SignInOptions({ onEnter }: { onEnter: () => void }) {
           <Option variant="line" icon={<Fingerprint className="size-5" />} title="Continue with email, passkey or Google" sub="NEAR Auth · no wallet or seed phrase" onClick={startNearAuth} disabled={busy || !authHere} />
           {!authHere && (
             <p className="-mt-1 text-[0.8125rem] leading-relaxed text-muted-foreground">
-              NEAR Auth's shared testnet login accepts only <code className="font-mono">localhost:3000</code>, so it runs from a local build for now. This
-              domain needs its own NEAR Auth client.
+              Unavailable on this site: NEAR Auth's shared testnet login only allows <code className="font-mono">localhost:3000</code> until its team allowlists this domain.
             </p>
           )}
           <Option variant="line" icon={<Wallet className="size-5" />} title="Connect a NEAR wallet" sub="NEAR Connect · Meteor, Intear, Nightly and more, on testnet" onClick={startWallet} disabled={busy} />

@@ -200,9 +200,16 @@ Do this, see that (routes: `/`, `/pricing`, `/unit`, `/unit/join`, `/unit/submit
   policy, not DNS. The DKIM `x=` expiry is not enforced and `l=` signatures are rejected. DKIM proves the email came
   from the key holder, not that payroll was right.
 - The committee is still the trusted registrar of member keys; a malicious majority could register fake members.
-- NEAR Auth's shared testnet login accepts only `http://localhost:3000` as its callback, so on the deployed site the NEAR Auth
-  button is disabled with that explanation; a deployed domain needs its own client in the NEAR Auth tenant
-  (`VITE_NEAR_AUTH_CLIENT_ID`). The published FastAuth SDK has no NEP-413 signing yet, hence the statement transaction.
+- **NEAR Auth is blocked on the deployed site.** What was tried: the shared testnet Auth0 client
+  (`np8paqIpMWmNbzT4xAvOOapZBjsOpptl` on `login.testnet.fast-auth.com`) from https://wallet.bandsheet.pages.dev. Exact error:
+  Auth0 403 `unauthorized_client: Callback URL mismatch. https://wallet.bandsheet.pages.dev is not in the list of allowed
+  callback URLs`. Probing other origins on 14 Nov 2026, only `http://localhost:3000` was accepted (localhost on other
+  ports, 127.0.0.1 and `bandsheet.pages.dev` all got the same 403). From `localhost:3000` the full path passed (passkey,
+  MPC signature, member added, submit, entry bound; tx links above). The deployed page shows the NEAR Auth button
+  disabled with a one-line reason. **What unblocks it:** the NEAR Auth team allowlisting `https://bandsheet.pages.dev` on
+  the shared testnet client, or issuing a client in their tenant for it (then set `VITE_NEAR_AUTH_CLIENT_ID`). Separately,
+  the published SDK (javascript-provider 1.4.1) has no NEP-413 signing and no public relayer, hence the statement
+  transaction and our own relay of `fast-auth.testnet` `sign`.
 - Sign-in opens membership to any NEAR account (one active key per account, but no roster or allow-list check yet): it
   proves control of an account, not employment or personhood, so one person with several accounts could join several times.
 - The audit is exact for k ≤ 3 (the default). For larger k it still catches any single member
