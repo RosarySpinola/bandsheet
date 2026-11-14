@@ -29,7 +29,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-svh bg-white">
       <SiteHeader />
-      <main className="gl-section pt-[calc(var(--gl)*12)] max-[991px]:pt-24">
+      <main className="gl-section pt-[calc(var(--gl)*12)]! max-[991px]:pt-28!">
         <div className="gl-container flex flex-col gap-[calc(var(--gl)*5)]">
           <Reveal>
             <h1 className="gl-h1">Choose your plan</h1>
@@ -42,17 +42,19 @@ export default function PricingPage() {
             <Reveal delay={0} className="flex flex-col gap-[calc(var(--gl)*2)] bg-band p-[calc(var(--gl)*3)] max-[991px]:p-6">
               <p className="text-[calc(var(--gl)*1.75)] font-semibold text-ink max-[991px]:text-lg">Chapel</p>
               <p className="gl-num text-[calc(var(--gl)*5)] leading-none text-ink max-[991px]:text-5xl">$0</p>
-              <p className="gl-body3">One union chapel or works council, up to 500 members. Everything Bandsheet does.</p>
+              <p className="gl-body3 max-[991px]:text-[0.9375rem]! max-[991px]:leading-[1.6]!">One union chapel or works council, up to 500 members. Everything Bandsheet does.</p>
               <Link to="/unit/join" className="mt-auto w-fit bg-ink px-[calc(var(--gl)*3)] py-[calc(var(--gl)*1.5)] text-[calc(var(--gl)*1.75)] text-white transition-colors duration-[400ms] ease-gl hover:bg-[#164537] max-[991px]:px-6 max-[991px]:py-3 max-[991px]:text-base">
                 Open the demo unit
               </Link>
             </Reveal>
             <Reveal delay={200} className="flex flex-col gap-[calc(var(--gl)*2)] bg-indigo p-[calc(var(--gl)*3)] text-white max-[991px]:p-6">
               <p className="text-[calc(var(--gl)*1.75)] font-semibold max-[991px]:text-lg">Bandsheet Federation</p>
-              <p className="gl-num text-[calc(var(--gl)*5)] leading-none max-[991px]:text-5xl">
-                $0.50<span className="font-sans text-[calc(var(--gl)*1.5)] font-normal max-[991px]:text-base"> per member / month</span>
+              {/* The unit wraps as one piece onto its own line on narrow screens, never mid-phrase. */}
+              <p className="flex flex-wrap items-baseline gap-x-[calc(var(--gl)*0.75)] gap-y-2">
+                <span className="gl-num text-[calc(var(--gl)*5)] leading-none max-[991px]:text-5xl">$0.50</span>
+                <span className="text-[calc(var(--gl)*1.5)] whitespace-nowrap max-[991px]:text-base">per member a month</span>
               </p>
-              <p className="gl-body3 text-white!">For federations and multi-employer bargaining: many units, cross-unit bands, your own pinned engine build.</p>
+              <p className="gl-body3 max-[991px]:text-[0.9375rem]! max-[991px]:leading-[1.6]! text-white!">For federations and multi-employer bargaining: many units, cross-unit bands, your own pinned engine build.</p>
               <a href="https://github.com/RosarySpinola/bandsheet/issues" target="_blank" rel="noreferrer" className="mt-auto w-fit bg-white px-[calc(var(--gl)*3)] py-[calc(var(--gl)*1.5)] text-[calc(var(--gl)*1.75)] text-indigo transition-colors duration-[400ms] ease-gl hover:bg-lav-soft max-[991px]:px-6 max-[991px]:py-3 max-[991px]:text-base">
                 Contact us
               </a>
@@ -63,15 +65,15 @@ export default function PricingPage() {
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b-2 border-ink">
-                  <th className="gl-body3 py-3 font-semibold">Compare</th>
-                  <th className="gl-body3 py-3 font-semibold">Chapel</th>
-                  <th className="gl-body3 py-3 font-semibold">Federation</th>
+                  <th className="gl-body3 max-[991px]:text-[0.9375rem]! max-[991px]:leading-[1.6]! py-3 font-semibold">Compare</th>
+                  <th className="gl-body3 max-[991px]:text-[0.9375rem]! max-[991px]:leading-[1.6]! py-3 font-semibold">Chapel</th>
+                  <th className="gl-body3 max-[991px]:text-[0.9375rem]! max-[991px]:leading-[1.6]! py-3 font-semibold">Federation</th>
                 </tr>
               </thead>
               <tbody>
                 {ROWS.map(([label, a, b]) => (
                   <tr key={label} className="border-b border-border">
-                    <td className="gl-body3 py-[calc(var(--gl)*1.1)] pr-4 max-[991px]:py-3">{label}</td>
+                    <td className="gl-body3 max-[991px]:text-[0.9375rem]! max-[991px]:leading-[1.6]! py-[calc(var(--gl)*1.1)] pr-4 max-[991px]:py-3">{label}</td>
                     <Cell v={a} />
                     <Cell v={b} />
                   </tr>
@@ -95,7 +97,7 @@ export default function PricingPage() {
 
 function Cell({ v }: { v: boolean | string }) {
   return (
-    <td className="gl-body3 py-[calc(var(--gl)*1.1)] max-[991px]:py-3">
+    <td className="gl-body3 max-[991px]:text-[0.9375rem]! max-[991px]:leading-[1.6]! py-[calc(var(--gl)*1.1)] max-[991px]:py-3">
       {typeof v === "string" ? v : v ? <Check className="size-5 text-ink" aria-label="Included" /> : <Minus className="size-5 text-inactive" aria-label="Not included" />}
     </td>
   )
@@ -119,7 +121,7 @@ function Faq({ q, a }: { q: string; a: string }) {
         <ChevronDown className={cn("size-6 shrink-0 transition-transform duration-200", open && "rotate-180")} />
       </button>
       <div className={cn("grid transition-[grid-template-rows] duration-200", open ? "grid-rows-[1fr] ease-out" : "grid-rows-[0fr] ease-in")}>
-        <p className="gl-body3 overflow-hidden pb-0 data-[open=true]:pb-4" data-open={open}>
+        <p className="gl-body3 max-[991px]:text-[0.9375rem]! max-[991px]:leading-[1.6]! overflow-hidden pb-0 data-[open=true]:pb-4" data-open={open}>
           {a}
         </p>
       </div>
