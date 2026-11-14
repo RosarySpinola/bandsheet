@@ -1,0 +1,15 @@
+diff --git a/build/SandboxedWallet/executor.js b/build/SandboxedWallet/executor.js
+index 6e8bdc24a679cecb4ca23f0421ae9d50105b24d6..28ab0ca0ea7a68d593e3beb85ba16142d8e2d5d7 100644
+--- a/build/SandboxedWallet/executor.js
++++ b/build/SandboxedWallet/executor.js
+@@ -227,7 +227,9 @@ class SandboxExecutor {
+                 success(null);
+                 return;
+             }
+-            const panel = window.open(event.data.params.url, "_blank", event.data.params.features);
++            // Bandsheet patch: no window features, so a web wallet (Meteor) opens as a tab in the same window, not a popup.
++            // The opener relationship is kept: the wallet answers through window.opener.postMessage and panel.closed means cancel.
++            const panel = window.open(event.data.params.url, "_blank");
+             const panelId = panel ? (0, uuid_1.uuid4)() : null;
+             const handler = (ev) => {
+                 const url = (0, url_1.parseUrl)(event.data.params.url);
