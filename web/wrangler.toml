@@ -1,0 +1,17 @@
+# Cloudflare Pages project "bandsheet": static SPA (web/dist) + Pages Functions (web/functions) on one origin.
+# Pages needs this file in the project root (web/), next to functions/. deploy/deploy.sh runs it from here.
+name = "bandsheet"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Non-secret config only. Secrets (NEARAI_API_KEY, COUNCIL_KEYS_JSON, DEMO_INVITE_JSON) are set with `wrangler pages secret put`.
+[vars]
+BANDSHEET_CONTRACT = "bandsheet-3f36b7.testnet"
+BANDSHEET_DAO = "harbour-chapel.sputnik-v2.testnet"
+BANDSHEET_COUNCIL = "bs-c1-3f36b7.testnet,bs-c2-3f36b7.testnet,bs-c3-3f36b7.testnet"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bandsheet-spend"
+database_id = "4f812a9f-1645-421e-b281-e65fff1d8640"

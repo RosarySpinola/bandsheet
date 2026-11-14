@@ -75,7 +75,7 @@ const upstream = (status: number, what: string): AppError => {
 export class NearAiClient {
   private readonly f: typeof fetch;
   constructor(private readonly o: NearAiOptions) {
-    this.f = o.fetchImpl ?? fetch;
+    this.f = o.fetchImpl ?? ((input, init) => fetch(input, init)); // a bare `fetch` called as this.f() throws "Illegal invocation" on Workers
   }
 
   private headers(extra: Record<string, string> = {}): Record<string, string> {

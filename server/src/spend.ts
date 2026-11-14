@@ -39,8 +39,46 @@ export interface Projection {
   maxOutputTokens?: number;
 }
 
+/** Where ledger rows live. The Node file store is the default; spend-d1.ts supplies a Cloudflare D1 one. */
+export interface LedgerStore {
+  /** Sum and count of every recorded call. Must throw SpendCapError when the ledger cannot be read (fail closed). */
+  totals(): Promise<{ total_usd: number; calls: number }>;
+  append(entry: LedgerEntry): Promise<void>;
+}
+
+/** JSON file ledger (local dev and tests). Writes go through a temp file and rename. */
+export class FileLedgerStore implements LedgerStore {
+  constructor(private readonly path: string) {}
+
+  private async read(): Promise<Ledger> {
+    if (!existsSync(this.path)) return { version: 1, entries: [] };
+    try {
+      const l = JSON.parse(await readFile(this.path, "utf8")) as Ledger;
+      if (l.version !== 1 || !Array.isArray(l.entries)) throw new Error("bad shape");
+      return l;
+    } catch {
+      throw new SpendCapError("spend ledger unreadable; refusing (fail closed)");
+    }
+  }
+
+  async totals(): Promise<{ total_usd: number; calls: number }> {
+    const l = await this.read();
+    return { total_usd: l.entries.reduce((s, e) => s + e.cost_usd, 0), calls: l.entries.length };
+  }
+
+  async append(entry: LedgerEntry): Promise<void> {
+    const l = await this.read();
+    l.entries.push(entry);
+    const tmp = `${this.path}.tmp`;
+    await writeFile(tmp, JSON.stringify(l, null, 2));
+    await rename(tmp, this.path);
+  }
+}
+
 export interface GuardOptions {
-  path: string;
+  /** Convenience: a JSON ledger file. Ignored when `store` is given. */
+  path?: string;
+  store?: LedgerStore;
   getPrice: PriceFn;
   cap?: number;
 }
@@ -55,8 +93,12 @@ export class SpendGuard {
   private pending = 0;
   private chain: Promise<unknown> = Promise.resolve();
 
+  private readonly store: LedgerStore;
+
   constructor(private readonly opts: GuardOptions) {
     this.cap = opts.cap ?? SPEND_CAP_USD;
+    if (!opts.store && !opts.path) throw new Error("SpendGuard needs a store or a path");
+    this.store = opts.store ?? new FileLedgerStore(opts.path as string);
   }
 
   private serial<T>(fn: () => Promise<T>): Promise<T> {
@@ -65,31 +107,12 @@ export class SpendGuard {
     return run;
   }
 
-  private async read(): Promise<Ledger> {
-    if (!existsSync(this.opts.path)) return { version: 1, entries: [] };
-    try {
-      const l = JSON.parse(await readFile(this.opts.path, "utf8")) as Ledger;
-      if (l.version !== 1 || !Array.isArray(l.entries)) throw new Error("bad shape");
-      return l;
-    } catch {
-      throw new SpendCapError("spend ledger unreadable; refusing (fail closed)");
-    }
-  }
-
-  private async write(l: Ledger): Promise<void> {
-    const tmp = `${this.opts.path}.tmp`;
-    await writeFile(tmp, JSON.stringify(l, null, 2));
-    await rename(tmp, this.opts.path);
-  }
-
   async total(): Promise<number> {
-    const l = await this.read();
-    return l.entries.reduce((s, e) => s + e.cost_usd, 0);
+    return (await this.store.totals()).total_usd;
   }
 
   async summary(): Promise<{ total_usd: number; calls: number; cap_usd: number }> {
-    const l = await this.read();
-    return { total_usd: l.entries.reduce((s, e) => s + e.cost_usd, 0), calls: l.entries.length, cap_usd: this.cap };
+    return { ...(await this.store.totals()), cap_usd: this.cap };
   }
 
   private async project(model: string, p: Projection): Promise<number> {
@@ -127,8 +150,7 @@ export class SpendGuard {
     } finally {
       await this.serial(async () => {
         this.pending -= projected;
-        const l = await this.read();
-        l.entries.push({
+        await this.store.append({
           ts: new Date().toISOString(),
           model,
           kind,
@@ -136,7 +158,6 @@ export class SpendGuard {
           completion_tokens: usage.completion_tokens ?? 0,
           cost_usd: Number(cost.toFixed(8)),
         });
-        await this.write(l);
       });
     }
   }

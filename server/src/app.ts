@@ -41,6 +41,7 @@ export function createApp(deps: Deps): Hono {
   app.onError((err, c) => {
     if (err instanceof AppError) return c.json(err.body(), err.status);
     if (err instanceof ZodError) return c.json({ error: "invalid request", code: "BAD_REQUEST" }, 400);
+    console.error("unhandled error", err instanceof Error ? `${err.name}: ${err.message}` : String(err));
     return c.json({ error: "internal error", code: "INTERNAL" }, 500);
   });
   return app;
