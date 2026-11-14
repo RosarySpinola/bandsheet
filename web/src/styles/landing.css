@@ -1,0 +1,74 @@
+/* Greenlock type scale, expressed in its fluid unit (--gl) so the app keeps a normal 16px root. */
+.gl-h1 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-variation-settings: "opsz" 72;
+  font-size: calc(var(--gl) * 4.625);
+  line-height: calc(var(--gl) * 5.063);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.gl-h2 {
+  font-weight: 400;
+  font-size: calc(var(--gl) * 2.25);
+  line-height: calc(var(--gl) * 2.875);
+  color: var(--ink);
+}
+.gl-h2-sb { font-weight: 600; }
+.gl-body1 {
+  font-size: calc(var(--gl) * 1.75);
+  line-height: calc(var(--gl) * 2.375);
+  color: var(--text);
+}
+.gl-body3 {
+  font-size: calc(var(--gl) * 1.25);
+  line-height: calc(var(--gl) * 2);
+  color: var(--text);
+}
+.gl-cta {
+  font-weight: 600;
+  font-size: calc(var(--gl) * 2.5);
+  line-height: calc(var(--gl) * 3.375);
+  color: var(--ink);
+}
+.gl-nav {
+  font-size: calc(var(--gl) * 1.75);
+  line-height: calc(var(--gl) * 1.75);
+  color: var(--text);
+}
+.gl-label {
+  font-size: calc(var(--gl) * 1.75);
+  line-height: calc(var(--gl) * 2.375);
+}
+.gl-num {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-variation-settings: "opsz" 72;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.gl-section { padding: calc(var(--gl) * 8) calc(var(--gl) * 2.25); }
+.gl-container { max-width: 1940px; margin-inline: auto; padding-inline: calc(var(--gl) * 2); }
+
+@media (max-width: 991px) {
+  .gl-h1 { font-size: calc(var(--gl) * 3); line-height: calc(var(--gl) * 3); }
+  .gl-h2 { font-size: calc(var(--gl) * 1.875); line-height: calc(var(--gl) * 2.5); }
+  .gl-body1 { font-size: calc(var(--gl) * 1.188); line-height: calc(var(--gl) * 1.875); }
+  .gl-body3 { font-size: calc(var(--gl) * 1); line-height: calc(var(--gl) * 1.313); }
+  .gl-cta { font-size: calc(var(--gl) * 1.875); line-height: calc(var(--gl) * 2.625); }
+  .gl-section { padding: calc(var(--gl) * 4) calc(var(--gl) * 1); }
+}
+
+/* Logo ticker: 70s linear loop. */
+@keyframes gl-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.gl-ticker-track { animation: gl-ticker 70s linear infinite; }
+
+/* Slow drift for the generated shard field (our own art, not Greenlock's video). */
+@keyframes shard-sway {
+  0%, 100% { transform: rotate(var(--r0)) scaleY(1); }
+  50% { transform: rotate(var(--r1)) scaleY(1.04); }
+}
+.shard { transform-origin: 100% 0%; animation: shard-sway var(--dur, 9s) var(--ease) infinite; }
