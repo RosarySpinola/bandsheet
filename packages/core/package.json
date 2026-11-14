@@ -1,0 +1,29 @@
+{
+  "name": "@bandsheet/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared schemas, crypto, seed data and NEAR helpers for Bandsheet (synthetic data only).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./near": "./src/near.ts",
+    "./seed": "./src/seed.ts",
+    "./crypto": "./src/crypto.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@noble/ciphers": "^2.4.0",
+    "@noble/curves": "^2.4.0",
+    "@noble/hashes": "^2.4.0",
+    "near-api-js": "^7.5.3",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

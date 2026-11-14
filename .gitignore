@@ -1,0 +1,10 @@
+.env*
+!.env.example
+node_modules/
+target/
+dist/
+.spend.json
+*.key
+keys/
+.near-credentials/
+.DS_Store
