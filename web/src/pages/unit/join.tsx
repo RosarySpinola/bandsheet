@@ -10,6 +10,7 @@ import { CtaButton, SquareButton } from "@/components/unit/links"
 import { ErrorState } from "@/components/unit/states"
 import { PassMark } from "@/components/unit/verified-panel"
 import { JoinVisual } from "@/components/unit/join/join-visual"
+import { SignInOptions } from "@/components/unit/join/sign-in-options"
 
 type State = { status: "idle" | "busy" | "error" | "done"; source?: KeySource; data?: CheckedKey; error?: unknown }
 
@@ -59,15 +60,24 @@ export default function Join() {
               Join your chapel
             </h1>
             <p className="text-[1.0625rem] leading-relaxed text-foreground">
-              Open your member key. It lets you add your pay privately and ask where you stand. It cannot read anyone's figures, yours
-              included.
+              Join with your NEAR account, or open a member key. It lets you add your pay privately and ask where you stand. It cannot
+              read anyone's figures, yours included.
             </p>
           </div>
 
           <div className="flex flex-col gap-6">
-            <SquareButton onClick={() => open("demo")} disabled={busy} className="w-full">
-              {busy && state.source === "demo" ? "Opening the demo member's key…" : "Use the demo member"}
-            </SquareButton>
+            <div className="flex flex-col gap-2">
+              <p className="text-[0.8125rem] font-medium tracking-[0.02em] text-muted-foreground uppercase">For judges and AI screeners</p>
+              <SquareButton onClick={() => open("demo")} disabled={busy} className="w-full">
+                {busy && state.source === "demo" ? "Opening the demo member's key…" : "Try as a demo member (no sign-in)"}
+              </SquareButton>
+            </div>
+            <div className="flex items-center gap-4 text-[0.875rem] text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              or
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <SignInOptions onEnter={() => navigate(next)} />
             <div className="flex items-center gap-4 text-[0.875rem] text-muted-foreground">
               <span className="h-px flex-1 bg-border" />
               or open your own invite

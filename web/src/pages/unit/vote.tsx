@@ -10,6 +10,7 @@ import { useDaoActions, type VoteInput } from "@/components/unit-b/dao-actions"
 import { useDaoProposals, type DaoProposal, type ProposeResult } from "@/components/unit-b/data"
 import { ProposalCard, type VoteState } from "@/components/unit-b/proposal-card"
 import { QueryBuilder } from "@/components/unit-b/query-builder"
+import { WalletSeat } from "@/components/unit-b/wallet-seat"
 
 /** Approved release proposals, in order, line up with release records in order. */
 function linkReleases(proposals: DaoProposal[], releases: ReleaseRecord[]): Map<number, ReleaseRecord> {
@@ -129,6 +130,8 @@ export default function VotePage() {
           Mock mode{mock !== "1" ? ` (${mock})` : ""}: proposals and votes are simulated in your browser. Nothing is sent to NEAR testnet.
         </p>
       )}
+
+      {!mock && <WalletSeat proposals={list} />}
 
       <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-10">
         <Reveal className="flex min-w-0 flex-col gap-12">

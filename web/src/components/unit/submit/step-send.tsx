@@ -7,6 +7,7 @@ import { HashValue } from "../copy-button"
 import { AccountLink, CtaButton, CtaLink, ExtLink, SquareButton, TxLink } from "../links"
 import { ErrorState } from "../states"
 import type { SubmitFlow } from "./use-submit-flow"
+import { BindEntry } from "@/lib/wallet/bind-entry"
 
 /** Step 4: show the sealed envelope, then sign `submit` with the member key. */
 export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }) {
@@ -92,6 +93,7 @@ export function StepDone({ flow }: { flow: SubmitFlow }) {
           {flow.invite.status === "done" && flow.invite.data ? <HashValue value={flow.invite.data.invite.slot} head={12} tail={6} /> : "—"}
         </Fact>
       </dl>
+      <BindEntry ciphertext={flow.sealed} slot={flow.invite.status === "done" ? flow.invite.data?.invite.slot : undefined} />
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
         <CtaLink to="/unit/stand" size="lg">
           See where you stand
