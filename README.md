@@ -72,11 +72,20 @@ Tested live on https://bandsheet.pages.dev (14 Nov 2026), through NEAR Connect's
 - signing it posted the entry: [submit](https://testnet.nearblocks.io/txns/9tRQdptwc6PvnPQtD1H9QKTSrdjzp7hhoxxdvthGKE5v), signed by the union account's posting key, and the binding was recorded
 - cleanup: test keys revoked, so 38 members and 38 entries again
 
+**Tested with a real wallet** (15 Nov 2026, Meteor Web, testnet account `rosaryspinola.testnet`):
+- join on https://bandsheet.pages.dev: Meteor showed "Connect Request", then "Sign Message" with `Bandsheet join: ed25519:…`, and the posting key was added ([add_members](https://testnet.nearblocks.io/txns/HqMJwS83E8MWPi7wgEhyaJw2HKtqKWVoF7ArF7A1z1aQ)).
+- decline: rejecting `Bandsheet entry:` in Meteor showed "Your wallet did not sign, so nothing was posted"; the entry count did not change.
+- that test found a bug, now fixed. The first approved entry landed, but dRPC answered `send_tx` with "Request timeout on the free plan", so the server reported a refusal and recorded no binding. Fix: the server now sends without waiting and polls the outcome by hash.
+- after the fix, on the `wallet` preview: Meteor signed `Bandsheet entry: 2e68941d…`, then the posting key's submit was posted ([submit](https://testnet.nearblocks.io/txns/DgmK33f4f7Ys3m74y5UkVbRPCjUFu7rNmfRvS5T5x4wy), FINAL, signed by `bandsheet-3f36b7.testnet`) and the binding was recorded. Re-joining there revoked the earlier key ([add](https://testnet.nearblocks.io/txns/A86yfExSoCDrrCDpvvGQvDzXCLBGfKVqJY8d46D2G7Um), [revoke](https://testnet.nearblocks.io/txns/5ybNcjZDLUyk74eGUfUEZSEQ9o9fa3oFBBgPFRyGAzbF)).
+- council seat: `scripts/seat-swap.ts rosaryspinola.testnet`. Proposal #7 removed `bs-c3-3f36b7.testnet` and #8 added the wallet, each approved by seats 1 and 2 ([#7](https://testnet.nearblocks.io/txns/9VjNCUfpeEpz29ugKCL1JtxLjxrMHFL6mREq3Jo9uhxU), [#8](https://testnet.nearblocks.io/txns/AroWR2suUSScvEMHWCpHMj4s9QFrxXqKWA8psarJMYnk)). Poll #9 was opened ([poll](https://testnet.nearblocks.io/txns/7QWtjhXzMtGi6vQfXCK2hwbyybDEssodQH7CbZn4D4by)). `get_policy` now lists bs-c1, bs-c2 and rosaryspinola.testnet, still 2 of 3.
+- vote, from a local production build on localhost: the seat panel showed the poll with Approve and Reject, and Meteor signed `act_proposal` VoteApprove ([vote](https://testnet.nearblocks.io/txns/2zayXCuFockYuhzY2t1JmUWwqY9eAcW8AQsQuqRLFGjg), FINAL). After seat 1 also approved ([seat 1](https://testnet.nearblocks.io/txns/3ks6icnsY1s6Ezx5Q5DcKhnPcw49XnYKm5Xh9fQmZF5X)), poll #9 is Approved, 2 of 3.
+- web wallets open their tab from the user's tap: everything is prepared before the tap, and `window.__bsSignTrace` recorded `signMessage` and `signAndSendTransaction` starting inside the click's task.
+
 Meteor's web wallet opens as a tab in the same window: `patches/@hot-labs__near-connect@0.12.0.patch` drops the popup
 window features and keeps the opener link. An Ethereum Wallets join reached evm-on-near.dev and connected a scripted
 EIP-1193 wallet. That page then stopped at "Setup failed: Failed to fetch", because its testnet RPC
-(`rpc.testnet.fastnear.com`) answered HTTP 429. The EIP-191 check itself is covered by unit tests only. Not tested with
-real wallet apps (Meteor, Intear, Nightly, Ledger, MetaMask) or a real seat vote.
+(`rpc.testnet.fastnear.com`) answered HTTP 429. The EIP-191 check itself is covered by unit tests only. Intear, Nightly,
+Ledger and MetaMask were not tried with real apps.
 
 Council seat for a member's wallet: `scripts/seat-swap.ts <accountId>` proposes removing `bs-c3-3f36b7.testnet` and
 adding the account (seats 1 and 2 approve each), then opens a signalling poll. The council stays at 3 seats with 2 of 3
