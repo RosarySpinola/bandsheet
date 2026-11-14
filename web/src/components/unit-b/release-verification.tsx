@@ -24,7 +24,13 @@ export function ReleaseVerification({ extras: x }: { extras: ReleaseExtras }) {
           {x.rejections.map((r) => (
             <li key={r.reason} className="flex items-start gap-3 text-[0.9375rem] font-medium text-ink">
               <MailX className="mt-0.5 size-4 shrink-0" />
-              {rejectionText(r)}
+              <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                {rejectionText(r)}
+                {/* The engine's own reason code, exactly as recorded on chain. */}
+                <code className="bg-white px-1.5 py-0.5 font-mono text-[0.75rem] font-normal text-muted-foreground" title="Reason code in the on-chain release record">
+                  {r.reason}
+                </code>
+              </span>
             </li>
           ))}
           <li className="text-[0.8125rem] text-muted-foreground">Refused entries are left out of every cell. The record names no one.</li>
