@@ -1,0 +1,15 @@
+[warm, explaining calmly across a table] Say your union asks for average pay by grade, and a month later one reporter joins and you ask again. Both tables hide any group smaller than three, so they look safe. But subtract one from the other, and you get her exact salary: seventy thousand euros. Nobody hacked anything. Two honest tables did it.
+
+[pause] Band-sheet is built to stop exactly that.
+
+So a member drops in the payslip email their payroll sent. NEAR AI Cloud reads it inside a confidential GPU. Before anything is sent, we check a fresh attestation, an Intel T-D-X quote and NVIDIA's GPU report tied to our nonce, and afterwards the signature on its answer. The entry is sealed in the browser to a key that only exists inside an OutLayer enclave. Each member's NEAR key can call only submit, so it goes on chain without gas, and a newer payslip replaces the old one.
+
+Now, if someone edits even one digit, it doesn't count. The chapel voted on NEAR to trust the employer's D-K-I-M key, and the enclave checks every signature. In release three, someone turned a four into a six on one payslip, and the enclave threw it out.
+
+When the chapel wants a release, it votes in its Sputnik DAO. Two of three seats approve, the contract calls the enclave, and the enclave replays every earlier table and solves the attacker's equations first. So it publishes four bands, withholds the Senior one, and writes why to NEAR, with the exact subtraction it refused.
+
+We ran a hundred generated attacks. A typical tool leaked salaries in ninety-five of them. Band-sheet leaked none, and still published nearly three cells in four. You don't have to trust us: one command re-checks nineteen claims against the chain, and you can try the subtraction yourself on the site.
+
+Union reps can ask Band-sheet from Claude through an M-C-P tool, say why a table was refused, and it answers without a single salary. And every member sees where they stand next to Eurostat's median for their job, with an Article 7 pay request ready to send.
+
+[pause] That's Band-sheet: every band published, and nobody exposed.

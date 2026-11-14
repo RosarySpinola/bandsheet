@@ -1,0 +1,26 @@
+{
+  "name": "bandsheet-film",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio --port 3123",
+    "render": "remotion render Film out/bandsheet-film.mp4 --codec h264 --crf 18 --pixel-format yuv420p --color-space bt709",
+    "still": "remotion still"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.1",
+    "@remotion/cli": "4.0.529",
+    "@remotion/google-fonts": "4.0.529",
+    "@remotion/three": "4.0.529",
+    "@types/three": "0.186.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.529",
+    "three": "0.186.1",
+    "typescript": "5.9.3"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3"
+  }
+}

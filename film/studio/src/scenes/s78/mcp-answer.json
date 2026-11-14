@@ -1,0 +1,27 @@
+{
+  "_note": "Verbatim output of the bandsheet-mcp explain_refusal tool (mcp/dist/index.js over stdio, default API https://bandsheet.pages.dev/api). Re-check with: node src/scenes/s78/check-s78.mjs",
+  "captured_at": "2026-11-14T15:39:35.320Z",
+  "tool": "explain_refusal",
+  "arguments": {
+    "release_id": 3,
+    "cell": "Senior"
+  },
+  "question": "Why was the Senior band withheld in release #3?",
+  "text": "Release #3 withheld grade=Senior.\nReason: differencing.\nWitness (the exact check that failed): \"Release #3 Senior - Release #1 Senior isolates 1 member\"\n\nPublishing this cell would let anyone subtract an earlier release from this one and solve for a single member's pay. Bandsheet checks every earlier release too, not just this one, and withholds a cell the moment it becomes solvable.\n\nFor scale: release #1 published grade=Senior as an average of 9 members at EUR 62,400. A newer average over a slightly different group, minus that, leaves exactly the difference between the groups: one person's pay.",
+  "structured": {
+    "found": true,
+    "release_id": 3,
+    "cell": {
+      "grade": "Senior"
+    },
+    "reason": "differencing",
+    "witness": "Release #3 Senior - Release #1 Senior isolates 1 member"
+  },
+  "pay_context_MT": {
+    "median_monthly_eur": 2189,
+    "year": 2018,
+    "isco08": "OC2",
+    "isco_label": "Professionals",
+    "dataset": "earn_ses_monthly"
+  }
+}

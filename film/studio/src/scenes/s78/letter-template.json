@@ -1,0 +1,10 @@
+{
+  "_note": "Output of server/src/letter.ts templateLetter(\"Reporter\", \"MT\"), the app's own Article 7 letter generator. Re-check with: node src/scenes/s78/check-s78.mjs",
+  "generator": "server/src/letter.ts templateLetter",
+  "args": {
+    "grade": "Reporter",
+    "country": "MT"
+  },
+  "subject": "Request for pay information under Article 7 of Directive (EU) 2023/970",
+  "body": "Dear [HR / Pay Transparency Contact],\n\nI am writing as a Reporter at [Employer] [Job title, site] to exercise my right to pay information under Article 7 of Directive (EU) 2023/970 (the Pay Transparency Directive), as transposed into Maltese law.\n\nPlease provide in writing:\n1. My individual pay level.\n2. The average pay levels, broken down by sex, for the category of workers performing the same work as me or work of equal value to mine.\n3. The criteria used to determine pay, pay levels and pay progression for that category.\n\nArticle 7(4) asks for a reply within a reasonable period, and in any event within two months of this request. I am also content to receive the information through my union representative.\n\nKind regards,\n[Your name]\n[Date]"
+}
