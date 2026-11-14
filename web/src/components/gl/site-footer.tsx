@@ -13,12 +13,21 @@ export function SiteFooter() {
         </div>
         <div className="flex flex-col items-start">
           <span>Runs on NEAR testnet · synthetic demo unit</span>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-x-6">
             <a href="https://github.com/RosarySpinola/bandsheet" className="wipe" target="_blank" rel="noreferrer">
               Source
             </a>
             <Link to="/unit" className="wipe">
               Demo unit
+            </Link>
+            <Link to="/pricing" className="wipe">
+              Pricing
+            </Link>
+            <Link to="/terms" className="wipe">
+              Terms
+            </Link>
+            <Link to="/privacy" className="wipe">
+              Privacy
             </Link>
           </div>
         </div>
