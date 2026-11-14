@@ -1,9 +1,21 @@
-import { Account, JsonRpcProvider, KeyPair, type KeyPairString, teraToGas } from "near-api-js";
+import { Account, FailoverRpcProvider, JsonRpcProvider, KeyPair, type KeyPairString, type Provider, teraToGas } from "near-api-js";
 import { z } from "zod";
 import { slotIdFromNearPublicKey } from "./slot";
 import { type Ciphertext, CiphertextSchema } from "./schemas";
 
 export const TESTNET_RPC = "https://test.rpc.fastnear.com";
+/** Tried in order; each endpoint retries with exponential backoff before the next is used. */
+export const TESTNET_RPCS: readonly string[] = [TESTNET_RPC, "https://archival-rpc.testnet.near.org"];
+
+/** Testnet provider with endpoint failover and per-endpoint backoff (the public RPCs rate-limit hard). */
+export function makeProvider(urls: readonly string[] = TESTNET_RPCS): Provider {
+  for (const u of urls) {
+    if (/mainnet/i.test(u) || /^https:\/\/(rpc|archival-rpc)\.near\.org/i.test(u)) throw new Error("refusing non-testnet RPC");
+  }
+  const mk = (url: string): Provider => new JsonRpcProvider({ url }, { retries: 4, wait: 600, backoff: 1.8 });
+  const list = urls.map(mk);
+  return list.length === 1 ? list[0]! : new FailoverRpcProvider(list);
+}
 
 /** Fields accepted from an invite file, tolerant of snake_case and camelCase. */
 const InviteRaw = z
@@ -55,6 +67,8 @@ export function parseInvite(json: unknown, defaultContractId?: string): Invite {
 }
 
 export interface SubmitOptions {
+  /** Provider override (the server passes its failover provider). */
+  provider?: Provider;
   /** Contract method name. Default "submit". */
   method?: string;
   /** Wait milestone. Default EXECUTED_OPTIMISTIC (near-api-js default). */
@@ -69,21 +83,32 @@ export async function submitEntry(
   invite: Invite,
   ciphertext: Ciphertext,
   opts: SubmitOptions = {},
-): Promise<{ result: unknown }> {
-  if (/mainnet|near\.org\/?$/i.test(invite.rpcUrl) && !/testnet/i.test(invite.rpcUrl)) {
-    throw new Error("refusing non-testnet RPC");
-  }
+): Promise<{ result: unknown; txHash?: string }> {
   const body = CiphertextSchema.parse(ciphertext);
-  const provider = new JsonRpcProvider({ url: invite.rpcUrl });
+  const provider = opts.provider ?? makeProvider([invite.rpcUrl]);
   const account = new Account(invite.accountId, provider, invite.privateKey);
-  const result = await account.callFunction({
+  const out = await account.callFunctionRaw({
     contractId: invite.contractId,
     methodName: opts.method ?? "submit",
     args: { ciphertext: body },
     gas: teraToGas(opts.gasTeras ?? 30),
     deposit: 0n,
   });
-  return { result };
+  const status = out.status as { SuccessValue?: string; Failure?: unknown } | string;
+  if (typeof status === "object" && status && "Failure" in status && status.Failure) {
+    throw new Error(`submit refused on chain: ${JSON.stringify(status.Failure).slice(0, 300)}`);
+  }
+  let result: unknown = undefined;
+  const raw = typeof status === "object" ? status?.SuccessValue : undefined;
+  if (raw) {
+    const text = atob(raw);
+    try {
+      result = JSON.parse(text);
+    } catch {
+      result = text;
+    }
+  }
+  return { result, txHash: out.transaction?.hash ?? out.transaction_outcome?.id };
 }
 
 /** Read-only contract view call over NEAR RPC (no key needed). */
@@ -91,9 +116,9 @@ export async function viewCall<T = unknown>(
   contractId: string,
   method: string,
   args: Record<string, unknown> = {},
-  rpcUrl: string = TESTNET_RPC,
+  rpcUrl?: string | Provider,
 ): Promise<T> {
-  const provider = new JsonRpcProvider({ url: rpcUrl });
+  const provider = typeof rpcUrl === "object" ? rpcUrl : makeProvider(rpcUrl ? [rpcUrl] : TESTNET_RPCS);
   return (await provider.callFunction({ contractId, method, args })) as T;
 }
 
