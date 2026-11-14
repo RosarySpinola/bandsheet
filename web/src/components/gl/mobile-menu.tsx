@@ -77,9 +77,10 @@ export function MobileMenu() {
           </ul>
         </div>
         {[
-          { href: "#how", label: "How it works" },
-          { href: "#proof", label: "Proof" },
-          { href: "#privacy", label: "Privacy" },
+          { href: "/#how", label: "How it works" },
+          { href: "/#proof", label: "Proof" },
+          { href: "/#privacy", label: "Privacy" },
+          { href: "/pricing", label: "Pricing" },
         ].map((l) => (
           <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="font-serif text-[2.6rem] leading-none text-ink">
             {l.label}

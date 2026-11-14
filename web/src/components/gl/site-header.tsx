@@ -6,9 +6,10 @@ import { SCREENS } from "./screens"
 import { MobileMenu } from "./mobile-menu"
 
 const LINKS = [
-  { href: "#how", label: "How it works" },
-  { href: "#proof", label: "Proof" },
-  { href: "#privacy", label: "Privacy" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#proof", label: "Proof" },
+  { href: "/#privacy", label: "Privacy" },
+  { href: "/pricing", label: "Pricing" },
 ]
 
 /** Greenlock header: transparent over the hero, white past 59% of it (2% on mobile). */

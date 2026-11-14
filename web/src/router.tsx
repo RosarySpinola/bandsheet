@@ -11,11 +11,17 @@ const Attack = lazy(() => import("./pages/unit/attack"))
 const Vote = lazy(() => import("./pages/unit/vote"))
 const Stand = lazy(() => import("./pages/unit/stand"))
 const Verify = lazy(() => import("./pages/unit/verify"))
+const Join = lazy(() => import("./pages/unit/join"))
+const How = lazy(() => import("./pages/unit/how"))
+const Help = lazy(() => import("./pages/unit/help"))
+const Pricing = lazy(() => import("./pages/pricing"))
 
 const s = (node: ReactNode) => <Suspense fallback={null}>{node}</Suspense>
 
 export const router = createBrowserRouter([
   { path: "/", element: <LandingPage /> },
+  { path: "/pricing", element: s(<Pricing />) },
+  { path: "/unit/join", element: s(<Join />) },
   {
     path: "/unit",
     element: s(<AppShell />),
@@ -27,6 +33,8 @@ export const router = createBrowserRouter([
       { path: "vote", element: s(<Vote />) },
       { path: "stand", element: s(<Stand />) },
       { path: "verify", element: s(<Verify />) },
+      { path: "how", element: s(<How />) },
+      { path: "help", element: s(<Help />) },
     ],
   },
 ])
