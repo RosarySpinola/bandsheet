@@ -1,0 +1,10 @@
+{
+  "enclave_sk_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+  "envelope": {
+    "ct": "jr8wT//vCrYzXPGmZEtNC/kVhE1BjSc2604lbD5+u0BF2UhKBoc1NTJ1H6vr+eXlZxAbZRM1b+lyStngLnCH1Iq4WMI5qwv9MX6SOn5P0WdOnsQl/ajtNeT23+CFRp0UTCxtnbjxfJpQ9QrRv9sA8UMN5oZZsetDk2Oi1uZDEGD1SGQ8Uc1uwcvReW8CnvYKk66orTw6LVmIc3x60SxAdNiMIlybJnumZzPp+1Yl2Pnw3zlltP/SnBY3",
+    "epk": "OKtmS9hvd9fma92a4HkpE6lP2LM6EmACfktGwfSITGc=",
+    "nonce": "ZmZmZmZmZmZmZmZm"
+  },
+  "note": "Made by Rust (bandsheet-enclave) with fixed keys. Test keys only.",
+  "plaintext": "{\"slot\":\"000000000000000000000000000000000000000000000000000000000000002a\",\"gross_annual_eur\":70000,\"grade\":\"Senior\",\"gender\":\"F\",\"site\":\"City\",\"submitted_at\":1763078400}"
+}

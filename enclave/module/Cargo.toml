@@ -1,0 +1,26 @@
+[package]
+name = "bandsheet-enclave"
+version = "0.1.0"
+edition = "2021"
+description = "Bandsheet OutLayer module: decrypts member entries inside the TEE, runs the release audit, returns bands."
+publish = false
+
+[lib]
+name = "bandsheet_enclave"
+path = "src/lib.rs"
+
+[[bin]]
+name = "bandsheet-enclave"
+path = "src/main.rs"
+
+[dependencies]
+bandsheet-audit = { path = "../audit" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
+x25519-dalek = { version = "2", default-features = false, features = ["static_secrets"] }
+hkdf = "0.12"
+chacha20poly1305 = "0.10"
+getrandom = "0.3"

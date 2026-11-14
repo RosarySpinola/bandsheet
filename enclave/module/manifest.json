@@ -1,0 +1,7 @@
+{
+  "display": {
+    "name": "Bandsheet enclave (private pay-band release audit)"
+  },
+  "operations": ["release", "pubkey"],
+  "capabilities": {}
+}
