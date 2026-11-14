@@ -184,7 +184,7 @@ describe("rate limiting", () => {
 describe("RPC provider", () => {
   it("fails over across testnet endpoints and refuses mainnet", () => {
     const p = makeProvider() as unknown as { providers: { connection: { url: string } }[] };
-    expect(p.providers.map((x) => x.connection.url)).toEqual(["https://test.rpc.fastnear.com", "https://archival-rpc.testnet.near.org"]);
+    expect(p.providers.map((x) => x.connection.url)).toEqual(["https://test.rpc.fastnear.com", "https://archival-rpc.testnet.near.org", "https://near-testnet.drpc.org"]);
     expect(() => makeProvider(["https://rpc.mainnet.near.org"])).toThrow(/non-testnet/);
     expect(() => makeProvider(["https://rpc.near.org"])).toThrow(/non-testnet/);
   });

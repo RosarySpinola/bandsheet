@@ -21,7 +21,8 @@
     "hono": "^4.6.0",
     "near-api-js": "^7.5.3",
     "unpdf": "^1.0.0",
-    "zod": "^4.0.0"
+    "zod": "^4.0.0",
+    "postal-mime": "^2.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

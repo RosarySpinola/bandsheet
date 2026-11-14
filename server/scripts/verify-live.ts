@@ -48,9 +48,9 @@ function show(title: string, body: { verified?: { all_passed: boolean; checks: {
   if (!v?.all_passed) failed++;
 }
 
-async function extract(file: string, mime: string): Promise<Record<string, unknown>> {
+async function extract(file: string, mime: string, dir = resolve(SERVER_DIR, "fixtures/payslips")): Promise<Record<string, unknown>> {
   const fd = new FormData();
-  fd.set("file", new File([new Uint8Array(readFileSync(resolve(SERVER_DIR, "fixtures/payslips", file)))], file, { type: mime }));
+  fd.set("file", new File([new Uint8Array(readFileSync(resolve(dir, file)))], file, { type: mime }));
   const res = await app.request("/api/extract", { method: "POST", body: fd });
   const body = (await res.json()) as Record<string, unknown>;
   if (res.status !== 200) {
@@ -58,6 +58,23 @@ async function extract(file: string, mime: string): Promise<Record<string, unkno
     failed++;
   }
   return body;
+}
+
+// --only-eml: one verified call on a DKIM-signed .eml payslip (fixtures/dkim/emails), recorded as fixtures/recorded-eml.json.
+if (process.argv.includes("--only-eml")) {
+  const ex = await extract("leila-benali.eml", "message/rfc822", resolve(SERVER_DIR, "../fixtures/dkim/emails"));
+  out(`extracted: ${JSON.stringify(ex.extracted)}`);
+  out(`dkim_preview: ${JSON.stringify(ex.dkim_preview)}`);
+  show("extract (.eml)", ex as never);
+  const ok = (ex.extracted as { gross_annual_eur?: number } | undefined)?.gross_annual_eur === 41200;
+  out(`extraction correct (41200 expected): ${ok}`);
+  const rec = exchanges[exchanges.length - 1];
+  if (rec && !process.argv.includes("--no-save")) {
+    writeFileSync(resolve(SERVER_DIR, "fixtures/recorded-eml.json"), JSON.stringify({ recorded_at: new Date().toISOString(), model: cfg.textModel, ...rec }, null, 1));
+  }
+  const t = await guard.summary();
+  out(`spend ledger: USD ${t.total_usd.toFixed(6)} of ${t.cap_usd} over ${t.calls} entries`);
+  process.exit(ok && failed === 0 ? 0 : 1);
 }
 
 // --skip-extract re-runs only the text path (saves a paid vision call while iterating).

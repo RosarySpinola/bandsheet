@@ -4,7 +4,7 @@ import { type Cell, CellSchema, GenderSchema, GradeSchema, SiteSchema } from "@b
 import type { Deps } from "../deps";
 import { AppError } from "../errors";
 import { parseModelJson } from "../json";
-import { type Letter, isAcceptableLetter, templateLetter } from "../letter";
+import { type Letter, isAcceptableLetter, replyDeadline, templateLetter } from "../letter";
 import { latestBands, readReleases } from "./releases";
 
 export const StandRequestSchema = z.object({
@@ -12,6 +12,8 @@ export const StandRequestSchema = z.object({
   grade: GradeSchema,
   gender: GenderSchema.optional(),
   site: SiteSchema.optional(),
+  /** Where the chapel is; sets the reply deadline in the letter. The demo chapel is in Malta. */
+  country: z.enum(["MT", "GR", "DE", "FR", "IE"]).default("MT"),
   /** Public released bands. If omitted the server reads the latest release from the contract. */
   bands: z.array(CellSchema).max(200).optional(),
 });
@@ -49,8 +51,8 @@ const SYSTEM = [
   'that bands are averages of n members; if position is null say the chapel could not publish that band safely) and',
   '"letter" ({subject, body}) a polite Article 7 pay-information request under Directive (EU) 2023/970 asking the employer for',
   "the member's individual pay level, the average pay levels broken down by sex for workers doing the same work or work of equal",
-  "value, and the criteria used to set pay, with a reply within two months. Use bracketed placeholders for name, employer, job",
-  "title, date, member state. Do NOT put the member's pay figure in the letter. Never invent legal text beyond Article 7.",
+  "value, and the criteria used to set pay, asking for a reply within facts.reply_deadline and citing facts.law. Use bracketed",
+  "placeholders for name, employer, job title, date. Do NOT put the member's pay figure in the letter. Never invent legal text beyond Article 7.",
 ].join(" ");
 
 function fallbackAnswer(p: Position | undefined): string {
@@ -81,6 +83,8 @@ export function standRoutes(deps: Deps): Hono {
       member: { grade: req.grade, gender: req.gender ?? null, site: req.site ?? null, gross_annual_eur: req.gross_annual_eur },
       position: position ?? null,
       released_bands: cells.filter((x) => x.key.grade === req.grade),
+      reply_deadline: replyDeadline(req.country).text,
+      law: replyDeadline(req.country).law,
     };
     const content = JSON.stringify(facts);
     const chat = await deps.chat({
@@ -93,7 +97,7 @@ export function standRoutes(deps: Deps): Hono {
     });
 
     let answer = fallbackAnswer(position);
-    let letter: Letter = templateLetter(req.grade);
+    let letter: Letter = templateLetter(req.grade, req.country);
     let source: "model" | "fallback" = "fallback";
     try {
       const out = parseModelJson(chat.content, ModelOut);

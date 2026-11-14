@@ -5,6 +5,7 @@ import type { Deps } from "./deps";
 import { AppError, SpendCapError } from "./errors";
 import { rateLimit } from "./ratelimit";
 import { chainRoutes } from "./routes/chain";
+import { contextRoutes } from "./routes/context";
 import { demoRoutes } from "./routes/demo";
 import { extractRoutes } from "./routes/extract";
 import { releasesRoutes } from "./routes/releases";
@@ -32,6 +33,7 @@ export function createApp(deps: Deps): Hono {
   for (const path of ["/api/extract", "/api/stand"]) app.use(path, ai);
 
   app.route("/api", chainRoutes(deps));
+  app.route("/api", contextRoutes());
   app.route("/api/demo", demoRoutes(deps));
   app.route("/api/extract", extractRoutes(deps));
   app.route("/api/stand", standRoutes(deps));

@@ -80,7 +80,7 @@ describe("POST /api/extract", () => {
   it("rejects unsupported types and empty bodies as { error, code }", async () => {
     const { app } = makeApp(modelJson);
     const r1 = await app.request("/api/extract", upload(Buffer.from("x"), "text/plain", "x.txt"));
-    expect([r1.status, await r1.json()]).toEqual([415, { error: "upload a PNG, JPEG, WebP or PDF payslip", code: "UNSUPPORTED_TYPE" }]);
+    expect([r1.status, await r1.json()]).toEqual([415, { error: "upload a PNG, JPEG, WebP, PDF or .eml payslip", code: "UNSUPPORTED_TYPE" }]);
     const r2 = await app.request("/api/extract", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
     expect(r2.status).toBe(400);
   });

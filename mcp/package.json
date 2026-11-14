@@ -1,0 +1,36 @@
+{
+  "name": "bandsheet-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Bandsheet: read released pay bands, withheld cells and their witnesses, verify releases, and fetch public Eurostat wage context.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "bandsheet-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json",
+    "smoke": "tsx scripts/smoke.ts",
+    "prepack": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

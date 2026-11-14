@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - server
+  - mcp
   - web
 allowBuilds:
   esbuild: true

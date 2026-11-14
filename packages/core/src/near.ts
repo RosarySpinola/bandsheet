@@ -5,7 +5,12 @@ import { type Ciphertext, CiphertextSchema } from "./schemas";
 
 export const TESTNET_RPC = "https://test.rpc.fastnear.com";
 /** Tried in order; each endpoint retries with exponential backoff before the next is used. */
-export const TESTNET_RPCS: readonly string[] = [TESTNET_RPC, "https://archival-rpc.testnet.near.org"];
+export const TESTNET_RPCS: readonly string[] = [
+  TESTNET_RPC,
+  "https://archival-rpc.testnet.near.org",
+  // Added 14 Nov: the two above throttle or answer "deprecated" under load; this one stayed reachable.
+  "https://near-testnet.drpc.org",
+];
 
 /** Testnet provider with endpoint failover and per-endpoint backoff (the public RPCs rate-limit hard). */
 export function makeProvider(urls: readonly string[] = TESTNET_RPCS): Provider {

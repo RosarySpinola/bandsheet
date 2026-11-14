@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { GradeSchema } from "@bandsheet/core";
+import { EML_MAX_BYTES, type DkimPreview, parseEml } from "../eml";
 import { AppError } from "../errors";
 import { parseModelJson } from "../json";
 import type { Deps } from "../deps";
@@ -18,7 +19,7 @@ export const ExtractModelSchema = z.object({
   role_text: z.string().max(120).nullable().catch(null),
 });
 
-const JsonBody = z.object({ file_base64: z.string().min(1), mime: z.string() });
+const JsonBody = z.object({ file_base64: z.string().min(1), mime: z.string(), filename: z.string().max(200).optional() });
 
 const SYSTEM = [
   "You read one payslip and return ONLY a JSON object, no prose.",
@@ -36,7 +37,7 @@ export interface ExtractResult {
   currency: string;
   grade_guess: z.infer<typeof GradeSchema> | null;
   role_text: string | null;
-  source: "image" | "pdf_text";
+  source: "image" | "pdf_text" | "eml";
   warnings: string[];
 }
 
@@ -54,25 +55,30 @@ export function toAnnual(amount: number, period: keyof typeof PERIODS, currency:
   return { annual, warnings };
 }
 
-async function readUpload(c: { req: { header: (n: string) => string | undefined; parseBody: () => Promise<Record<string, unknown>>; json: () => Promise<unknown> } }): Promise<{ bytes: Uint8Array; mime: string }> {
+async function readUpload(c: { req: { header: (n: string) => string | undefined; parseBody: () => Promise<Record<string, unknown>>; json: () => Promise<unknown> } }): Promise<{ bytes: Uint8Array; mime: string; name: string }> {
   const type = c.req.header("content-type") ?? "";
   if (type.includes("multipart/form-data")) {
     const form = await c.req.parseBody();
     const f = form["file"];
     if (!(f instanceof File)) throw new AppError(400, 'multipart field "file" is required', "BAD_REQUEST");
-    return { bytes: new Uint8Array(await f.arrayBuffer()), mime: f.type };
+    return { bytes: new Uint8Array(await f.arrayBuffer()), mime: f.type, name: f.name };
   }
   const body = JsonBody.safeParse(await c.req.json().catch(() => null));
   if (!body.success) throw new AppError(400, "send multipart field file, or JSON {file_base64, mime}", "BAD_REQUEST");
-  return { bytes: new Uint8Array(Buffer.from(body.data.file_base64, "base64")), mime: body.data.mime };
+  return { bytes: new Uint8Array(Buffer.from(body.data.file_base64, "base64")), mime: body.data.mime, name: body.data.filename ?? "" };
 }
 
 export function extractRoutes(deps: Deps): Hono {
   const app = new Hono();
   app.post("/", async (c) => {
-    const { bytes, mime } = await readUpload(c);
+    const { bytes, mime: declared, name } = await readUpload(c);
+    const isEml = declared === "message/rfc822" || /\.eml$/i.test(name);
+    const mime = isEml ? "message/rfc822" : declared;
+    let dkim: DkimPreview | null = null;
     if (bytes.length === 0) throw new AppError(400, "empty file", "BAD_REQUEST");
-    if (bytes.length > MAX_BYTES) throw new AppError(413, "file larger than 6 MB", "TOO_LARGE");
+    if (bytes.length > (isEml ? EML_MAX_BYTES : MAX_BYTES)) {
+      throw new AppError(413, isEml ? "email larger than 1 MB" : "file larger than 6 MB", "TOO_LARGE");
+    }
 
     let source: ExtractResult["source"];
     let model: string;
@@ -106,8 +112,26 @@ export function extractRoutes(deps: Deps): Hono {
         { role: "system" as const, content: SYSTEM },
         { role: "user" as const, content: `Payslip text:\n<<<\n${text}\n>>>` },
       ];
+    } else if (isEml) {
+      const eml = await parseEml(bytes).catch(() => {
+        throw new AppError(422, "could not read this email", "EML_UNREADABLE");
+      });
+      dkim = eml.dkim_preview;
+      const pdfText = eml.pdf ? await pdfTextLayer(eml.pdf).catch(() => "") : "";
+      const text = [eml.subject ? `Subject: ${eml.subject}` : "", eml.text, pdfText ? `--- attached PDF text ---\n${pdfText}` : ""]
+        .filter(Boolean).join("\n\n").slice(0, 6000);
+      if (eml.text.length + pdfText.length < 40) {
+        throw new AppError(422, "this email has no readable payslip text", "EML_NO_TEXT");
+      }
+      source = "eml";
+      model = deps.config.textModel;
+      estimatedInputTokens = Math.ceil(text.length / 2.5) + 500;
+      messages = [
+        { role: "system" as const, content: SYSTEM },
+        { role: "user" as const, content: `Payslip email text:\n<<<\n${text}\n>>>` },
+      ];
     } else {
-      throw new AppError(415, "upload a PNG, JPEG, WebP or PDF payslip", "UNSUPPORTED_TYPE");
+      throw new AppError(415, "upload a PNG, JPEG, WebP, PDF or .eml payslip", "UNSUPPORTED_TYPE");
     }
 
     const chat = await deps.chat({ model, messages, max_tokens: model === deps.config.textModel ? 1200 : 400, temperature: 0, estimatedInputTokens, ...(model === deps.config.textModel ? { reasoning_effort: "low" as const } : {}) });
@@ -128,7 +152,7 @@ export function extractRoutes(deps: Deps): Hono {
       source,
       warnings,
     };
-    return c.json({ extracted: result, verified: chat.verified });
+    return c.json({ extracted: result, verified: chat.verified, dkim_preview: dkim });
   });
   return app;
 }

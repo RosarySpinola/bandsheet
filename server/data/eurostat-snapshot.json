@@ -1,0 +1,1238 @@
+{
+ "fetched_at": "2026-11-14T09:06:29.303Z",
+ "dataset": "earn_ses_monthly",
+ "entries": {
+  "MT|OC2": {
+   "raw": {
+    "version": "2.0",
+    "class": "dataset",
+    "label": "Structure of earnings survey - monthly earnings",
+    "source": "ESTAT",
+    "updated": "2026-02-09T23:00:00+0100",
+    "value": {
+     "1": 1440,
+     "2": 1596,
+     "3": 1899,
+     "4": 2189,
+     "7": 1542,
+     "8": 1647,
+     "9": 2033,
+     "10": 2347,
+     "13": 1388,
+     "14": 1527,
+     "15": 1795,
+     "16": 2123
+    },
+    "id": [
+     "freq",
+     "nace_r2",
+     "isco08",
+     "worktime",
+     "age",
+     "sex",
+     "indic_se",
+     "geo",
+     "time"
+    ],
+    "size": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     3,
+     1,
+     1,
+     6
+    ],
+    "dimension": {
+     "freq": {
+      "label": "Time frequency",
+      "category": {
+       "index": {
+        "A": 0
+       },
+       "label": {
+        "A": "Annual"
+       }
+      }
+     },
+     "nace_r2": {
+      "label": "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+      "category": {
+       "index": {
+        "B-S_X_O": 0
+       },
+       "label": {
+        "B-S_X_O": "Industry, construction and services (except public administration, defense, compulsory social security)"
+       }
+      }
+     },
+     "isco08": {
+      "label": "International Standard Classification of Occupations 2008 (ISCO-08)",
+      "category": {
+       "index": {
+        "OC2": 0
+       },
+       "label": {
+        "OC2": "Professionals"
+       }
+      }
+     },
+     "worktime": {
+      "label": "Working time",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "age": {
+      "label": "Age class",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "sex": {
+      "label": "Sex",
+      "category": {
+       "index": {
+        "T": 0,
+        "M": 1,
+        "F": 2
+       },
+       "label": {
+        "T": "Total",
+        "M": "Males",
+        "F": "Females"
+       }
+      }
+     },
+     "indic_se": {
+      "label": "Structure of earnings indicator",
+      "category": {
+       "index": {
+        "MED_E_EUR": 0
+       },
+       "label": {
+        "MED_E_EUR": "Median earnings in euro"
+       }
+      }
+     },
+     "geo": {
+      "label": "Geopolitical entity (reporting)",
+      "category": {
+       "index": {
+        "MT": 0
+       },
+       "label": {
+        "MT": "Malta"
+       }
+      }
+     },
+     "time": {
+      "label": "Time",
+      "category": {
+       "index": {
+        "2002": 0,
+        "2006": 1,
+        "2010": 2,
+        "2014": 3,
+        "2018": 4,
+        "2022": 5
+       },
+       "label": {
+        "2002": "2002",
+        "2006": "2006",
+        "2010": "2010",
+        "2014": "2014",
+        "2018": "2018",
+        "2022": "2022"
+       }
+      }
+     }
+    },
+    "extension": {
+     "lang": "EN",
+     "id": "EARN_SES_MONTHLY",
+     "agencyId": "ESTAT",
+     "version": "1.0",
+     "datastructure": {
+      "id": "EARN_SES_MONTHLY",
+      "agencyId": "ESTAT",
+      "version": "24.0"
+     },
+     "annotation": [
+      {
+       "type": "CREATED",
+       "date": "2014-07-09T11:22:18+0200"
+      },
+      {
+       "type": "DISSEMINATION_DOI_XML",
+       "title": "<adms:identifier xmlns:adms=\"http://www.w3.org/ns/adms#\" xmlns:skos=\"http://www.w3.org/2004/02/skos/core.html\" xmlns:dct=\"http://purl.org/dc/terms/\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><adms:Identifier rdf:about=\"https://doi.org/10.2908/EARN_SES_MONTHLY\"><skos:notation rdf:datatype=\"http://purl.org/spar/datacite/doi\">10.2908/EARN_SES_MONTHLY</skos:notation><dct:creator rdf:resource=\"http://publications.europa.eu/resource/authority/corporate-body/ESTAT\"/><dct:issued rdf:datatype=\"http://www.w3.org/2001/XMLSchema#date\">2023-01-23</dct:issued></adms:Identifier></adms:identifier>"
+      },
+      {
+       "type": "DISSEMINATION_OBJECT_TYPE",
+       "title": "DATASET"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_GLOBAL",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_PLANNED",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "ESMS_HTML",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/cache/metadata/en/earn_ses_main_esms.htm"
+      },
+      {
+       "type": "ESMS_SDMX",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/api/dissemination/files?file=metadata/earn_ses_main_esms.sdmx.zip"
+      },
+      {
+       "type": "OBS_COUNT",
+       "title": "11438954"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_LATEST",
+       "title": "2022"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_OLDEST",
+       "title": "2002"
+      },
+      {
+       "type": "SOURCE_INSTITUTIONS",
+       "text": "Eurostat"
+      },
+      {
+       "type": "UPDATE_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "UPDATE_STRUCTURE",
+       "date": "2025-02-11T23:00:00+0100"
+      }
+     ],
+     "positions-with-no-data": {
+      "freq": [],
+      "nace_r2": [],
+      "isco08": [],
+      "worktime": [],
+      "age": [],
+      "sex": [],
+      "indic_se": [],
+      "geo": [],
+      "time": [
+       0,
+       5
+      ]
+     }
+    }
+   },
+   "sha256": "156164330cb539707ba810338e48b7c3ebedbf84fb56f4a2f3005e4fa58e3d4f"
+  },
+  "GR|OC2": {
+   "raw": {
+    "version": "2.0",
+    "class": "dataset",
+    "label": "Structure of earnings survey - monthly earnings",
+    "source": "ESTAT",
+    "updated": "2026-02-09T23:00:00+0100",
+    "value": {
+     "1": 1850,
+     "2": 1912,
+     "3": 1740,
+     "4": 1682,
+     "7": 1952,
+     "8": 2017,
+     "9": 1899,
+     "10": 1811,
+     "13": 1610,
+     "14": 1853,
+     "15": 1670,
+     "16": 1617
+    },
+    "id": [
+     "freq",
+     "nace_r2",
+     "isco08",
+     "worktime",
+     "age",
+     "sex",
+     "indic_se",
+     "geo",
+     "time"
+    ],
+    "size": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     3,
+     1,
+     1,
+     6
+    ],
+    "dimension": {
+     "freq": {
+      "label": "Time frequency",
+      "category": {
+       "index": {
+        "A": 0
+       },
+       "label": {
+        "A": "Annual"
+       }
+      }
+     },
+     "nace_r2": {
+      "label": "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+      "category": {
+       "index": {
+        "B-S_X_O": 0
+       },
+       "label": {
+        "B-S_X_O": "Industry, construction and services (except public administration, defense, compulsory social security)"
+       }
+      }
+     },
+     "isco08": {
+      "label": "International Standard Classification of Occupations 2008 (ISCO-08)",
+      "category": {
+       "index": {
+        "OC2": 0
+       },
+       "label": {
+        "OC2": "Professionals"
+       }
+      }
+     },
+     "worktime": {
+      "label": "Working time",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "age": {
+      "label": "Age class",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "sex": {
+      "label": "Sex",
+      "category": {
+       "index": {
+        "T": 0,
+        "M": 1,
+        "F": 2
+       },
+       "label": {
+        "T": "Total",
+        "M": "Males",
+        "F": "Females"
+       }
+      }
+     },
+     "indic_se": {
+      "label": "Structure of earnings indicator",
+      "category": {
+       "index": {
+        "MED_E_EUR": 0
+       },
+       "label": {
+        "MED_E_EUR": "Median earnings in euro"
+       }
+      }
+     },
+     "geo": {
+      "label": "Geopolitical entity (reporting)",
+      "category": {
+       "index": {
+        "EL": 0
+       },
+       "label": {
+        "EL": "Greece"
+       }
+      }
+     },
+     "time": {
+      "label": "Time",
+      "category": {
+       "index": {
+        "2002": 0,
+        "2006": 1,
+        "2010": 2,
+        "2014": 3,
+        "2018": 4,
+        "2022": 5
+       },
+       "label": {
+        "2002": "2002",
+        "2006": "2006",
+        "2010": "2010",
+        "2014": "2014",
+        "2018": "2018",
+        "2022": "2022"
+       }
+      }
+     }
+    },
+    "extension": {
+     "lang": "EN",
+     "id": "EARN_SES_MONTHLY",
+     "agencyId": "ESTAT",
+     "version": "1.0",
+     "datastructure": {
+      "id": "EARN_SES_MONTHLY",
+      "agencyId": "ESTAT",
+      "version": "24.0"
+     },
+     "annotation": [
+      {
+       "type": "CREATED",
+       "date": "2014-07-09T11:22:18+0200"
+      },
+      {
+       "type": "DISSEMINATION_DOI_XML",
+       "title": "<adms:identifier xmlns:adms=\"http://www.w3.org/ns/adms#\" xmlns:skos=\"http://www.w3.org/2004/02/skos/core.html\" xmlns:dct=\"http://purl.org/dc/terms/\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><adms:Identifier rdf:about=\"https://doi.org/10.2908/EARN_SES_MONTHLY\"><skos:notation rdf:datatype=\"http://purl.org/spar/datacite/doi\">10.2908/EARN_SES_MONTHLY</skos:notation><dct:creator rdf:resource=\"http://publications.europa.eu/resource/authority/corporate-body/ESTAT\"/><dct:issued rdf:datatype=\"http://www.w3.org/2001/XMLSchema#date\">2023-01-23</dct:issued></adms:Identifier></adms:identifier>"
+      },
+      {
+       "type": "DISSEMINATION_OBJECT_TYPE",
+       "title": "DATASET"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_GLOBAL",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_PLANNED",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "ESMS_HTML",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/cache/metadata/en/earn_ses_main_esms.htm"
+      },
+      {
+       "type": "ESMS_SDMX",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/api/dissemination/files?file=metadata/earn_ses_main_esms.sdmx.zip"
+      },
+      {
+       "type": "OBS_COUNT",
+       "title": "11438954"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_LATEST",
+       "title": "2022"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_OLDEST",
+       "title": "2002"
+      },
+      {
+       "type": "SOURCE_INSTITUTIONS",
+       "text": "Eurostat"
+      },
+      {
+       "type": "UPDATE_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "UPDATE_STRUCTURE",
+       "date": "2025-02-11T23:00:00+0100"
+      }
+     ],
+     "positions-with-no-data": {
+      "freq": [],
+      "nace_r2": [],
+      "isco08": [],
+      "worktime": [],
+      "age": [],
+      "sex": [],
+      "indic_se": [],
+      "geo": [],
+      "time": [
+       0,
+       5
+      ]
+     }
+    }
+   },
+   "sha256": "437a8040c2b1efbc801625cb96dd65427010692e5ef1069f0ef578368f46b488"
+  },
+  "DE|OC2": {
+   "raw": {
+    "version": "2.0",
+    "class": "dataset",
+    "label": "Structure of earnings survey - monthly earnings",
+    "source": "ESTAT",
+    "updated": "2026-02-09T23:00:00+0100",
+    "value": {
+     "1": 3706,
+     "2": 3515,
+     "3": 3943,
+     "4": 4665,
+     "7": 4281,
+     "8": 4402,
+     "9": 4629,
+     "10": 5117,
+     "13": 3023,
+     "14": 2803,
+     "15": 3213,
+     "16": 4284
+    },
+    "id": [
+     "freq",
+     "nace_r2",
+     "isco08",
+     "worktime",
+     "age",
+     "sex",
+     "indic_se",
+     "geo",
+     "time"
+    ],
+    "size": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     3,
+     1,
+     1,
+     6
+    ],
+    "dimension": {
+     "freq": {
+      "label": "Time frequency",
+      "category": {
+       "index": {
+        "A": 0
+       },
+       "label": {
+        "A": "Annual"
+       }
+      }
+     },
+     "nace_r2": {
+      "label": "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+      "category": {
+       "index": {
+        "B-S_X_O": 0
+       },
+       "label": {
+        "B-S_X_O": "Industry, construction and services (except public administration, defense, compulsory social security)"
+       }
+      }
+     },
+     "isco08": {
+      "label": "International Standard Classification of Occupations 2008 (ISCO-08)",
+      "category": {
+       "index": {
+        "OC2": 0
+       },
+       "label": {
+        "OC2": "Professionals"
+       }
+      }
+     },
+     "worktime": {
+      "label": "Working time",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "age": {
+      "label": "Age class",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "sex": {
+      "label": "Sex",
+      "category": {
+       "index": {
+        "T": 0,
+        "M": 1,
+        "F": 2
+       },
+       "label": {
+        "T": "Total",
+        "M": "Males",
+        "F": "Females"
+       }
+      }
+     },
+     "indic_se": {
+      "label": "Structure of earnings indicator",
+      "category": {
+       "index": {
+        "MED_E_EUR": 0
+       },
+       "label": {
+        "MED_E_EUR": "Median earnings in euro"
+       }
+      }
+     },
+     "geo": {
+      "label": "Geopolitical entity (reporting)",
+      "category": {
+       "index": {
+        "DE": 0
+       },
+       "label": {
+        "DE": "Germany"
+       }
+      }
+     },
+     "time": {
+      "label": "Time",
+      "category": {
+       "index": {
+        "2002": 0,
+        "2006": 1,
+        "2010": 2,
+        "2014": 3,
+        "2018": 4,
+        "2022": 5
+       },
+       "label": {
+        "2002": "2002",
+        "2006": "2006",
+        "2010": "2010",
+        "2014": "2014",
+        "2018": "2018",
+        "2022": "2022"
+       }
+      }
+     }
+    },
+    "extension": {
+     "lang": "EN",
+     "id": "EARN_SES_MONTHLY",
+     "agencyId": "ESTAT",
+     "version": "1.0",
+     "datastructure": {
+      "id": "EARN_SES_MONTHLY",
+      "agencyId": "ESTAT",
+      "version": "24.0"
+     },
+     "annotation": [
+      {
+       "type": "CREATED",
+       "date": "2014-07-09T11:22:18+0200"
+      },
+      {
+       "type": "DISSEMINATION_DOI_XML",
+       "title": "<adms:identifier xmlns:adms=\"http://www.w3.org/ns/adms#\" xmlns:skos=\"http://www.w3.org/2004/02/skos/core.html\" xmlns:dct=\"http://purl.org/dc/terms/\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><adms:Identifier rdf:about=\"https://doi.org/10.2908/EARN_SES_MONTHLY\"><skos:notation rdf:datatype=\"http://purl.org/spar/datacite/doi\">10.2908/EARN_SES_MONTHLY</skos:notation><dct:creator rdf:resource=\"http://publications.europa.eu/resource/authority/corporate-body/ESTAT\"/><dct:issued rdf:datatype=\"http://www.w3.org/2001/XMLSchema#date\">2023-01-23</dct:issued></adms:Identifier></adms:identifier>"
+      },
+      {
+       "type": "DISSEMINATION_OBJECT_TYPE",
+       "title": "DATASET"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_GLOBAL",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_PLANNED",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "ESMS_HTML",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/cache/metadata/en/earn_ses_main_esms.htm"
+      },
+      {
+       "type": "ESMS_SDMX",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/api/dissemination/files?file=metadata/earn_ses_main_esms.sdmx.zip"
+      },
+      {
+       "type": "OBS_COUNT",
+       "title": "11438954"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_LATEST",
+       "title": "2022"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_OLDEST",
+       "title": "2002"
+      },
+      {
+       "type": "SOURCE_INSTITUTIONS",
+       "text": "Eurostat"
+      },
+      {
+       "type": "UPDATE_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "UPDATE_STRUCTURE",
+       "date": "2025-02-11T23:00:00+0100"
+      }
+     ],
+     "positions-with-no-data": {
+      "freq": [],
+      "nace_r2": [],
+      "isco08": [],
+      "worktime": [],
+      "age": [],
+      "sex": [],
+      "indic_se": [],
+      "geo": [],
+      "time": [
+       0,
+       5
+      ]
+     }
+    }
+   },
+   "sha256": "d364b3411cea6928d41194643c3300e1369bc94f5f8c7f841e67e1b0e4c16585"
+  },
+  "FR|OC2": {
+   "raw": {
+    "version": "2.0",
+    "class": "dataset",
+    "label": "Structure of earnings survey - monthly earnings",
+    "source": "ESTAT",
+    "updated": "2026-02-09T23:00:00+0100",
+    "value": {
+     "1": 3025,
+     "2": 2948,
+     "3": 2995,
+     "4": 3315,
+     "7": 3497,
+     "8": 3429,
+     "9": 3532,
+     "10": 3900,
+     "13": 2546,
+     "14": 2579,
+     "15": 2660,
+     "16": 2941
+    },
+    "id": [
+     "freq",
+     "nace_r2",
+     "isco08",
+     "worktime",
+     "age",
+     "sex",
+     "indic_se",
+     "geo",
+     "time"
+    ],
+    "size": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     3,
+     1,
+     1,
+     6
+    ],
+    "dimension": {
+     "freq": {
+      "label": "Time frequency",
+      "category": {
+       "index": {
+        "A": 0
+       },
+       "label": {
+        "A": "Annual"
+       }
+      }
+     },
+     "nace_r2": {
+      "label": "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+      "category": {
+       "index": {
+        "B-S_X_O": 0
+       },
+       "label": {
+        "B-S_X_O": "Industry, construction and services (except public administration, defense, compulsory social security)"
+       }
+      }
+     },
+     "isco08": {
+      "label": "International Standard Classification of Occupations 2008 (ISCO-08)",
+      "category": {
+       "index": {
+        "OC2": 0
+       },
+       "label": {
+        "OC2": "Professionals"
+       }
+      }
+     },
+     "worktime": {
+      "label": "Working time",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "age": {
+      "label": "Age class",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "sex": {
+      "label": "Sex",
+      "category": {
+       "index": {
+        "T": 0,
+        "M": 1,
+        "F": 2
+       },
+       "label": {
+        "T": "Total",
+        "M": "Males",
+        "F": "Females"
+       }
+      }
+     },
+     "indic_se": {
+      "label": "Structure of earnings indicator",
+      "category": {
+       "index": {
+        "MED_E_EUR": 0
+       },
+       "label": {
+        "MED_E_EUR": "Median earnings in euro"
+       }
+      }
+     },
+     "geo": {
+      "label": "Geopolitical entity (reporting)",
+      "category": {
+       "index": {
+        "FR": 0
+       },
+       "label": {
+        "FR": "France"
+       }
+      }
+     },
+     "time": {
+      "label": "Time",
+      "category": {
+       "index": {
+        "2002": 0,
+        "2006": 1,
+        "2010": 2,
+        "2014": 3,
+        "2018": 4,
+        "2022": 5
+       },
+       "label": {
+        "2002": "2002",
+        "2006": "2006",
+        "2010": "2010",
+        "2014": "2014",
+        "2018": "2018",
+        "2022": "2022"
+       }
+      }
+     }
+    },
+    "extension": {
+     "lang": "EN",
+     "id": "EARN_SES_MONTHLY",
+     "agencyId": "ESTAT",
+     "version": "1.0",
+     "datastructure": {
+      "id": "EARN_SES_MONTHLY",
+      "agencyId": "ESTAT",
+      "version": "24.0"
+     },
+     "annotation": [
+      {
+       "type": "CREATED",
+       "date": "2014-07-09T11:22:18+0200"
+      },
+      {
+       "type": "DISSEMINATION_DOI_XML",
+       "title": "<adms:identifier xmlns:adms=\"http://www.w3.org/ns/adms#\" xmlns:skos=\"http://www.w3.org/2004/02/skos/core.html\" xmlns:dct=\"http://purl.org/dc/terms/\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><adms:Identifier rdf:about=\"https://doi.org/10.2908/EARN_SES_MONTHLY\"><skos:notation rdf:datatype=\"http://purl.org/spar/datacite/doi\">10.2908/EARN_SES_MONTHLY</skos:notation><dct:creator rdf:resource=\"http://publications.europa.eu/resource/authority/corporate-body/ESTAT\"/><dct:issued rdf:datatype=\"http://www.w3.org/2001/XMLSchema#date\">2023-01-23</dct:issued></adms:Identifier></adms:identifier>"
+      },
+      {
+       "type": "DISSEMINATION_OBJECT_TYPE",
+       "title": "DATASET"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_GLOBAL",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_PLANNED",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "ESMS_HTML",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/cache/metadata/en/earn_ses_main_esms.htm"
+      },
+      {
+       "type": "ESMS_SDMX",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/api/dissemination/files?file=metadata/earn_ses_main_esms.sdmx.zip"
+      },
+      {
+       "type": "OBS_COUNT",
+       "title": "11438954"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_LATEST",
+       "title": "2022"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_OLDEST",
+       "title": "2002"
+      },
+      {
+       "type": "SOURCE_INSTITUTIONS",
+       "text": "Eurostat"
+      },
+      {
+       "type": "UPDATE_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "UPDATE_STRUCTURE",
+       "date": "2025-02-11T23:00:00+0100"
+      }
+     ],
+     "positions-with-no-data": {
+      "freq": [],
+      "nace_r2": [],
+      "isco08": [],
+      "worktime": [],
+      "age": [],
+      "sex": [],
+      "indic_se": [],
+      "geo": [],
+      "time": [
+       0,
+       5
+      ]
+     }
+    }
+   },
+   "sha256": "648a54a0afe8771db94a5331f2d96cb36fcecbd512ca0b85aeacab153e3f12f5"
+  },
+  "IE|OC2": {
+   "raw": {
+    "version": "2.0",
+    "class": "dataset",
+    "label": "Structure of earnings survey - monthly earnings",
+    "source": "ESTAT",
+    "updated": "2026-02-09T23:00:00+0100",
+    "value": {
+     "0": 3298,
+     "1": 3884,
+     "2": 4116,
+     "3": 4324,
+     "4": 4524,
+     "6": 3796,
+     "7": 4505,
+     "8": 4442,
+     "9": 5001,
+     "10": 4902,
+     "12": 3042,
+     "13": 3508,
+     "14": 3908,
+     "15": 3952,
+     "16": 4346
+    },
+    "id": [
+     "freq",
+     "nace_r2",
+     "isco08",
+     "worktime",
+     "age",
+     "sex",
+     "indic_se",
+     "geo",
+     "time"
+    ],
+    "size": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     3,
+     1,
+     1,
+     6
+    ],
+    "dimension": {
+     "freq": {
+      "label": "Time frequency",
+      "category": {
+       "index": {
+        "A": 0
+       },
+       "label": {
+        "A": "Annual"
+       }
+      }
+     },
+     "nace_r2": {
+      "label": "Statistical classification of economic activities in the European Community (NACE Rev. 2)",
+      "category": {
+       "index": {
+        "B-S_X_O": 0
+       },
+       "label": {
+        "B-S_X_O": "Industry, construction and services (except public administration, defense, compulsory social security)"
+       }
+      }
+     },
+     "isco08": {
+      "label": "International Standard Classification of Occupations 2008 (ISCO-08)",
+      "category": {
+       "index": {
+        "OC2": 0
+       },
+       "label": {
+        "OC2": "Professionals"
+       }
+      }
+     },
+     "worktime": {
+      "label": "Working time",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "age": {
+      "label": "Age class",
+      "category": {
+       "index": {
+        "TOTAL": 0
+       },
+       "label": {
+        "TOTAL": "Total"
+       }
+      }
+     },
+     "sex": {
+      "label": "Sex",
+      "category": {
+       "index": {
+        "T": 0,
+        "M": 1,
+        "F": 2
+       },
+       "label": {
+        "T": "Total",
+        "M": "Males",
+        "F": "Females"
+       }
+      }
+     },
+     "indic_se": {
+      "label": "Structure of earnings indicator",
+      "category": {
+       "index": {
+        "MED_E_EUR": 0
+       },
+       "label": {
+        "MED_E_EUR": "Median earnings in euro"
+       }
+      }
+     },
+     "geo": {
+      "label": "Geopolitical entity (reporting)",
+      "category": {
+       "index": {
+        "IE": 0
+       },
+       "label": {
+        "IE": "Ireland"
+       }
+      }
+     },
+     "time": {
+      "label": "Time",
+      "category": {
+       "index": {
+        "2002": 0,
+        "2006": 1,
+        "2010": 2,
+        "2014": 3,
+        "2018": 4,
+        "2022": 5
+       },
+       "label": {
+        "2002": "2002",
+        "2006": "2006",
+        "2010": "2010",
+        "2014": "2014",
+        "2018": "2018",
+        "2022": "2022"
+       }
+      }
+     }
+    },
+    "extension": {
+     "lang": "EN",
+     "id": "EARN_SES_MONTHLY",
+     "agencyId": "ESTAT",
+     "version": "1.0",
+     "datastructure": {
+      "id": "EARN_SES_MONTHLY",
+      "agencyId": "ESTAT",
+      "version": "24.0"
+     },
+     "annotation": [
+      {
+       "type": "CREATED",
+       "date": "2014-07-09T11:22:18+0200"
+      },
+      {
+       "type": "DISSEMINATION_DOI_XML",
+       "title": "<adms:identifier xmlns:adms=\"http://www.w3.org/ns/adms#\" xmlns:skos=\"http://www.w3.org/2004/02/skos/core.html\" xmlns:dct=\"http://purl.org/dc/terms/\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><adms:Identifier rdf:about=\"https://doi.org/10.2908/EARN_SES_MONTHLY\"><skos:notation rdf:datatype=\"http://purl.org/spar/datacite/doi\">10.2908/EARN_SES_MONTHLY</skos:notation><dct:creator rdf:resource=\"http://publications.europa.eu/resource/authority/corporate-body/ESTAT\"/><dct:issued rdf:datatype=\"http://www.w3.org/2001/XMLSchema#date\">2023-01-23</dct:issued></adms:Identifier></adms:identifier>"
+      },
+      {
+       "type": "DISSEMINATION_OBJECT_TYPE",
+       "title": "DATASET"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_GLOBAL",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "DISSEMINATION_TIMESTAMP_PLANNED",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "ESMS_HTML",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/cache/metadata/en/earn_ses_main_esms.htm"
+      },
+      {
+       "type": "ESMS_SDMX",
+       "title": "Explanatory texts (metadata)",
+       "href": "https://ec.europa.eu/eurostat/api/dissemination/files?file=metadata/earn_ses_main_esms.sdmx.zip"
+      },
+      {
+       "type": "OBS_COUNT",
+       "title": "11438954"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_LATEST",
+       "title": "2022"
+      },
+      {
+       "type": "OBS_PERIOD_OVERALL_OLDEST",
+       "title": "2002"
+      },
+      {
+       "type": "SOURCE_INSTITUTIONS",
+       "text": "Eurostat"
+      },
+      {
+       "type": "UPDATE_DATA",
+       "date": "2026-02-09T23:00:00+0100"
+      },
+      {
+       "type": "UPDATE_STRUCTURE",
+       "date": "2025-02-11T23:00:00+0100"
+      }
+     ],
+     "positions-with-no-data": {
+      "freq": [],
+      "nace_r2": [],
+      "isco08": [],
+      "worktime": [],
+      "age": [],
+      "sex": [],
+      "indic_se": [],
+      "geo": [],
+      "time": [
+       5
+      ]
+     }
+    }
+   },
+   "sha256": "aa6743e9c46f6c7c436788858bb623f8fb3bd155574075f8e524fa8e326955c3"
+  }
+ }
+}
