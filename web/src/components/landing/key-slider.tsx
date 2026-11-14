@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 const SLIDES = [
   {
     title: "Read privately.",
-    body: "A member drops in a payslip. NEAR AI Cloud reads it inside a GPU enclave, and before a single byte is sent we check a fresh attestation and, afterwards, the signed response. The member confirms five fields. The payslip itself is never stored.",
+    body: "A member drops in the payslip email their payroll sent. NEAR AI Cloud reads it inside a GPU enclave, after we check a fresh attestation, and we verify the signed response. The engine later checks the employer's DKIM signature, so an edited payslip never counts. Nothing is stored.",
   },
   {
     title: "Asked by the chapel.",

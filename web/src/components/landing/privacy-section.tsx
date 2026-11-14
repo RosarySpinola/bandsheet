@@ -10,6 +10,10 @@ const BLOCKS = [
     body: "Payslips go to NEAR AI Cloud only after its TEE attestation checks out against a fresh nonce. The signed response is verified, then forgotten. Nothing is stored.",
   },
   {
+    title: "Not a forger",
+    body: "Payslips arrive as the employer's own payroll email. The chapel votes to trust the employer's DKIM key on NEAR, and the engine checks every signature inside the enclave. Change one digit and the entry is refused.",
+  },
+  {
     title: "Not the attacker",
     body: "Each release is a sum over members. Before publishing, the engine asks whether any single member can be solved from everything ever released. If so, that cell stays withheld.",
   },
