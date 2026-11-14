@@ -3,6 +3,9 @@ import { cors } from "hono/cors";
 import { ZodError } from "zod";
 import type { Deps } from "./deps";
 import { AppError, SpendCapError } from "./errors";
+import { rateLimit } from "./ratelimit";
+import { chainRoutes } from "./routes/chain";
+import { demoRoutes } from "./routes/demo";
 import { extractRoutes } from "./routes/extract";
 import { releasesRoutes } from "./routes/releases";
 import { standRoutes } from "./routes/stand";
@@ -22,6 +25,14 @@ export function createApp(deps: Deps): Hono {
       spend: spend ?? null,
     });
   });
+  // Write endpoints share one bucket (10/min/IP). The AI routes cost money, so they get their own.
+  const writes = rateLimit({ limit: 10 });
+  const ai = rateLimit({ limit: 20 });
+  for (const path of ["/api/dao/propose", "/api/dao/vote", "/api/demo/submit"]) app.use(path, writes);
+  for (const path of ["/api/extract", "/api/stand"]) app.use(path, ai);
+
+  app.route("/api", chainRoutes(deps));
+  app.route("/api/demo", demoRoutes(deps));
   app.route("/api/extract", extractRoutes(deps));
   app.route("/api/stand", standRoutes(deps));
   app.route("/api/releases", releasesRoutes(deps));

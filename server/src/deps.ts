@@ -1,3 +1,5 @@
+import type { ChainConfig } from "./chain/config";
+import type { ChainPort } from "./chain/port";
 import type { Config } from "./env";
 import type { ChatRequest, VerifiedChat } from "./nearai/client";
 import type { SpendGuard } from "./spend";
@@ -11,4 +13,6 @@ export interface Deps {
   chat: ChatFn;
   view: ViewFn;
   guard: SpendGuard;
+  chain: ChainPort;
+  chainCfg: ChainConfig;
 }

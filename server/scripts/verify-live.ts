@@ -33,7 +33,7 @@ const client = new NearAiClient({
   deps: { verifyQuote: verifyQuoteDcap, verifyGpu: verifyGpuNras, acceptedTcb: DEFAULT_ACCEPTED_TCB },
   record: (r) => exchanges.push(r),
 });
-const deps: Deps = { config: cfg, guard, chat: (r) => client.verifiedChat(r), view: async () => [] };
+const deps: Deps = { config: cfg, guard, chat: (r) => client.verifiedChat(r), view: async () => [], chain: undefined as never, chainCfg: undefined as never };
 const app = createApp(deps);
 
 const BANDS = [

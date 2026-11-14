@@ -1,21 +1,16 @@
-import { mkdtempSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../src/app";
 import type { Deps } from "../src/deps";
-import { type Config, SERVER_DIR } from "../src/env";
+import { SERVER_DIR } from "../src/env";
+import { chainCfg, config, mockChain } from "./helpers";
 import { SpendCapError } from "../src/errors";
 import type { ChatRequest, Verified, VerifiedChat } from "../src/nearai/client";
 import { toAnnual } from "../src/routes/extract";
 import { positionFor } from "../src/routes/stand";
 import { SpendGuard } from "../src/spend";
 
-const config: Config = {
-  hasKey: true, baseUrl: "https://example.invalid", contract: "bandsheet.testnet", releasesMethod: "get_releases",
-  rpcUrl: "https://example.invalid", port: 0, visionModel: "Qwen/Qwen3-VL-30B-A3B-Instruct", textModel: "z-ai/glm-5.3-flash",
-  ledgerPath: join(mkdtempSync(join(tmpdir(), "app-")), ".spend.json"), corsOrigin: "*",
-};
 const verified: Verified = { all_passed: true, model: "m", nonce: "n", signers: { model: [] }, checks: [], verified_at: "t" };
 const BANDS = [
   { key: { grade: "Senior" }, n: 9, mean_eur: 62400 },
@@ -32,6 +27,8 @@ function makeApp(content: string | ((r: ChatRequest) => string), over: Partial<D
       return { content: typeof content === "function" ? content(req) : content, usage: {}, verified };
     },
     view: async () => [],
+    chain: mockChain().chain,
+    chainCfg: chainCfg(),
     ...over,
   };
   return { app: createApp(deps), calls };
@@ -145,7 +142,7 @@ describe("POST /api/stand", () => {
     expect(body.position.band_mean_eur).toBe(43000);
     const senior = await (await post(app, { gross_annual_eur: 70000, grade: "Senior" })).json();
     expect(senior.position.band_mean_eur).toBe(62400); // suppressed in #2, last published value from #1
-    expect(view).toHaveBeenCalledWith("bandsheet.testnet", "get_releases", {});
+    expect(view).toHaveBeenCalledWith("bandsheet-test.testnet", "get_releases", {});
   });
   it("validates input", async () => {
     const { app } = makeApp(good);

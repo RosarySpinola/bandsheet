@@ -2,7 +2,15 @@ import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const SERVER_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+/** import.meta.url is undefined on Cloudflare Workers; there the fs-based paths are simply unused. */
+function hereDir(): string {
+  try {
+    return dirname(fileURLToPath(import.meta.url));
+  } catch {
+    return "/";
+  }
+}
+export const SERVER_DIR = resolve(hereDir(), "..");
 export const REPO_ROOT = resolve(SERVER_DIR, "..");
 
 let loaded = false;
@@ -11,7 +19,7 @@ export function loadEnv(): void {
   if (loaded) return;
   loaded = true;
   const p = resolve(REPO_ROOT, ".env.local");
-  if (existsSync(p)) process.loadEnvFile(p);
+  if (existsSync(p) && typeof process.loadEnvFile === "function") process.loadEnvFile(p);
 }
 
 export interface Config {
@@ -42,7 +50,7 @@ export function getConfig(): Config {
     contract: e.BANDSHEET_CONTRACT || undefined,
     releasesMethod: e.BANDSHEET_RELEASES_METHOD || "get_releases",
     rpcUrl: e.NEAR_RPC_URL || "https://test.rpc.fastnear.com",
-    port: Number(e.PORT || 8787),
+    port: Number(e.PORT || 8788),
     visionModel: "Qwen/Qwen3-VL-30B-A3B-Instruct",
     textModel: "z-ai/glm-5.3-flash",
     ledgerPath: e.SPEND_LEDGER_PATH || resolve(SERVER_DIR, ".spend.json"),

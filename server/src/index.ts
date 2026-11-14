@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
-import { viewCall } from "@bandsheet/core/near";
 import { createApp } from "./app";
+import { loadChainConfig } from "./chain/config";
+import { createChainPort } from "./chain/port";
 import type { Deps } from "./deps";
 import { apiKey, getConfig } from "./env";
 import { AppError } from "./errors";
@@ -11,7 +12,9 @@ import { DEFAULT_ACCEPTED_TCB } from "./nearai/verify";
 import { SpendGuard } from "./spend";
 
 export function buildDeps(): Deps {
-  const config = getConfig();
+  const chainCfg = loadChainConfig();
+  const config = { ...getConfig(), ...(getConfig().contract ? {} : { contract: chainCfg.unit }) };
+  const chain = createChainPort(process.env.NEAR_RPC_URLS?.split(",").map((u) => u.trim()));
   const prices = createPriceSource(config.baseUrl);
   const guard = new SpendGuard({ path: config.ledgerPath, getPrice: prices.getPrice });
   const client = new NearAiClient({
@@ -28,7 +31,9 @@ export function buildDeps(): Deps {
       if (!config.hasKey) throw new AppError(503, "NEARAI_API_KEY is not configured", "NO_API_KEY");
       return client.verifiedChat(req);
     },
-    view: (contractId, method, args) => viewCall(contractId, method, args, config.rpcUrl),
+    chain,
+    chainCfg,
+    view: (contractId, method, args) => chain.view(contractId, method, args),
   };
 }
 
