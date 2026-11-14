@@ -1,0 +1,69 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  ts:
+    name: TypeScript (core, server, web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Core and server tests
+        run: pnpm --filter @bandsheet/core --filter server test
+      - name: Typecheck core and server
+        run: pnpm --filter @bandsheet/core --filter server typecheck
+      - name: Web typecheck and build
+        run: pnpm --filter web build
+      - name: Offline verifier (no network, no keys)
+        run: node tools/verify/index.mjs --offline
+
+  enclave:
+    name: Rust enclave audit and module
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            enclave/target
+          key: cargo-enclave-${{ hashFiles('enclave/Cargo.lock') }}
+      # hero case, 100 adversarial cases, module tests, then the TypeScript <-> Rust crypto vectors
+      - run: make -C enclave test
+
+  contract:
+    name: NEAR contract unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.86.0
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/bandsheet/target
+          key: cargo-contract-${{ hashFiles('contracts/bandsheet/Cargo.lock') }}
+      - name: cargo test (unit tests only; the sandbox tests in contracts/bandsheet/it are not run)
+        working-directory: contracts/bandsheet
+        env:
+          RUSTFLAGS: --cfg near
+        run: cargo test --locked -p bandsheet
+
+# Not run in CI: `pnpm verify` live checks (they read testnet RPC and OutLayer, which rate-limit shared runners;
+# run them locally), wasm builds (need wasm32 targets and wasm-opt), contracts/bandsheet/it (near-workspaces sandbox).
