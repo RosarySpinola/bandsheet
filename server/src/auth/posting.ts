@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { decodeSignedTransaction } from "near-api-js";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { baseEncode, decodeSignedTransaction } from "near-api-js";
 import { CiphertextSchema, slotIdFromNearPublicKey } from "@bandsheet/core";
 import { type SentTx, decodeValue, failureText } from "../chain/port";
 import { AppError } from "../errors";
@@ -53,42 +54,82 @@ export function readPostingTx(b64: string, unit: string): PostingTx {
 
 export type Broadcast = (signed: Uint8Array) => Promise<SentTx>;
 
-interface SendTxReply {
-  result?: {
-    status: unknown;
-    transaction: { hash: string };
-    transaction_outcome?: { outcome?: { status?: unknown } };
-    receipts_outcome?: { outcome?: { status?: unknown } }[];
-  };
-  error?: { message?: string; data?: unknown; cause?: { name?: string } };
+interface TxResult {
+  status: unknown;
+  final_execution_status?: string;
+  transaction: { hash: string };
+  transaction_outcome?: { outcome?: { status?: unknown } };
+  receipts_outcome?: { outcome?: { status?: unknown } }[];
+}
+interface RpcReply {
+  result?: TxResult;
+  error?: { message?: string; data?: unknown; name?: string; cause?: { name?: string } };
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const errText = (e: RpcReply["error"]) => JSON.stringify(e?.data ?? e?.cause?.name ?? e?.message ?? "rejected").slice(0, 240);
+/** "Not decided yet" answers: the provider gave up waiting (dRPC's free plan does) or the tx is not indexed yet. */
+const pending = (e: RpcReply["error"]) => /timeout|TIMEOUT|UNKNOWN_TRANSACTION|not found|doesn't exist|does not exist/i.test(JSON.stringify(e ?? {}));
+
+/** Hash of a signed transaction: sha256 of its Transaction bytes (the trailing 65 bytes are the ed25519 signature). */
+export function signedTxHash(bytes: Uint8Array): string {
+  return baseEncode(sha256(bytes.subarray(0, bytes.length - 65)));
+}
+
+function outcomeOf(r: TxResult): SentTx {
+  const outcomes = [r.transaction_outcome, ...(r.receipts_outcome ?? [])];
+  const failed = outcomes.map((o) => failureText(o?.outcome?.status)).find(Boolean) ?? failureText(r.status);
+  return { hash: r.transaction.hash, ok: !failed, error: failed, value: decodeValue(r.status) };
 }
 
 /**
- * Broadcast the exact signed bytes (`send_tx`, wait until executed) over the testnet RPCs; the bytes are never
- * re-encoded, so the posting key's signature stays valid. A transport failure moves to the next RPC; an answer
- * (success, contract panic or invalid transaction) is final, so a submit is never sent twice by retrying.
+ * Broadcast the exact signed bytes and wait for the outcome. The bytes are never re-encoded, so the posting key's
+ * signature stays valid. `send_tx` returns at once (wait_until NONE); a definite refusal (invalid transaction) ends
+ * it, a timeout or transport error moves on. The outcome is then polled by hash on every RPC, so a provider that
+ * times out while waiting (seen 15 Nov: dRPC "Request timeout on the free plan") cannot hide a submit that landed.
+ * A submit is never sent twice once an RPC has accepted it.
  */
-export function createBroadcast(urls: readonly string[], fetchFn: typeof fetch = fetch): Broadcast {
+export function createBroadcast(urls: readonly string[], fetchFn: typeof fetch = fetch, pollMs = 1500): Broadcast {
   for (const u of urls) if (/mainnet/i.test(u)) throw new Error("refusing non-testnet RPC");
+  const call = async (url: string, method: string, params: object): Promise<RpcReply> => {
+    const res = await fetchFn(url, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: "bandsheet-post", method, params }), signal: AbortSignal.timeout(20_000),
+    });
+    if (res.status === 429 || res.status >= 500) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as RpcReply;
+  };
   return async (bytes) => {
-    const body = JSON.stringify({ jsonrpc: "2.0", id: "bandsheet-post", method: "send_tx", params: { signed_tx_base64: Buffer.from(bytes).toString("base64"), wait_until: "EXECUTED" } });
+    const hash = signedTxHash(bytes);
+    const signer = decodeSignedTransaction(bytes).transaction.signerId;
+    const b64 = Buffer.from(bytes).toString("base64");
+    let accepted = false;
     let last = "no RPC answered";
     for (const url of urls) {
-      let reply: SendTxReply;
       try {
-        const res = await fetchFn(url, { method: "POST", headers: { "content-type": "application/json" }, body, signal: AbortSignal.timeout(45_000) });
-        if (res.status === 429 || res.status >= 500) throw new Error(`HTTP ${res.status}`);
-        reply = (await res.json()) as SendTxReply;
+        const r = await call(url, "send_tx", { signed_tx_base64: b64, wait_until: "NONE" });
+        if (r.result || pending(r.error)) {
+          accepted = true;
+          break;
+        }
+        return { hash, ok: false, error: errText(r.error), value: undefined };
       } catch (e) {
         last = e instanceof Error ? e.message : String(e);
-        continue;
       }
-      const r = reply.result;
-      if (!r) return { hash: "", ok: false, error: JSON.stringify(reply.error?.data ?? reply.error?.message ?? "rejected").slice(0, 240), value: undefined };
-      const outcomes = [r.transaction_outcome, ...(r.receipts_outcome ?? [])];
-      const failed = outcomes.map((o) => failureText(o?.outcome?.status)).find(Boolean) ?? failureText(r.status);
-      return { hash: r.transaction.hash, ok: !failed, error: failed, value: decodeValue(r.status) };
     }
-    throw new Error(`testnet RPC unavailable: ${last.slice(0, 120)}`);
+    if (!accepted) throw new Error(`testnet RPC unavailable: ${last.slice(0, 120)}`);
+    for (let round = 0; round < 30; round++) {
+      for (const url of urls) {
+        try {
+          const r = await call(url, "tx", { tx_hash: hash, sender_account_id: signer, wait_until: "EXECUTED_OPTIMISTIC" });
+          if (r.result?.receipts_outcome) return outcomeOf(r.result);
+          if (r.error && !pending(r.error)) return { hash, ok: false, error: errText(r.error), value: undefined };
+        } catch {
+          // rate limit or transport error: try the next RPC
+        }
+      }
+      await sleep(pollMs);
+    }
+    throw new Error(`no outcome for ${hash} yet; check the transaction before retrying`);
   };
 }
