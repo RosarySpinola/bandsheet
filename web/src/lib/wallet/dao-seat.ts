@@ -2,6 +2,7 @@ import type { NearWalletBase } from "@hot-labs/near-connect"
 import { z } from "zod"
 import { ApiError } from "@/lib/api"
 import { DAO, view } from "@/lib/chain"
+import { traceSignCall } from "./gesture"
 
 /** Sputnik v2 reads and the one write a council seat makes from its own wallet: act_proposal. */
 
@@ -27,27 +28,30 @@ export async function readProposal(id: number): Promise<ChainProposal> {
 const VOTE_GAS = "270000000000000"
 
 /**
- * Sign act_proposal with the connected wallet, then read the proposal back from the chain. The DAO's own policy
- * decides whether the vote counts; nothing here can change the council or the 2-of-3 threshold.
+ * Sign act_proposal with the connected wallet, then read the proposal back from the chain. The proposal (its kind)
+ * is read before the tap, so the wallet call starts synchronously in the click and a web wallet's tab is not blocked.
+ * The DAO's own policy decides whether the vote counts; nothing here can change the council or the 2-of-3 threshold.
  */
-export async function voteFromWallet(
+export function voteFromWallet(
   wallet: NearWalletBase,
   accountId: string,
-  id: number,
+  before: ChainProposal,
   action: "VoteApprove" | "VoteReject",
 ): Promise<{ txHash: string | null; status: string; votes: Record<string, string> }> {
-  const before = await readProposal(id)
-  if (before.status !== "InProgress") throw new ApiError(`Proposal #${id} is already ${before.status}.`, "PROPOSAL_CLOSED")
-  if (before.votes?.[accountId]) throw new ApiError("This seat has already voted on this proposal.", "ALREADY_VOTED")
-  const out = await wallet.signAndSendTransaction({
+  if (before.status !== "InProgress") return Promise.reject(new ApiError(`Proposal #${before.id} is already ${before.status}.`, "PROPOSAL_CLOSED"))
+  if (before.votes?.[accountId]) return Promise.reject(new ApiError("This seat has already voted on this proposal.", "ALREADY_VOTED"))
+  traceSignCall("signAndSendTransaction")
+  const sending = wallet.signAndSendTransaction({
     network: "testnet",
     signerId: accountId,
     receiverId: DAO,
-    actions: [{ type: "FunctionCall", params: { methodName: "act_proposal", args: { id, action, proposal: before.kind as object }, gas: VOTE_GAS, deposit: "0" } }],
+    actions: [{ type: "FunctionCall", params: { methodName: "act_proposal", args: { id: before.id, action, proposal: before.kind as object }, gas: VOTE_GAS, deposit: "0" } }],
   })
-  const failure = JSON.stringify((out as { status?: unknown } | undefined)?.status ?? {}).match(/"Failure"/)
-  const txHash = (out as { transaction?: { hash?: string } } | undefined)?.transaction?.hash ?? null
-  if (failure) throw new ApiError("The DAO refused the vote.", "CHAIN_REJECTED")
-  const after = await readProposal(id)
-  return { txHash, status: after.status, votes: after.votes ?? {} }
+  return sending.then(async (out) => {
+    const failure = JSON.stringify((out as { status?: unknown } | undefined)?.status ?? {}).match(/"Failure"/)
+    const txHash = (out as { transaction?: { hash?: string } } | undefined)?.transaction?.hash ?? null
+    if (failure) throw new ApiError("The DAO refused the vote.", "CHAIN_REJECTED")
+    const after = await readProposal(before.id)
+    return { txHash, status: after.status, votes: after.votes ?? {} }
+  })
 }

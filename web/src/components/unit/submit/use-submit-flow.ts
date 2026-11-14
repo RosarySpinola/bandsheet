@@ -8,7 +8,7 @@ import { checkKey, nearLib } from "../key-check"
 import type { Member } from "../session"
 import { isEml } from "../dropzone"
 import { useIdentity } from "@/lib/wallet/identity"
-import { walletSignedSubmit, type SignedSubmitStage } from "@/lib/wallet/signed-submit"
+import { prepareWalletEntry, signAndPostWalletEntry, type PreparedEntry } from "@/lib/wallet/signed-submit"
 
 async function fileB64(f: File): Promise<string> {
   const bytes = new Uint8Array(await f.arrayBuffer())
@@ -43,7 +43,9 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   /** A member who joined with a NEAR Connect wallet: their wallet must sign each entry before it is posted. */
   const who = useIdentity()
   const wallet = who?.method === "near-connect" && member !== null && who.slot === member.slot ? who : null
-  const [stage, setStage] = useState<SignedSubmitStage | null>(null)
+  const [stage, setStage] = useState<"wallet" | "posting" | null>(null)
+  /** A wallet member's entry, prepared right after sealing so the tap can start the wallet call at once. */
+  const [prepared, setPrepared] = useState<Async<PreparedEntry>>(idle)
 
   const go = useCallback((s: Step) => {
     setStep(s)
@@ -121,18 +123,42 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     go(4)
   }, [policy, invite, fields, emlB64, go])
 
+  // After sealing, a wallet member's posting transaction and wallet call are prepared (no tap needed).
+  const invData = invite.status === "done" ? invite.data : undefined
+  useEffect(() => {
+    if (!wallet || !sealed || !invData) return setPrepared(idle)
+    let live = true
+    setPrepared({ status: "busy" })
+    prepareWalletEntry(invData.invite, sealed, wallet).then(
+      (data) => live && setPrepared({ status: "done", data }),
+      (error) => live && setPrepared({ status: "error", error }),
+    )
+    return () => {
+      live = false
+    }
+  }, [wallet, sealed, invData])
+
   /** Sign `submit` with the member key in the browser; for the demo key, fall back to the server signer. */
   const sendSealed = useCallback(async () => {
     if (!sealed || invite.status !== "done" || !invite.data) return
     const before = policy?.entries ?? null
-    setSend({ status: "busy" })
     const { invite: inv, demo } = invite.data
     if (wallet) {
+      if (prepared.status !== "done" || !prepared.data) return
+      // The wallet call starts here, synchronously in the tap; nothing awaits before it.
+      const posting = signAndPostWalletEntry(prepared.data, () => setStage("posting"))
+      setStage("wallet")
+      setSend({ status: "busy" })
       try {
-        const r = await walletSignedSubmit(inv, sealed, wallet, setStage)
+        const r = await posting
         setSend({ status: "done", data: { tx: r.tx.hash, via: "wallet", count: r.entry_count, before, account: r.account_id } })
       } catch (error) {
         setSend({ status: "error", error })
+        // A used or expired nonce needs a fresh preparation; a decline can reuse the same one.
+        if ((error as { code?: string })?.code !== "WALLET_REFUSED") setPrepared(idle)
+        if ((error as { code?: string })?.code !== "WALLET_REFUSED" && invData) {
+          prepareWalletEntry(invData.invite, sealed, wallet).then((data) => setPrepared({ status: "done", data }), (e) => setPrepared({ status: "error", error: e }))
+        }
         return
       } finally {
         setStage(null)
@@ -141,6 +167,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
       go(5)
       return
     }
+    setSend({ status: "busy" })
     try {
       const near = await nearLib()
       const out = (await near.submitEntry(inv, sealed)) as { result: unknown; txHash?: string }
@@ -163,7 +190,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     }
     void qc.invalidateQueries({ queryKey: ["chain", "policy"] })
     go(5)
-  }, [sealed, invite, policy, qc, go, wallet])
+  }, [sealed, invite, policy, qc, go, wallet, prepared, invData])
 
   /** Step 3 -> 2: forget the read payslip (and anything sealed from it) and show an empty upload step. Gender and site stay. */
   const anotherPayslip = useCallback(() => {
@@ -191,7 +218,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   return {
     step, reached, go, invite, resetInvite,
     file, extract, runExtract, trySample, fields, setFields, emlB64, sample,
-    sealed, seal, send, sendSealed, restart, anotherPayslip, wallet, stage,
+    sealed, seal, send, sendSealed, restart, anotherPayslip, wallet, stage, prepared,
   }
 }
 

@@ -2,7 +2,8 @@ import type { NearConnector, NearWalletBase } from "@hot-labs/near-connect"
 import { ApiError } from "@/lib/api"
 import { CONTRACT } from "@/lib/chain"
 import { getNonce, nonceBytes, statementText, type Purpose, type SignedClaim } from "./auth-api"
-import { EVM_WALLET, evmPersonalSign, evmStatement } from "./evm"
+import { EVM_WALLET, evmPersonalSign, evmPreparedSign, evmStatement } from "./evm"
+import { traceSignCall } from "./gesture"
 import { TX_RPCS } from "@/lib/rpc"
 
 /**
@@ -85,6 +86,39 @@ export async function walletSignStatement(walletId: string, purpose: Purpose, su
     return checked({ scheme: "nep413", account_id: s.accountId, public_key: s.publicKey, signature: s.signature, nonce: issued.nonce }, walletId)
   } catch (e) {
     throw cancelled(e) ? new WalletCancelled() : e
+  }
+}
+
+/** A statement ready to sign: nonce issued and wallet loaded, so sign() starts the wallet call inside the tap. */
+export type PreparedStatement = { nonce: string; sign: () => Promise<SignedClaim> }
+
+/** Tap 1 (or an effect after sealing): fetch the nonce and load the wallet. Nothing is signed yet. */
+export async function prepareStatement(walletId: string, purpose: Purpose, subject: string, accountId: string): Promise<PreparedStatement> {
+  const [c, issued] = await Promise.all([getConnector(), getNonce(purpose)])
+  if (walletId === EVM_WALLET) {
+    const sign = await evmPreparedSign(accountId, evmStatement(purpose, subject, CONTRACT, issued.nonce))
+    return {
+      nonce: issued.nonce,
+      sign: () => {
+        traceSignCall("personal_sign")
+        return sign().then((signature) => ({ scheme: "eip191" as const, account_id: accountId, signature, nonce: issued.nonce }))
+      },
+    }
+  }
+  const wallet = await c.wallet(walletId)
+  const params = { message: statementText(purpose, subject), recipient: CONTRACT, nonce: nonceBytes(issued.nonce), network: "testnet" as const, signerId: accountId }
+  return {
+    nonce: issued.nonce,
+    // Tap 2: the wallet call starts synchronously in the click, before any await.
+    sign: () => {
+      traceSignCall("signMessage")
+      return wallet.signMessage(params).then(
+        (s) => checked({ scheme: "nep413", account_id: s.accountId, public_key: s.publicKey, signature: s.signature, nonce: issued.nonce }, walletId),
+        (e) => {
+          throw cancelled(e) ? new WalletCancelled() : e
+        },
+      )
+    },
   }
 }
 

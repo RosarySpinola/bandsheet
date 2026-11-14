@@ -43,6 +43,9 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
         </dl>
       </div>
 
+      {flow.wallet && flow.prepared.status === "error" && (
+        <ErrorState error={flow.prepared.error} title="Your entry could not be prepared for your wallet." onRetry={() => flow.go(3)} />
+      )}
       {s.status === "error" &&
         (refused ? (
           <ErrorState error={s.error} tone="alarm" title="Refused by the contract. This key is not a member." />
@@ -51,9 +54,15 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
         ))}
 
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-        <SquareButton onClick={flow.sendSealed} disabled={s.status === "busy"} aria-busy={s.status === "busy"}>
+        <SquareButton
+          onClick={flow.sendSealed}
+          disabled={s.status === "busy" || (flow.wallet !== null && flow.prepared.status !== "done")}
+          aria-busy={s.status === "busy"}
+        >
           {s.status !== "busy"
-            ? flow.wallet ? "Sign with your wallet and post" : "Sign and send to NEAR"
+            ? flow.wallet
+              ? flow.prepared.status === "done" ? "Sign with your wallet and post" : "Preparing your entry…"
+              : "Sign and send to NEAR"
             : flow.stage === "wallet" ? "Approve in your wallet…" : flow.stage === "posting" ? "Posting…" : "Signing and sending…"}
         </SquareButton>
         <CtaButton onClick={() => flow.go(3)} disabled={s.status === "busy"}>

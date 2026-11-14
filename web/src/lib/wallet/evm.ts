@@ -17,6 +17,20 @@ const hexUtf8 = (s: string) => `0x${Array.from(new TextEncoder().encode(s), (b) 
  * personal_sign through the browser's EIP-1193 provider (MetaMask and similar). The account must be the one the
  * Ethereum Wallets executor signed in with; the server checks the recovered address against it.
  */
+/** Prepare a personal_sign: account access is checked first, so the returned call can start inside the tap. */
+export async function evmPreparedSign(address: string, text: string): Promise<() => Promise<string>> {
+  const eth = (window as unknown as { ethereum?: Eip1193 }).ethereum
+  if (!eth) throw new ApiError("No Ethereum wallet in this browser. Open Bandsheet where MetaMask (or another extension) is installed.", "NO_EVM_PROVIDER")
+  const accounts = ((await eth.request({ method: "eth_requestAccounts" })) as string[]).map((a) => a.toLowerCase())
+  if (!accounts.includes(address.toLowerCase())) throw new ApiError(`Switch your Ethereum wallet to ${address}, the account you connected with.`, "WRONG_ACCOUNT")
+  return () =>
+    (eth.request({ method: "personal_sign", params: [hexUtf8(text), address] }) as Promise<unknown>).then(String, (e: unknown) => {
+      const code = (e as { code?: number })?.code
+      if (code === 4001 || /reject|denied|cancel/i.test(String((e as Error)?.message))) throw new WalletCancelled()
+      throw e
+    })
+}
+
 export async function evmPersonalSign(address: string, text: string): Promise<string> {
   const eth = (window as unknown as { ethereum?: Eip1193 }).ethereum
   if (!eth) throw new ApiError("No Ethereum wallet in this browser. Open Bandsheet where MetaMask (or another extension) is installed.", "NO_EVM_PROVIDER")

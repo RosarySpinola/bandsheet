@@ -5,7 +5,7 @@ import { Wallet } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
 import { ErrorState, SquareButton, TxLink } from "@/components/unit"
 import { DAO } from "@/lib/chain"
-import { councilMembers, voteFromWallet } from "@/lib/wallet/dao-seat"
+import { councilMembers, readProposal, voteFromWallet } from "@/lib/wallet/dao-seat"
 import { shortAccount } from "@/lib/wallet/identity"
 import { WalletCancelled, connectVoter, disconnectVoter, restoreVoter } from "@/lib/wallet/near-connect"
 import type { DaoProposal } from "./data"
@@ -48,13 +48,17 @@ export function WalletSeat({ proposals }: { proposals: DaoProposal[] }) {
     setOutcome(null)
   }
   const vote = (id: number, action: "VoteApprove" | "VoteReject") => {
-    if (!conn) return
+    const before = chainOpen.data?.find((p) => p.id === id)
+    if (!conn || !before) return
+    // Synchronous in the tap: the proposal was read beforehand, so the wallet's tab opens without being blocked.
+    const sending = voteFromWallet(conn.wallet, conn.accountId, before, action)
     setVoting({ id, action })
     setOutcome(null)
-    voteFromWallet(conn.wallet, conn.accountId, id, action)
+    sending
       .then((r) => {
         setOutcome({ id, tx: r.txHash, status: r.status })
         void qc.invalidateQueries({ queryKey: ["dao", "release-proposals"] })
+        void chainOpen.refetch()
       })
       .catch((error) => setOutcome(error instanceof WalletCancelled ? null : { id, error }))
       .finally(() => setVoting(null))
@@ -62,6 +66,13 @@ export function WalletSeat({ proposals }: { proposals: DaoProposal[] }) {
 
   const open = proposals.filter((p) => p.status === "InProgress")
   const seat = conn && council.data ? council.data.includes(conn.accountId) : null
+  // Read each open proposal (its kind) ahead of the tap.
+  const chainOpen = useQuery({
+    queryKey: ["dao", "open-proposals", open.map((p) => p.id).join(",")],
+    queryFn: () => Promise.all(open.map((p) => readProposal(p.id))),
+    enabled: seat === true && open.length > 0,
+    staleTime: 15_000,
+  })
 
   return (
     <section aria-labelledby="wallet-seat" className="-mt-4 flex flex-col gap-4 border-b border-border pb-6 md:-mt-8">
@@ -110,8 +121,8 @@ export function WalletSeat({ proposals }: { proposals: DaoProposal[] }) {
                     <span className="flex items-center gap-2 text-[0.9375rem] text-ink" role="status"><Spinner className="size-3.5" /> Confirm in your wallet…</span>
                   ) : (
                     <span className="flex items-center gap-4">
-                      <button type="button" disabled={voting !== null} onClick={() => vote(p.id, "VoteApprove")} className="wipe cursor-pointer text-[0.9375rem] font-semibold text-ink disabled:opacity-40">Approve</button>
-                      <button type="button" disabled={voting !== null} onClick={() => vote(p.id, "VoteReject")} className="wipe cursor-pointer text-[0.9375rem] text-muted-foreground hover:text-ink disabled:opacity-40">Reject</button>
+                      <button type="button" disabled={voting !== null || !chainOpen.data} onClick={() => vote(p.id, "VoteApprove")} className="wipe cursor-pointer text-[0.9375rem] font-semibold text-ink disabled:opacity-40">Approve</button>
+                      <button type="button" disabled={voting !== null || !chainOpen.data} onClick={() => vote(p.id, "VoteReject")} className="wipe cursor-pointer text-[0.9375rem] text-muted-foreground hover:text-ink disabled:opacity-40">Reject</button>
                     </span>
                   )}
                 </div>
