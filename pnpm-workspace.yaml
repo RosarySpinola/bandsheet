@@ -5,3 +5,6 @@ packages:
   - web
 allowBuilds:
   esbuild: true
+  # FastAuth SDK transitive deps: secp256k1 falls back to pure JS (elliptic); browser-tabs-lock only prints a notice.
+  secp256k1: false
+  browser-tabs-lock: false
