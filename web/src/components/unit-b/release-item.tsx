@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import type { ReleaseRecord } from "@bandsheet/core"
 import { Accordion as A } from "radix-ui"
 import { ChevronDown } from "lucide-react"
@@ -21,7 +22,18 @@ const INDICATOR: Record<ReleaseStatus, string> = {
 const requesterLabel = (id?: string) => (!id ? "the chapel" : id.includes("sputnik") ? "the chapel DAO" : id)
 
 /** One ledger record: a ReUI timeline step whose body is a Greenlock accordion (200ms, chevron 180°). */
-export function ReleaseItem({ release, step, tx }: { release: ReleaseRecord; step: number; tx?: string }) {
+export function ReleaseItem({ release, step, tx, badge, extra, requester, contract }: {
+  release: ReleaseRecord
+  step: number
+  tx?: string
+  /** A judge's own unit: a tag beside the date (e.g. "Includes synthetic"). */
+  badge?: ReactNode
+  /** A judge's own unit: shown first in the open record (entry counts, synthetic notice). */
+  extra?: ReactNode
+  requester?: string
+  /** A judge's own unit: the units contract, linked when a record has no tx. */
+  contract?: string
+}) {
   const status = release.status as ReleaseStatus
   const q = asQuery(release.query)
   const withheld = release.suppressed.length
@@ -45,6 +57,7 @@ export function ReleaseItem({ release, step, tx }: { release: ReleaseRecord; ste
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.875rem] text-muted-foreground">
                   <span className="gl-num text-[0.9375rem] text-ink">No. {String(release.id).padStart(2, "0")}</span>
                   <span>{when(d)}</span>
+                  {badge}
                   {x.requireDkim && (
                     <span className="inline-flex items-center border border-ink px-1.5 py-0.5 text-[0.75rem] font-semibold text-ink">DKIM required</span>
                   )}
@@ -53,7 +66,7 @@ export function ReleaseItem({ release, step, tx }: { release: ReleaseRecord; ste
                   {describeQuery(q)}
                 </h3>
                 <p className="text-[0.9375rem] text-muted-foreground">
-                  Requested by {requesterLabel(release.requested_by)} · {plural(release.cells.length, "cell")} published
+                  Requested by {requester ?? requesterLabel(release.requested_by)} ·{plural(release.cells.length, "cell")} published
                   {withheld > 0 && ` · ${withheld} withheld`}
                   {x.entriesVerified !== null && ` · ${x.entriesVerified} payslips verified`}
                   {x.rejections.length > 0 && ` · ${x.rejections.reduce((n, r) => n + r.count, 0)} refused`}
@@ -68,6 +81,7 @@ export function ReleaseItem({ release, step, tx }: { release: ReleaseRecord; ste
           <A.Content className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
             <div className="grid grid-cols-1 gap-10 pb-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
               <div className="flex min-w-0 flex-col gap-6">
+                {extra}
                 <ReleaseVerification extras={x} />
                 {release.status === "error" && (
                   <p className="border-l-2 border-ink bg-band px-5 py-4 text-[0.9375rem] text-foreground">
@@ -81,7 +95,7 @@ export function ReleaseItem({ release, step, tx }: { release: ReleaseRecord; ste
               </div>
               <div className="flex min-w-0 flex-col gap-4 lg:border-l lg:border-border lg:pl-10">
                 <p className="text-[0.8125rem] font-semibold tracking-[0.04em] text-ink uppercase">Verify it yourself</p>
-                <ReleaseProof release={release} tx={tx} />
+                <ReleaseProof release={release} tx={tx} contract={contract} />
               </div>
             </div>
           </A.Content>

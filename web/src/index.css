@@ -212,3 +212,9 @@
   --invert: var(--color-zinc-700);
   --invert-foreground: var(--color-zinc-50);
 }
+
+/* Units: the engine-running bar (stops under reduced motion via the rule above). */
+@keyframes bs-run {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}

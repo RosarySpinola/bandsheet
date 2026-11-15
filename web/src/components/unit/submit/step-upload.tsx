@@ -5,6 +5,7 @@ import { Dropzone } from "../dropzone"
 import { CtaButton } from "../links"
 import { ErrorState } from "../states"
 import type { SampleKind, SubmitFlow } from "./use-submit-flow"
+import { useSubmitScope } from "./scope"
 
 const SAMPLES: { path: string; name: string; kind: SampleKind; title: string; note: string; Icon: typeof Mail }[] = [
   {
@@ -39,6 +40,7 @@ const TITLES: Record<string, string> = {
 export function StepUpload({ flow }: { flow: SubmitFlow }) {
   const ex = flow.extract
   const busy = ex.status === "busy"
+  const scope = useSubmitScope()
 
   return (
     <div className="flex flex-col gap-8">
@@ -65,7 +67,8 @@ export function StepUpload({ flow }: { flow: SubmitFlow }) {
         <Dropzone onFile={(f) => flow.runExtract(f)} onReject={flow.anotherPayslip} file={flow.file} />
       )}
 
-      {!busy && (
+      {!busy && scope.samples}
+      {!busy && !scope.samples && (
         <div className="flex flex-col gap-3">
           <p className="text-[0.9375rem] font-medium text-ink">No payroll email to hand? Synthetic samples from Harbour Courier Ltd:</p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

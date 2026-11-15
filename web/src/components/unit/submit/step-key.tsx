@@ -1,20 +1,20 @@
 import { cn } from "@/lib/utils"
-import { UNIT_NAME } from "../nav"
 import { Fact } from "../page-header"
 import { HashValue } from "../copy-button"
 import { CtaLink, SquareButton } from "../links"
 import { ErrorState, Shimmer } from "../states"
 import { PassMark } from "../verified-panel"
-import { joinHref } from "../session"
+import { useSubmitScope } from "./scope"
 import type { SubmitFlow } from "./use-submit-flow"
 
 /** Step 1: the key opened on /unit/join, re-checked live against the contract's member list. */
 export function StepKey({ flow }: { flow: SubmitFlow }) {
   const s = flow.invite
+  const scope = useSubmitScope()
   return (
     <div className="flex flex-col gap-8">
       <p className="max-w-[38rem] text-[1.0625rem] leading-relaxed text-foreground">
-        Your key can only call <code className="font-mono text-[0.9375rem]">submit</code> on the chapel's contract. Your entry is filed
+        Your key can only call <code className="font-mono text-[0.9375rem]">submit</code> on the {scope.noun}'s contract. Your entry is filed
         under a slot derived from it, so the ledger never links an entry to a name.
       </p>
 
@@ -32,7 +32,7 @@ export function StepKey({ flow }: { flow: SubmitFlow }) {
             <PassMark pass={s.data.member} className="mt-0.5 size-8" />
             <div className="flex flex-col gap-1">
               <p className={"text-[1.125rem] font-semibold text-ink"}>
-                {s.data.member ? `A registered member of ${UNIT_NAME}` : "Refused: this key is not a member"}
+                {s.data.member ? `A registered member of ${scope.unitName}` : "Refused: this key is not a member"}
               </p>
               <p className="text-[0.9375rem] text-foreground">
                 {s.data.member
@@ -53,7 +53,7 @@ export function StepKey({ flow }: { flow: SubmitFlow }) {
           </dl>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
             {s.data.member && <SquareButton onClick={() => flow.go(2)}>Continue to the payslip</SquareButton>}
-            <CtaLink to={joinHref("/unit/submit")}>Switch key</CtaLink>
+            <CtaLink to={scope.switchKeyHref}>Switch key</CtaLink>
           </div>
         </div>
       )}

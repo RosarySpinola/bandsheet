@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { Link, useLocation } from "react-router"
 import { cn } from "@/lib/utils"
 import { DemoTag, NavGroups } from "./sidebar"
 import { IdentityBlock } from "./identity"
 
-/** <1024px: 56px white top bar, Greenlock two-bar burger, full-screen sheet sliding from -6rem. */
-export function MobileNav() {
+/**
+ * <1024px: 56px white top bar, Greenlock two-bar burger, full-screen sheet sliding from -6rem.
+ * A judge's own unit passes its tag, nav and identity block; the demo chapel uses the defaults.
+ */
+export function MobileNav({ tag, nav, identity }: { tag?: ReactNode; nav?: (close: () => void) => ReactNode; identity?: ReactNode } = {}) {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
 
@@ -47,10 +50,10 @@ export function MobileNav() {
           open ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-24 opacity-0",
         )}
       >
-        <DemoTag />
-        <NavGroups pathname={pathname} size="lg" onNavigate={() => setOpen(false)} />
+        {tag ?? <DemoTag />}
+        {nav ? nav(() => setOpen(false)) : <NavGroups pathname={pathname} size="lg" onNavigate={() => setOpen(false)} />}
         <div className="mt-auto">
-          <IdentityBlock className="bg-band" />
+          {identity ?? <IdentityBlock className="bg-band" />}
         </div>
       </div>
     </div>

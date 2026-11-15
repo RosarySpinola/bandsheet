@@ -1,6 +1,6 @@
 import { Lock } from "lucide-react"
 import { plainError } from "@/lib/api"
-import { CONTRACT, explorer, type Policy } from "@/lib/chain"
+import { explorer, type Policy } from "@/lib/chain"
 import { int, shortHash } from "@/lib/format"
 import { Fact } from "../page-header"
 import { HashValue } from "../copy-button"
@@ -9,11 +9,13 @@ import { ErrorState } from "../states"
 import type { SubmitFlow } from "./use-submit-flow"
 import { WebWalletTip } from "../web-wallet-tip"
 import { shortAccount } from "@/lib/wallet/identity"
+import { useSubmitScope } from "./scope"
 
 /** Step 4: show the sealed envelope, then sign `submit` with the member key. */
 export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }) {
   const c = flow.sealed
   const s = flow.send
+  const scope = useSubmitScope()
   if (!c) return null
   const refused = s.status === "error" && plainError(s.error).code === "NOT_MEMBER"
 
@@ -29,7 +31,7 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
         <p className="max-w-[38rem] text-[1rem] leading-relaxed text-white/80">
           Your entry{flow.emlB64 ? ", with the signed payroll email inside it," : ""} is encrypted to the engine's public key{" "}
           <code className="font-mono text-lav-mid">{shortHash(policy?.policy.enclave_pubkey, 10, 4)}</code>, read from the contract
-          policy. Only the sealed OutLayer engine holds the matching private key. The contract, the chapel and this server see only the
+          policy. Only the sealed OutLayer engine holds the matching private key. The contract, the {scope.noun} and this server see only the
           envelope below.
         </p>
         <dl className="grid grid-cols-1 gap-4 font-mono text-[0.8125rem] sm:grid-cols-3">
@@ -57,10 +59,12 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
         <SquareButton
           onClick={flow.sendSealed}
-          disabled={s.status === "busy" || (flow.wallet !== null && flow.prepared.status !== "done")}
+          disabled={s.status === "busy" || (flow.wallet !== null && flow.prepared.status !== "done") || (scope.sendGate !== undefined && !scope.sendGate.ready)}
           aria-busy={s.status === "busy"}
         >
-          {s.status !== "busy"
+          {scope.sendGate
+            ? s.status === "busy" ? scope.sendGate.busyLabel : scope.sendGate.label
+            : s.status !== "busy"
             ? flow.wallet
               ? flow.prepared.status === "done" ? "Sign with your wallet and post" : "Preparing your entry…"
               : "Sign and send to NEAR"
@@ -70,7 +74,10 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
           Change the fields
         </CtaButton>
       </div>
-      {flow.wallet ? (
+      {scope.sendGate?.status}
+      {scope.sendGate ? (
+        scope.sendGate.note
+      ) : flow.wallet ? (
         <p className="border-l-2 border-ink bg-band px-5 py-4 text-[0.9375rem] leading-relaxed text-foreground">
           Your wallet ({shortAccount(flow.wallet.account_id)}) signs; the chapel's posting key posts it, so your account never appears next to your entry
           on chain. Bandsheet checks your wallet's signature before anything is posted; if you decline, nothing is posted.
@@ -78,8 +85,8 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
         </p>
       ) : (
         <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Your posting key signs a call to <code className="font-mono">submit</code> on <AccountLink id={CONTRACT} className="text-[0.9375rem]" />.
-          The chapel's account pays the gas, so you need no tokens.
+          Your posting key signs a call to <code className="font-mono">submit</code> on <AccountLink id={scope.contract} className="text-[0.9375rem]" />.
+          The {scope.noun}'s account pays the gas, so you need no tokens.
         </p>
       )}
     </div>
@@ -89,6 +96,7 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
 /** Step 5: receipt with the transaction and what happened to the entry count. */
 export function StepDone({ flow }: { flow: SubmitFlow }) {
   const r = flow.send.status === "done" ? flow.send.data : undefined
+  const scope = useSubmitScope()
   if (!r) return null
   const same = r.count !== null && r.before !== null && r.count === r.before
   return (
@@ -102,14 +110,15 @@ export function StepDone({ flow }: { flow: SubmitFlow }) {
               ? ` The unit still holds ${int(r.count)} entries, because your slot already had one and this replaced it.`
               : ` The unit now holds ${int(r.count)} entries.`)}
         </p>
+        {scope.doneNote}
       </div>
       <dl className="grid grid-cols-1 gap-6 bg-band p-6 sm:grid-cols-2 md:p-8">
         <Fact label="Transaction">
-          {r.tx ? <TxLink tx={r.tx} /> : <ExtLink href={explorer.account(CONTRACT)}>Signed in your browser · see the contract</ExtLink>}
+          {r.tx ? <TxLink tx={r.tx} /> : <ExtLink href={explorer.account(scope.contract)}>Signed in your browser · see the contract</ExtLink>}
         </Fact>
         <Fact label="Signed by">
           {r.via === "wallet"
-            ? `Your wallet (${shortAccount(r.account ?? "")}); posted by the chapel's posting key`
+            ? `Your wallet (${shortAccount(r.account ?? "")}); posted by the ${scope.noun}'s posting key`
             : r.via === "browser" ? "Your posting key, in this browser" : "The demo member key, on the Bandsheet server"}
         </Fact>
         <Fact label="Entries">{r.count !== null ? int(r.count) : "—"}</Fact>
@@ -118,7 +127,7 @@ export function StepDone({ flow }: { flow: SubmitFlow }) {
         </Fact>
       </dl>
       <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-        <CtaLink to="/unit/stand" size="lg">
+        <CtaLink to={scope.standHref} size="lg">
           See where you stand
         </CtaLink>
         <CtaButton onClick={flow.restart}>Submit again</CtaButton>

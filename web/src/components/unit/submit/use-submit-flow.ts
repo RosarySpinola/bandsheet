@@ -23,11 +23,20 @@ export type Receipt = { tx: string | null; via: "browser" | "server" | "wallet";
 export type SampleKind = "email" | "forged" | "image"
 export type Async<T> = { status: "idle" | "busy" | "done" | "error"; data?: T; error?: unknown }
 
+/**
+ * A unit other than the demo chapel (/u/:unitId/submit): how its stored key is checked and how a sealed entry is
+ * posted. Without one, the flow is the demo chapel's, unchanged. Pass a memoised object.
+ */
+export type SubmitTarget = {
+  check: (member: Member) => Promise<{ invite: Invite; member: boolean; demo: boolean }>
+  send: (invite: Invite, sealed: Ciphertext, entry: Omit<Entry, "slot" | "submitted_at">, emlB64: string | null) => Promise<{ tx: string | null; count: number | null; account?: string }>
+}
+
 const idle = { status: "idle" } as const
 
 const coreLib = () => import("@bandsheet/core")
 
-export function useSubmitFlow(policy: Policy | undefined, member: Member | null) {
+export function useSubmitFlow(policy: Policy | undefined, member: Member | null, target?: SubmitTarget) {
   const qc = useQueryClient()
   const [step, setStep] = useState<Step>(1)
   const [reached, setReached] = useState<Step>(1)
@@ -58,12 +67,12 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     if (!member) return setInvite(idle)
     setInvite({ status: "busy" })
     try {
-      const k = await checkKey("stored", member.invite, member.demo)
+      const k = target ? await target.check(member) : await checkKey("stored", member.invite, member.demo)
       setInvite({ status: "done", data: { invite: k.invite, member: k.member, demo: k.demo } })
     } catch (error) {
       setInvite({ status: "error", error })
     }
-  }, [member])
+  }, [member, target])
 
   useEffect(() => {
     void checkStored()
@@ -145,6 +154,19 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     if (!sealed || invite.status !== "done" || !invite.data) return
     const before = policy?.entries ?? null
     const { invite: inv, demo } = invite.data
+    if (target) {
+      setSend({ status: "busy" })
+      try {
+        const entry = { gross_annual_eur: Number(fields.gross_annual_eur), grade: fields.grade!, gender: fields.gender!, site: fields.site! }
+        const r = await target.send(inv, sealed, entry, emlB64)
+        setSend({ status: "done", data: { tx: r.tx, via: r.account ? "wallet" : "browser", count: r.count, before, account: r.account } })
+      } catch (error) {
+        setSend({ status: "error", error })
+        return
+      }
+      go(5)
+      return
+    }
     if (wallet) {
       if (prepared.status !== "done" || !prepared.data) return
       // The wallet call starts here, synchronously in the tap; nothing awaits before it.
@@ -192,7 +214,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     }
     void qc.invalidateQueries({ queryKey: ["chain", "policy"] })
     go(5)
-  }, [sealed, invite, policy, qc, go, wallet, prepared, invData])
+  }, [sealed, invite, policy, qc, go, wallet, prepared, invData, target, fields, emlB64])
 
   /** Step 3 -> 2: forget the read payslip (and anything sealed from it) and show an empty upload step. Gender and site stay. */
   const anotherPayslip = useCallback(() => {

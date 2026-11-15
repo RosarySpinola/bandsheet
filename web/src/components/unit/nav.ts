@@ -1,6 +1,6 @@
 import { SCREENS, type ScreenLink } from "@/components/gl/screens"
 
-export type NavItem = Omit<ScreenLink, "kind"> & { kind: ScreenLink["kind"] | "overview" | "how" | "help" | "pricing" }
+export type NavItem = Omit<ScreenLink, "kind"> & { kind: ScreenLink["kind"] | "overview" | "how" | "help" | "pricing" | "invite" }
 
 const screen = (to: string): NavItem => {
   const s = SCREENS.find((x) => x.to === to)

@@ -21,7 +21,7 @@ function CheckLine({ ok, children }: { ok: boolean | null; children: string }) {
 }
 
 /** Proof column: tx, OutLayer attestation (fetched and compared), sha256 of input and output, engine WASM. */
-export function ReleaseProof({ release, tx }: { release: ReleaseRecord; tx?: string }) {
+export function ReleaseProof({ release, tx, contract = CONTRACT }: { release: ReleaseRecord; tx?: string; contract?: string }) {
   const att = useAttestation(tx)
   const recorded = extras(release).wasm
   const input = release.input_sha256 ?? release.input_hash
@@ -36,7 +36,7 @@ export function ReleaseProof({ release, tx }: { release: ReleaseRecord; tx?: str
   return (
     <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
       <Row label="Transaction">
-        {tx ? <TxLink tx={tx} /> : <AccountLink id={CONTRACT} />}
+        {tx ? <TxLink tx={tx} /> : <AccountLink id={contract} />}
       </Row>
       <Row label="OutLayer attestation">
         {tx ? <ExtLink href={explorer.attestation(tx)}>View attestation</ExtLink> : <span className="text-muted-foreground">No tx on file for this record</span>}

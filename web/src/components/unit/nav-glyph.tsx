@@ -28,6 +28,14 @@ export function NavGlyph({ kind, className }: { kind: NavItem["kind"]; className
         <path d="M12 21 H18 V27 H12 Z" fill="var(--ink)" />
       </svg>
     )
+  if (kind === "invite")
+    return (
+      <svg viewBox="0 0 48 48" className={cn("size-12 shrink-0", className)} aria-hidden="true">
+        <path d="M6 14 H42 V38 H6 Z" fill="var(--purple-200)" />
+        <path d="M6 14 L24 28 L42 14 Z" fill="var(--purple-300)" />
+        <path d="M30 4 H44 V18 H30 Z" fill="var(--ink)" />
+      </svg>
+    )
   if (kind !== "overview") return <Glyph kind={kind} className={className} />
   return (
     <svg viewBox="0 0 48 48" className={cn("size-12 shrink-0", className)} aria-hidden="true">

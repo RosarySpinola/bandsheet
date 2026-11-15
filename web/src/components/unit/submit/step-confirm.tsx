@@ -5,6 +5,7 @@ import { SquareButton, CtaButton } from "../links"
 import { VerifiedPanel } from "../verified-panel"
 import { DkimCard } from "./dkim-card"
 import type { SubmitFlow } from "./use-submit-flow"
+import { useSubmitScope } from "./scope"
 
 const GRADES = ["Junior", "Reporter", "Senior", "Editor", "Chief"].map((g) => ({ value: g, label: g }))
 const GENDERS = [
@@ -21,6 +22,7 @@ const PERIOD: Record<string, string> = { monthly: "a month", annual: "a year", w
 /** Step 3: the member checks what was read, fills what a payslip doesn't say, and sees the attestation. */
 export function StepConfirm({ flow }: { flow: SubmitFlow }) {
   const [tried, setTried] = useState(false)
+  const scope = useSubmitScope()
   const [sealError, setSealError] = useState<string | null>(null)
   const f = flow.fields
   const ex = flow.extract.status === "done" ? flow.extract.data : undefined
@@ -60,7 +62,11 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
         ) : (
           <p className="bg-band p-6 text-[1rem] text-foreground">Enter your figures by hand. Nothing was read from a payslip.</p>
         )}
-        <DkimCard preview={ex?.dkim_preview} email={Boolean(flow.emlB64)} sample={flow.sample} />
+        {scope.dkimCard ? (
+          scope.dkimCard({ preview: ex?.dkim_preview, email: Boolean(flow.emlB64), sample: flow.sample })
+        ) : (
+          <DkimCard preview={ex?.dkim_preview} email={Boolean(flow.emlB64)} sample={flow.sample} />
+        )}
 
         <div className="grid grid-cols-1 gap-7 sm:grid-cols-2">
           <GlField
@@ -81,7 +87,7 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
             invalid={tried && !f.grade}
             className="sm:col-span-2"
           />
-          <GlSelect label="Site" value={f.site} onChange={(v) => flow.setFields({ ...f, site: v as typeof f.site })} options={SITES} invalid={tried && !f.site} />
+          <GlSelect label="Site" value={f.site} onChange={(v) => flow.setFields({ ...f, site: v as typeof f.site })} options={scope.siteOptions ?? SITES} invalid={tried && !f.site} />
           <GlSelect
             label="Gender"
             value={f.gender}
@@ -91,7 +97,7 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
           />
         </div>
         <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
-          Gender and site are not on a payslip. They let the chapel ask for gaps by gender or site, and the engine still refuses any cell
+          Gender and site are not on a payslip. They let the {scope.noun} ask for gaps by gender or site, and the engine still refuses any cell
           that would expose someone. These four fields, your slot and, if you used one, the payroll email are all that get sealed.
         </p>
         {tried && !ok && <p className="text-[0.9375rem] font-medium text-indigo" role="alert">Fill in all four fields to continue.</p>}
