@@ -7,6 +7,10 @@ Built at NEAR HACKATHON (November 2026) for the **Privacy & Private AI** track.
 Everything runs on **NEAR testnet** with a **synthetic** union chapel (a fictional newsroom, the Harbour Courier).
 No real payslips or salaries are used anywhere.
 
+> Submitted version: tag `hackathon-submission` (7384273). Later commits are post-deadline fixes from a readiness pass: https://github.com/RosarySpinola/bandsheet/compare/hackathon-submission...main
+>
+> Demo video: https://x.com/RezeryArc/status/2121752934950269019
+
 ## The problem
 
 A union chapel asks for average pay by grade. An honest tool publishes it with a "fewer than 3
