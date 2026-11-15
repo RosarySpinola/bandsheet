@@ -163,7 +163,7 @@ export default function VotePage() {
                     council={council}
                     serverSeats={serverSeats}
                     release={links.get(p.id)}
-                    waiting={p.kind === "release" && p.status === "Approved" && !links.has(p.id)}
+                    waiting={!mock && p.kind === "release" && p.status === "Approved" && !links.has(p.id)}
                     vote={voteState}
                     onVote={onVote}
                   />

@@ -209,7 +209,11 @@ export function ProposalCard({ p, council, serverSeats, release, waiting, vote, 
             <Spinner className="mt-1 size-3.5 shrink-0" /> Approved. Waiting for the sealed engine on OutLayer; the record usually lands within a minute or two.
           </span>
         ) : p.status === "Approved" ? (
-          <span className="text-[0.9375rem] text-muted-foreground">Approved. No release record is linked to this proposal.</span>
+          <span className="text-[0.9375rem] text-muted-foreground">
+            {txHere?.mock
+              ? "Approved in mock mode. A real vote would now call the contract, and the sealed engine would run on OutLayer."
+              : "Approved. No release record is linked to this proposal."}
+          </span>
         ) : open ? (
           <span className="text-[0.9375rem] text-muted-foreground">When {NEEDED} seats approve, the DAO calls the contract and the engine runs.</span>
         ) : (
