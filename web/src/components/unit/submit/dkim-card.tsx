@@ -37,7 +37,16 @@ export function DkimCard({ preview, email, sample }: { preview?: Preview | null;
       </Card>
     )
   }
-  if (!preview?.has_signature) {
+  if (!preview) {
+    // The email could not be read (so there is no header preview), but it still travels sealed with the entry.
+    return (
+      <Card icon={<Mail className="size-5" />} title="Your payroll email is sealed with this entry">
+        It could not be read here, so its signature is not previewed. The engine checks the employer's signature inside the enclave at
+        release, and counts your figures only if they match the signed email.
+      </Card>
+    )
+  }
+  if (!preview.has_signature) {
     return (
       <Card icon={<MailX className="size-5" />} title="This email is not signed">
         There is no DKIM signature in it, so the engine will refuse it at release as coming from an untrusted sender.

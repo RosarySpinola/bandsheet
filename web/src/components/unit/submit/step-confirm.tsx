@@ -70,10 +70,17 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
             value={f.gross_annual_eur}
             onChange={(e) => flow.setFields({ ...f, gross_annual_eur: e.target.value.replace(/[^\d]/g, "") })}
             invalid={tried && !grossOk}
-            hint={tried && !grossOk ? "Enter a whole number of euros, e.g. 70000." : "Before tax, for a full year."}
+            hint={tried && !grossOk ? "Enter your full-year gross in whole euros, between €1,000 and €10,000,000 (e.g. 70000)." : "Before tax, for a full year."}
             className="sm:col-span-2"
           />
-          <GlSelect label="Grade" value={f.grade} onChange={(v) => flow.setFields({ ...f, grade: v as typeof f.grade })} options={GRADES} invalid={tried && !f.grade} />
+          <GlSelect
+            label="Grade"
+            value={f.grade}
+            onChange={(v) => flow.setFields({ ...f, grade: v as typeof f.grade })}
+            options={GRADES}
+            invalid={tried && !f.grade}
+            className="sm:col-span-2"
+          />
           <GlSelect label="Site" value={f.site} onChange={(v) => flow.setFields({ ...f, site: v as typeof f.site })} options={SITES} invalid={tried && !f.site} />
           <GlSelect
             label="Gender"
@@ -81,7 +88,6 @@ export function StepConfirm({ flow }: { flow: SubmitFlow }) {
             onChange={(v) => flow.setFields({ ...f, gender: v as typeof f.gender })}
             options={GENDERS}
             invalid={tried && !f.gender}
-            className="sm:col-span-2"
           />
         </div>
         <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">

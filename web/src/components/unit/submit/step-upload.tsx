@@ -62,7 +62,7 @@ export function StepUpload({ flow }: { flow: SubmitFlow }) {
           <p className="text-[0.875rem] text-muted-foreground">This usually takes 10 to 30 seconds.</p>
         </div>
       ) : (
-        <Dropzone onFile={(f) => flow.runExtract(f)} file={flow.file} />
+        <Dropzone onFile={(f) => flow.runExtract(f)} onReject={flow.anotherPayslip} file={flow.file} />
       )}
 
       {!busy && (

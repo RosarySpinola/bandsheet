@@ -75,9 +75,11 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
   const runExtract = useCallback(async (f: File, kind: SampleKind | null = null) => {
     setFile(f)
     setSample(kind)
-    setEmlB64(isEml(f) ? await fileB64(f) : null)
+    setEmlB64(null)
     setExtract({ status: "busy" })
     try {
+      // Read inside the try: a file that can no longer be read (moved, revoked) must show an error, not hang.
+      setEmlB64(isEml(f) ? await fileB64(f) : null)
       const res = await extractPayslip(f)
       setExtract({ status: "done", data: res })
       setFields((prev) => ({
@@ -201,6 +203,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     setSealed(null)
     setSend(idle)
     setFields((prev) => ({ gross_annual_eur: "", gender: prev.gender, site: prev.site }))
+    setReached(2)
     go(2)
   }, [go])
 
@@ -212,6 +215,7 @@ export function useSubmitFlow(policy: Policy | undefined, member: Member | null)
     setSealed(null)
     setSend(idle)
     setFields({ gross_annual_eur: "" })
+    setReached(2)
     go(2)
   }, [go])
 

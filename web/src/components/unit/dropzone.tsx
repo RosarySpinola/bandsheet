@@ -10,6 +10,8 @@ export const isEml = (f: File) => f.type === "message/rfc822" || /\.eml$/i.test(
 
 export type DropzoneProps = {
   onFile: (f: File) => void
+  /** Called when a file is refused here (type or size), so the caller can drop an earlier file and its result. */
+  onReject?: () => void
   file?: File | null
   disabled?: boolean
   className?: string
@@ -18,15 +20,19 @@ export type DropzoneProps = {
 const kb = (n: number) => (n > 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`)
 
 /** Custom file picker: a large square drop area; the native input stays hidden. PNG, JPEG or PDF up to 6 MB. */
-export function Dropzone({ onFile, file, disabled, className }: DropzoneProps) {
+export function Dropzone({ onFile, onReject, file, disabled, className }: DropzoneProps) {
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
 
+  const refuse = (msg: string) => {
+    onReject?.()
+    setProblem(msg)
+  }
   const take = (f: File | undefined) => {
     if (!f) return
-    if (!ACCEPT.includes(f.type) && !isEml(f)) return setProblem("That file type is not supported. Use the .eml email, or a PNG, JPEG or PDF.")
-    if (isEml(f) ? f.size > MAX_EML : f.size > MAX) return setProblem(isEml(f) ? "That email is over 1 MB." : "That file is over 6 MB.")
+    if (!ACCEPT.includes(f.type) && !isEml(f)) return refuse("That file type is not supported. Use the .eml email, or a PNG, JPEG or PDF.")
+    if (isEml(f) ? f.size > MAX_EML : f.size > MAX) return refuse(isEml(f) ? "That email is over 1 MB." : "That file is over 6 MB.")
     setProblem(null)
     onFile(f)
   }
