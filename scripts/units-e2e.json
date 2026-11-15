@@ -1,0 +1,101 @@
+{
+  "run_at": "2026-11-15T06:43:38.277Z",
+  "contract": "bandsheet-units-2d3f96.testnet",
+  "steps": [
+    {
+      "step": "Sponsor: a fresh implicit wallet with 0 NEAR gets 0.05 testnet NEAR once",
+      "ok": false,
+      "detail": {}
+    },
+    {
+      "step": "Sponsor: the same wallet asking again is not paid twice",
+      "ok": false,
+      "detail": {}
+    },
+    {
+      "step": "create_unit by bsu-wallet-2d3f96.testnet (seat 1) -> unit 1",
+      "ok": true,
+      "tx": "8enie1Stx9Q4R8jr68fCs9voibbbnYL1qaBht93yiWZZ",
+      "link": "https://testnet.nearblocks.io/txns/8enie1Stx9Q4R8jr68fCs9voibbbnYL1qaBht93yiWZZ",
+      "detail": {
+        "unit_id": 1
+      }
+    },
+    {
+      "step": "unit_add_council bsu-wallet2-2d3f96.testnet -> added",
+      "ok": true,
+      "tx": "AdoXGbCBfP2KhiMc71v2EhHdzThd6s6fjJeWx7xSWBa9",
+      "link": "https://testnet.nearblocks.io/txns/AdoXGbCBfP2KhiMc71v2EhHdzThd6s6fjJeWx7xSWBa9"
+    },
+    {
+      "step": "Member 1: bsu-wallet-2d3f96.testnet joins unit 1 with NEP-413 (registrar adds the posting key; no wallet on chain)",
+      "ok": true,
+      "tx": "45zXn8asMmEMyG7RLRoA83JB5UG8wMV6mBSB3akjQd1N",
+      "link": "https://testnet.nearblocks.io/txns/45zXn8asMmEMyG7RLRoA83JB5UG8wMV6mBSB3akjQd1N",
+      "detail": {
+        "slot": "840fed7a4862de260070fb72f25825841a0054d8fbd29caf212b07cb197b5d1b"
+      }
+    },
+    {
+      "step": "Member 1: sealed entry submitted by the posting key, bound to bsu-wallet-2d3f96.testnet in the server store only",
+      "ok": true,
+      "tx": "4qWiq6nD5rZtAs1qxYXAbZhJqPq9ozjmeTdY6FdiKgRR",
+      "link": "https://testnet.nearblocks.io/txns/4qWiq6nD5rZtAs1qxYXAbZhJqPq9ozjmeTdY6FdiKgRR",
+      "detail": {
+        "entry_count": 1
+      }
+    },
+    {
+      "step": "Synthetic colleagues: 4 flagged keys added by the registrar, each submits one sealed sample entry",
+      "ok": false,
+      "detail": {}
+    },
+    {
+      "step": "Issuer over DNS-over-HTTPS for harbourcourier.example (fictional: expected DNS_NO_KEY)",
+      "ok": true,
+      "detail": {
+        "error": "no RSA DKIM key is published at payroll2026._domainkey.harbourcourier.example",
+        "code": "DNS_NO_KEY"
+      }
+    },
+    {
+      "step": "Issuer key supplied by a council member for the listed domain (recorded as 'supplied', not DNS)",
+      "ok": true,
+      "tx": "96LorPwzRRNEQRQwktm5Z1WG7Rk7puk17QLQjab8WDzZ",
+      "link": "https://testnet.nearblocks.io/txns/96LorPwzRRNEQRQwktm5Z1WG7Rk7puk17QLQjab8WDzZ",
+      "detail": {
+        "source": "supplied",
+        "key_sha256": "66e41d662388f0e1bd2720192ce376fef2dffa0ddc6adf59d779fed30129ff5d"
+      }
+    },
+    {
+      "step": "Member 2 (DKIM): bsu-wallet2-2d3f96.testnet joins unit 1 with NEP-413 (registrar adds the posting key; no wallet on chain)",
+      "ok": true,
+      "tx": "5VZwCmqnXhW6KPUJYnnLZsMa8D3Z93LuNKkWTXdHePzk",
+      "link": "https://testnet.nearblocks.io/txns/5VZwCmqnXhW6KPUJYnnLZsMa8D3Z93LuNKkWTXdHePzk",
+      "detail": {
+        "slot": "903006b27a126ffb1e3c5d91cb22dd0ed07da83c044c8caea3957c1d3647632e"
+      }
+    },
+    {
+      "step": "Member 2 (DKIM): sealed entry submitted by the posting key, bound to bsu-wallet2-2d3f96.testnet in the server store only",
+      "ok": true,
+      "tx": "CvDzhyaaan6YpudhGBLyDqgtPvzhVjqWxotMv4EnVUjv",
+      "link": "https://testnet.nearblocks.io/txns/CvDzhyaaan6YpudhGBLyDqgtPvzhVjqWxotMv4EnVUjv",
+      "detail": {
+        "entry_count": 2
+      }
+    },
+    {
+      "step": "unit_propose_release by bsu-wallet-2d3f96.testnet -> proposal 1",
+      "ok": true,
+      "tx": "5C4oidvW7UJM2kq5rsNikAnJLwHyA3iG7NHPH9exjvf8",
+      "link": "https://testnet.nearblocks.io/txns/5C4oidvW7UJM2kq5rsNikAnJLwHyA3iG7NHPH9exjvf8"
+    },
+    {
+      "step": "run stopped",
+      "ok": false,
+      "detail": "Error: Internal server error"
+    }
+  ]
+}

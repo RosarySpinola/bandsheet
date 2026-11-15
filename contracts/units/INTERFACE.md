@@ -6,10 +6,10 @@ Network: NEAR testnet only. Names follow UNITS-BRIEF.md; the additions and the t
 
 | | |
 |---|---|
-| Units contract | `bandsheet-units-2d3f96.testnet` (deploy pending; this file is updated with the code hash when it lands) |
+| Units contract | `bandsheet-units-2d3f96.testnet`, **deployed**, code sha256 `04014452ac30340c79d96ee5c5079f2baa1820bcc95517f9cb45da8ac3b3b26b` (deploy+init [7xYxyfzr…](https://testnet.nearblocks.io/txns/7xYxyfzrkUWxsoNDzKoTtXiaeDZRGPsLZk2eFur7Jvgh), current code [3yZpbAv1…](https://testnet.nearblocks.io/txns/3yZpbAv1EQzu5wTecPEZ5mKG9KFCDWbw4naieVSxFw72)) |
 | Registrar (contract `owner`) | `bsu-registrar-2d3f96.testnet` (the server holds a function-call key on it: `unit_add_member`, `unit_remove_member`, `unit_add_issuer` only) |
 | Gas sponsor | `bsu-sponsor-2d3f96.testnet` (about 2 NEAR) |
-| Engine | OutLayer project `bandsheet-enclave.testnet/bandsheet-enclave`, wasm sha256 `69d5616c…3b26`, same enclave key as the demo |
+| Engine | OutLayer project `bandsheet-enclave.testnet/bandsheet-enclave`, pinned `version_key` = wasm sha256 `69d5616c…3b26`, same enclave key as the demo (checked live from a non-owner caller) |
 
 Server code default: `UNITS_CONTRACT` (env overrides). Read the live values from `get_policy` / `GET /api/units/policy`.
 
@@ -28,14 +28,19 @@ and send `secret` as `invite_code` to the join route.
 | `create_unit` | `{name, invite_code_hash, dkim_domains: string[]}` | 30 Tgas | returns unit id (u32, from 1). Caller = seat 1. Caps: 3 per account, 400 total, 4 domains |
 | `unit_add_council` | `{unit_id, account_id}` | 30 Tgas | council only, 5 seats max. **(!)** returns `"added"` or `"pending"`: on a 1-seat council the seat is added at once; otherwise each call is one approval and the seat is added when more than half of the current council has called it for that account (review finding: one member must not pack the council). Pending ones are in `get_unit().pending_seats` |
 | `unit_add_dkim_domain` | `{unit_id, domain}` | 30 Tgas | council only |
-| `unit_propose_release` | `{unit_id, query}` | **300 Tgas** | council only; `query` is a JSON string `{"group_by":["grade"]}` (fields grade, gender, site; optional `filter`). Returns proposal id (per unit, from 1). The proposer's approval counts, so **on a 1-seat council the proposal passes and the engine runs in this same call** |
-| `unit_vote` | `{unit_id, proposal_id, approve: bool}` | **300 Tgas** | only seats that existed when the proposal was made; once each; returns `"open" \| "running" \| "rejected"` |
+| `unit_propose_release` | `{unit_id, query}` | **30 Tgas** | council only; `query` is a JSON string `{"group_by":["grade"]}` (fields grade, gender, site; optional `filter`). Returns proposal id (per unit, from 1). The proposer's approval counts, so on a 1-seat council it passes at once (status `approved`) |
+| `unit_vote` | `{unit_id, proposal_id, approve: bool}` | **30 Tgas** | only seats that existed when the proposal was made; once each; returns `"open" \| "approved" \| "rejected"` (or `"running"` if 250+ Tgas was attached) |
+| `unit_run` **(+)** | `{unit_id, proposal_id}` | 300 Tgas | anyone; starts the engine for an `approved` proposal. **The web calls `POST /api/units/:id/run` instead**, which pays it from the sponsor |
 | `unit_clear_stale` **(+)** | `{unit_id}` | 30 Tgas | council; unfreezes a run that never answered after 10 minutes |
 | `unit_withdraw_proposal` **(+)** | `{unit_id, proposal_id}` | 30 Tgas | the proposer only, while open |
 | `unit_rotate_invite` **(+)** | `{unit_id, invite_code_hash}` | 30 Tgas | council; a new invite link (old link stops working, members stay) |
 
 Threshold: approvals × 2 > seats at proposal time (1 of 1, 2 of 2, 2 of 3, 3 of 4, 3 of 5). A proposal is `rejected` as soon as it can no longer pass.
-Proposal status: `open → running → executed`, or `rejected`, `withdrawn`, `expired` (open proposals expire after 7 days). Caps: 5 open
+**(!) Why 30 Tgas + `/run`:** wallets and access-key allowances must hold prepaid gas at the *pessimistic* gas price (about 10x the
+block price on testnet): a 300 Tgas call needs about 0.31 NEAR free, a 30 Tgas call about 0.031. A sponsored wallet (0.05 NEAR) can sign 30 Tgas calls only.
+Flow: propose (30) → vote (30) → status `approved` → `POST /api/units/:id/run {proposal_id}` → `running` → `executed` (release lands in about a minute).
+
+Proposal status: `open → approved → running → executed`, or `rejected`, `withdrawn`, `expired` (open proposals expire after 7 days). Caps: 5 open
 proposals, 10 proposals and 5 engine runs per unit per rolling 24 h, 60 engine runs per 24 h across the contract, 40 members and 120 member keys
 ever per unit. `query` at most 512 bytes, keys `group_by`, `filter`, `stat` only. If a vote attaches too little gas for the DKIM count run, the
 release still runs and `count_note` says DKIM was not counted.
@@ -63,7 +68,7 @@ publishes no cells and only returns `entries_verified`. That number is `counts.d
 Plaintext (sealed with `encryptBytes(parseEnclavePublicKey(policy.enclave_pubkey), utf8(JSON))`, or `encryptEntry` for entries without email):
 `{slot, gross_annual_eur, grade: Junior|Reporter|Senior|Editor|Chief, gender: F|M|X, site: City|Port, submitted_at, eml_b64?}`. The engine only knows these
 five grades and two sites. `eml_b64` (raw .eml, base64) makes it countable as DKIM-verified. The posting key signs
-`submit({ciphertext})` on the units contract (signer = receiver = units contract): `signSubmitTx({accountId: UNITS, contractId: UNITS, privateKey, ...}, ct)`.
+`submit({ciphertext})` on the units contract (signer = receiver = units contract): `signSubmitTx({accountId: UNITS, contractId: UNITS, privateKey, ...}, ct, { gasTeras: 10 })` (pass 10 Tgas: the posting key's allowance is 0.05 NEAR and must cover prepaid gas at the pessimistic price).
 
 ## Server (Pages Functions; errors are `{error, code}`)
 
@@ -74,7 +79,8 @@ NEP-413 recipient = the units contract; nonce from `POST /api/units/nonce`. EIP-
 | Route | Body | Reply |
 |---|---|---|
 | `POST /api/units/nonce` **(+)** | `{purpose: "unit_join" \| "unit_synthetic" \| "unit_entry" \| "unit_issuer"}` | `{nonce, purpose, recipient, expires_at}` |
-| `POST /api/sponsor` | `{account_id}` | `{funded, tx?: {hash, url}, balance}`; 0.05 NEAR once per account when balance < 0.02; refuses `.near` / mainnet ids |
+| `POST /api/sponsor` | `{account_id}` | `{funded, tx?: {hash, url}, balance, reason?}`; 0.05 NEAR once per account when balance < **0.04** (!) (below that a wallet cannot sign a 30 Tgas call); 3 per IP per day; refuses `.near` / mainnet ids |
+| `POST /api/units/:id/run` **(+)** | `{proposal_id}` | `{unit_id, proposal_id, status: "running" \| "executed", tx}`; 409 `NOT_APPROVED`, 422 `RUN_NOT_STARTED` |
 | `POST /api/units/:id/join` | claim + `{member_public_key, invite_code: S}` **(!)** statement `Bandsheet join unit <id>: <member_public_key>` | `{unit_id, account_id, member_public_key, slot, tx, replaced}` |
 | `POST /api/units/:id/entry` **(+)** | claim + `{signed_tx}` statement `Bandsheet unit <id> entry: <sha256 hex of the ciphertext JSON>` | `{unit_id, slot, ct_sha256, tx, entry_count}`; binds the entry to the account in D1 and broadcasts |
 | `POST /api/units/:id/synthetic` | claim + `{n (1..8), grade?}` statement `Bandsheet synthetic <id>: <n>`; signer must hold a council seat | `{unit_id, added, synthetic_total, txs[{hash,url}]}` |

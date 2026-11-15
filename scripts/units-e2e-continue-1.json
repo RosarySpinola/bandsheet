@@ -1,0 +1,165 @@
+{
+  "run_at": "2026-11-15T06:56:50.000Z",
+  "contract": "bandsheet-units-2d3f96.testnet",
+  "steps": [
+    {
+      "step": "Sponsor: a fresh implicit wallet with 0 NEAR gets 0.05 testnet NEAR once",
+      "ok": true,
+      "tx": "86orHx37SkLkLgLmAG5odEUXDZMqepE2sv9eM66Nf7Qc",
+      "link": "https://testnet.nearblocks.io/txns/86orHx37SkLkLgLmAG5odEUXDZMqepE2sv9eM66Nf7Qc",
+      "detail": {
+        "balance": 0.05
+      }
+    },
+    {
+      "step": "Sponsor: the same wallet asking again is not paid twice",
+      "ok": true,
+      "detail": {
+        "reason": "balance is already 0.04 NEAR or more"
+      }
+    },
+    {
+      "step": "Synthetic colleagues: 4 flagged keys added by the registrar, each submits one sealed sample entry",
+      "ok": true,
+      "tx": "GiiAoGMYiMbEtVDgPmykFejbJYPEEAKtnC8EcH3TNLpC",
+      "link": "https://testnet.nearblocks.io/txns/GiiAoGMYiMbEtVDgPmykFejbJYPEEAKtnC8EcH3TNLpC",
+      "detail": {
+        "submitted": 4,
+        "txs": [
+          "5NqAq2GRaFPYP8azBX1LwMUVRH2jFQVExgaKhnwwwaGJ",
+          "B5yWhJT7WmfjCNqc22hpoqP8aZFPo63n2FMgmnsD4QQj",
+          "6ApFhgHo7gPduxSY5UPiubbnF7QBbQ6cg7S1SNFonJcQ",
+          "Eik2tDuaaacD2Hi4tWdkWa9NbvKZYguU98yCv88VFDZs"
+        ]
+      }
+    },
+    {
+      "step": "synthetic unit_add_member (registrar, flagged synthetic)",
+      "ok": true,
+      "tx": "GiiAoGMYiMbEtVDgPmykFejbJYPEEAKtnC8EcH3TNLpC",
+      "link": "https://testnet.nearblocks.io/txns/GiiAoGMYiMbEtVDgPmykFejbJYPEEAKtnC8EcH3TNLpC"
+    },
+    {
+      "step": "synthetic unit_add_member (registrar, flagged synthetic)",
+      "ok": true,
+      "tx": "8Nr1icD6kRvHGmP4fhWuqeMcwMZekrbm7jKRgVNCzZ17",
+      "link": "https://testnet.nearblocks.io/txns/8Nr1icD6kRvHGmP4fhWuqeMcwMZekrbm7jKRgVNCzZ17"
+    },
+    {
+      "step": "synthetic unit_add_member (registrar, flagged synthetic)",
+      "ok": true,
+      "tx": "7ieH4NRQLgiNQKDTz8fYiwEMzjN4dq7zsdu6rAziu7ky",
+      "link": "https://testnet.nearblocks.io/txns/7ieH4NRQLgiNQKDTz8fYiwEMzjN4dq7zsdu6rAziu7ky"
+    },
+    {
+      "step": "synthetic unit_add_member (registrar, flagged synthetic)",
+      "ok": true,
+      "tx": "vH23fK6d3Y9CAKvG985vnFXiZK6tM84nkGK2MsxPoTS",
+      "link": "https://testnet.nearblocks.io/txns/vH23fK6d3Y9CAKvG985vnFXiZK6tM84nkGK2MsxPoTS"
+    },
+    {
+      "step": "synthetic submit (single-use posting key)",
+      "ok": true,
+      "tx": "5NqAq2GRaFPYP8azBX1LwMUVRH2jFQVExgaKhnwwwaGJ",
+      "link": "https://testnet.nearblocks.io/txns/5NqAq2GRaFPYP8azBX1LwMUVRH2jFQVExgaKhnwwwaGJ"
+    },
+    {
+      "step": "synthetic submit (single-use posting key)",
+      "ok": true,
+      "tx": "B5yWhJT7WmfjCNqc22hpoqP8aZFPo63n2FMgmnsD4QQj",
+      "link": "https://testnet.nearblocks.io/txns/B5yWhJT7WmfjCNqc22hpoqP8aZFPo63n2FMgmnsD4QQj"
+    },
+    {
+      "step": "synthetic submit (single-use posting key)",
+      "ok": true,
+      "tx": "6ApFhgHo7gPduxSY5UPiubbnF7QBbQ6cg7S1SNFonJcQ",
+      "link": "https://testnet.nearblocks.io/txns/6ApFhgHo7gPduxSY5UPiubbnF7QBbQ6cg7S1SNFonJcQ"
+    },
+    {
+      "step": "synthetic submit (single-use posting key)",
+      "ok": true,
+      "tx": "Eik2tDuaaacD2Hi4tWdkWa9NbvKZYguU98yCv88VFDZs",
+      "link": "https://testnet.nearblocks.io/txns/Eik2tDuaaacD2Hi4tWdkWa9NbvKZYguU98yCv88VFDZs"
+    },
+    {
+      "step": "unit_propose_release by bsu-wallet-2d3f96.testnet (30 Tgas) -> proposal 3",
+      "ok": true,
+      "tx": "J3ViaUEaPJAcBv5JRWwcv2MQSvmsz8YGBg4Uk1qsVCsF",
+      "link": "https://testnet.nearblocks.io/txns/J3ViaUEaPJAcBv5JRWwcv2MQSvmsz8YGBg4Uk1qsVCsF"
+    },
+    {
+      "step": "unit_vote by bsu-wallet2-2d3f96.testnet (30 Tgas) -> approved (2 of 2 seats)",
+      "ok": true,
+      "tx": "ExEmYWVD2FKzZP5BMK4Tsfp2MjB6AKq4A9uZ7KYQeWbn",
+      "link": "https://testnet.nearblocks.io/txns/ExEmYWVD2FKzZP5BMK4Tsfp2MjB6AKq4A9uZ7KYQeWbn"
+    },
+    {
+      "step": "POST /api/units/:id/run: the sponsor relays unit_run (300 Tgas): the real OutLayer engine runs, plus the DKIM count run",
+      "ok": false,
+      "detail": {
+        "error": "NEAR testnet did not accept the transaction just now; try again",
+        "code": "CHAIN_WRITE"
+      }
+    },
+    {
+      "step": "Release read back from the units contract",
+      "ok": true,
+      "detail": {
+        "status": "released",
+        "cells": [
+          {
+            "key": {
+              "grade": "Senior"
+            },
+            "mean_eur": 59233,
+            "n": 6
+          }
+        ],
+        "suppressed": [],
+        "counts": {
+          "entries": 6,
+          "synthetic": 4,
+          "dkim_verified": 1,
+          "self_attested": 1,
+          "rejected": 0
+        },
+        "note": "",
+        "count_note": "",
+        "input_sha256": "1ada09823116d79a1b2f9d047f6918ba347e1d70beec745f5ad7567f954f10b6",
+        "input_hash": "1ada09823116d79a1b2f9d047f6918ba347e1d70beec745f5ad7567f954f10b6",
+        "output_sha256": "113a2f2900ef172dcc92d9db4081186b10cd3e7dd63d3cb7d925cc58b9f4a517"
+      }
+    },
+    {
+      "step": "GET /api/units/:id aggregates unit, proposals, releases and latest bands",
+      "ok": true,
+      "detail": {
+        "latest_bands": {
+          "release_id": 3,
+          "cells": [
+            {
+              "key": {
+                "grade": "Senior"
+              },
+              "n": 6,
+              "mean_eur": 59233
+            }
+          ]
+        },
+        "counts": {
+          "members": 10,
+          "synthetic_members": 8,
+          "entries": 6,
+          "releases": 3,
+          "latest_release": {
+            "entries": 6,
+            "synthetic": 4,
+            "dkim_verified": 1,
+            "self_attested": 1,
+            "rejected": 0
+          }
+        }
+      }
+    }
+  ]
+}

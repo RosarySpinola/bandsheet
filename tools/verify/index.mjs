@@ -5,11 +5,13 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import * as c from "./checks.mjs";
+import { checkUnits } from "./units.mjs";
 
 const args = process.argv.slice(2);
 const flag = (n) => args.includes(`--${n}`);
 if (flag("help")) {
-  console.log("pnpm verify [--json] [--offline] [--full] [--api <base url>]\n" +
+  console.log("pnpm verify [--json] [--offline] [--full] [--units] [--api <base url>]\n" +
+    "  --units    also check the units contract (start your own unit); the judged checks are unchanged\n" +
     "  --offline  only the checks that need no network\n  --full     also re-run `make -C enclave evaluate` (needs Rust)");
   process.exit(0);
 }
@@ -51,6 +53,7 @@ if (flag("full")) {
   }
 }
 if (!flag("offline")) await guard("F. Deployed API", "f", () => c.checkApi(deployed, unit, apiBase));
+if (flag("units") && !flag("offline")) await guard("U. Units contract (optional)", "u", () => checkUnits(c.ROOT, docs));
 
 const failed = results.filter((r) => !r.ok).length;
 if (json) console.log(JSON.stringify({ ok: failed === 0, passed: results.length - failed, failed, checks: results }, null, 2));

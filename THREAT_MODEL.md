@@ -69,3 +69,38 @@ colluding group of members, can compute an individual's pay from what is publish
 - The release history is ciphertext in the contract. Losing the enclave key (for example a rebuild without carrying the
   secret's access rule to the new hash) makes earlier releases unauditable; a fresh start with an empty history would
   forget them, so a rebuild must go through the DAO-visible policy update.
+
+## Your own unit (units contract)
+
+Anyone with a NEAR wallet can start a unit on `contracts/units` (one contract, many units). The demo chapel above is
+unchanged; this section covers what the units contract adds. Interface: `contracts/units/INTERFACE.md`.
+
+| Actor | Can | Cannot |
+|---|---|---|
+| Unit council (1 to 5 wallet seats) | Propose and vote releases in-contract (more than half of the seats at proposal time passes); approve new seats (more than half of the current council); list employer DKIM domains; ask for up to 8 synthetic colleagues; rotate the invite | Pack the council alone (a seat needs more than half), read entries, vote twice or after a proposal closed, touch another unit |
+| Unit member | Join with a wallet signature and the invite link secret; submit and replace one sealed entry per posting key | Submit to another unit (the slot routes the entry), hold two posting keys in one unit (re-joining revokes the old one) |
+| Registrar (server's function-call key on `bsu-registrar-*`) | Call `unit_add_member`, `unit_remove_member`, `unit_add_issuer` only | Vote, propose, change the engine; add a non-synthetic member without the unit's invite code (the contract checks it). It can add synthetic members (flagged on chain, 8 per unit): the council-signature check for those is the server's, not the contract's |
+| Gas sponsor (server's key on a low-value account) | Send 0.05 testnet NEAR once per account, 3 accounts per IP per day | Fund mainnet ids; fund an account twice |
+
+| Attack | Mitigation | Evidence |
+|---|---|---|
+| A unit's release mixes in another unit's entries or history | Entries, history, proposals and releases are keyed by unit; a slot belongs to exactly one unit; each run sends only its unit's ciphertexts and its own history | `contracts/units/src/tests_vote.rs`, sandbox `it/tests/units.rs` |
+| A wallet or outsider adds an entry | `submit` accepts only this account's own posting keys (predecessor = the contract, signer key = a registered slot) | sandbox test: outside wallet refused |
+| Replaying an invite code read from chain | The link carries a secret S; the chain sees only sha256(S) as the code; the server checks S itself | `server/test/units-join.test.ts` |
+| Synthetic entries passing as real | Synthetic keys are flagged on chain at join, single-use, capped at 8 by the contract, added only after a council member's signed request (checked by the server); every release records entries, synthetic, DKIM-verified and self-attested counts; the API, MCP and verify output say SYNTHETIC | `server/test/units-admin.test.ts`, `mcp/test/mcp.test.ts` |
+| Bills: storage and engine runs paid by the contract | 3 units per account, 400 in total; 40 members and 120 member keys per unit; 10 proposals and 5 runs per unit per day; 60 runs per day overall; a 0.5 NEAR floor below which writes are refused; queries at most 512 bytes; stored engine answers at most 96 KB | `contracts/units/src/tests*.rs` |
+
+Residual risks, units:
+- **Synthetic colleagues weaken a band.** A band of one real entry and four synthetic ones protects the real pay only as
+  long as nobody knows the synthetic values. The server draws them at random and never stores or logs them, but a server
+  that was modified could; synthetic data is for trying the product, not for real pay.
+- **Self-attested entries** (PDF, image, hand-entered, generated payslip) are the member's word. DKIM-verified counts come
+  from a second, cell-less engine run with `require_dkim`; the release itself counts every entry.
+- **Issuer keys supplied by a council member** (the test seam for a domain with no DNS record) are only as good as that
+  member; they are recorded as `supplied`, not `dns`, and shown that way.
+- **Squatting.** Anyone with testnet NEAR can create accounts and take units up to the caps; nothing is payable. The caps
+  bound the bill, they do not stop a determined squatter.
+- **The units account keeps a full-access key** during the hackathon (for fixes). Whoever holds it could redeploy the
+  contract; `pnpm verify --units` checks that the deployed code hash equals the committed build.
+- A member can submit a colleague's genuine DKIM payslip; the engine's nullifier keeps it to one entry per payslip, as in
+  the demo.

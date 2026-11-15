@@ -1,0 +1,18 @@
+{
+  "contract": "bandsheet-units-2d3f96.testnet",
+  "registrar": "bsu-registrar-2d3f96.testnet",
+  "sponsor": "bsu-sponsor-2d3f96.testnet",
+  "code_sha256": "04014452ac30340c79d96ee5c5079f2baa1820bcc95517f9cb45da8ac3b3b26b",
+  "deploy_tx": "7xYxyfzrkUWxsoNDzKoTtXiaeDZRGPsLZk2eFur7Jvgh",
+  "registrar_key_tx": "57hs1hARe6wovnPAZdts1b2bz23WoDyW5SHGFY1rTnaL",
+  "outlayer_project": "bandsheet-enclave.testnet/bandsheet-enclave",
+  "engine_sha256": "69d5616cacc61ce82d3b412ffaf76399f8bbfb6bbd853f604283316ce4643b26",
+  "deployed_at": "2026-11-15T06:54:36.350Z",
+  "upgrades": [
+    {
+      "tx": "3yZpbAv1EQzu5wTecPEZ5mKG9KFCDWbw4naieVSxFw72",
+      "code_sha256": "04014452ac30340c79d96ee5c5079f2baa1820bcc95517f9cb45da8ac3b3b26b",
+      "at": "2026-11-15T06:54:36.349Z"
+    }
+  ]
+}
