@@ -23,7 +23,7 @@ export default function UnitOverview() {
 function Body({ v }: { v: UnitView }) {
   const { unit } = v
   const newest = [...v.releases].sort((a, b) => b.id - a.id)[0]
-  const open = v.proposals.filter((p) => p.status === "open" || p.status === "running")
+  const open = v.proposals.filter((p) => p.status === "open" || p.status === "approved" || p.status === "running")
   const tooFew = !newest ? unit.entries < LIMITS.k : newest.cells.length === 0
   /** Offered while the unit is small; the panel itself says when the synthetic cap is reached. */
   const canAddSynthetic = unit.entries - unit.synthetic < 2 * LIMITS.k
@@ -91,7 +91,7 @@ function Body({ v }: { v: UnitView }) {
                 </span>
                 <span className="flex items-center gap-3 text-[0.875rem] text-muted-foreground">
                   {p.approvals.length} of {unit.council.length} approved
-                  <StatusTag status={p.status === "running" ? "Approved" : "InProgress"} />
+                  <StatusTag status={p.status === "running" ? "Running" : p.status === "approved" ? "Approved" : "InProgress"} />
                 </span>
               </li>
             ))}

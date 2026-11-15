@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router"
 import { ArrowLeft } from "lucide-react"
-import { JoinVisual } from "@/components/unit/join/join-visual"
+import { StartVisual } from "./start-visual"
 import { MockBanner } from "./mock-banner"
 
 /** The /start and /join frame: the demo join page's split layout, form on the left, sealed-release art on the right. */
@@ -30,7 +30,7 @@ export function EntryFrame({ eyebrow, title, lede, children, footer }: { eyebrow
           </main>
           {footer && <div className="max-w-[32rem] text-[0.8125rem] leading-relaxed text-muted-foreground">{footer}</div>}
         </div>
-        <JoinVisual />
+        <StartVisual />
       </div>
     </div>
   )

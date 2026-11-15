@@ -84,7 +84,7 @@ export async function prepareSynthetic(conn: Conn, unitId: number, n: number): P
 export async function prepareEntry(conn: Conn, invite: Invite, sealed: Ciphertext, meta: EntryMeta): Promise<Prepared<EntryReceipt>> {
   // Mock mode has no units account to sign against, so it skips the posting key's transaction.
   const { signedTxB64, ctText } =
-    units.mode === "mock" ? { signedTxB64: "mock", ctText: JSON.stringify(sealed) } : await (await import("@bandsheet/core/near")).signSubmitTx(invite, sealed)
+    units.mode === "mock" ? { signedTxB64: "mock", ctText: JSON.stringify(sealed) } : await (await import("@bandsheet/core/near")).signSubmitTx(invite, sealed, { gasTeras: 10 })
   const hash = await sha256Hex(ctText)
   const issued = await units.nonce("unit_entry")
   const msg = await unitsWallet.prepareMessage(conn, { message: unitStatement("unit_entry", meta.unitId, hash), recipient: issued.recipient, nonce: issued.nonce })

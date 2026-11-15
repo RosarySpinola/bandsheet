@@ -16,7 +16,7 @@ import { TxState } from "./tx-state"
 import { WithdrawButton } from "./withdraw-button"
 import { threshold } from "./unit-query-builder"
 
-const STATUS: Record<UnitProposal["status"], string> = { open: "InProgress", running: "Approved", done: "released", rejected: "Rejected", withdrawn: "Withdrawn", expired: "Expired", failed: "Failed" }
+const STATUS: Record<UnitProposal["status"], string> = { open: "InProgress", approved: "Approved", running: "Running", done: "released", rejected: "Rejected", withdrawn: "Withdrawn", expired: "Expired", failed: "Failed" }
 
 /** One release proposal: the request, each seat's vote, and (for a seat that has not voted) Approve / Reject. */
 export function UnitProposalCard({ p, unit, conn, gasReady }: { p: UnitProposal; unit: Unit; conn: Conn | null; gasReady: boolean }) {
@@ -62,7 +62,7 @@ export function UnitProposalCard({ p, unit, conn, gasReady }: { p: UnitProposal;
           })}
         </ul>
       </div>
-      {p.status === "running" && <EngineRunning proposal={p} />}
+      {(p.status === "running" || p.status === "approved") && <EngineRunning proposal={p} unitId={unit.id} />}
       {p.status === "done" && p.releaseId !== null && (
         <Link to={`/u/${unit.id}/releases#r${p.releaseId}`} className="wipe w-fit text-[1rem] font-semibold text-ink">
           See release #{p.releaseId} and what it withheld
@@ -93,7 +93,7 @@ function VoteButtons({ p, unit, conn, gasReady, voted, onTap }: { p: UnitProposa
   const last = p.approvals.length + 1 >= threshold((p.council ?? unit.council).length)
   return (
     <div className="flex flex-col gap-3 border-l-2 border-ink bg-band px-5 py-4">
-      {!voted && <p className="text-[0.9375rem] text-ink">Your seat has not voted.{last ? " Your approval reaches the majority and starts the engine." : ""}</p>}
+      {!voted && <p className="text-[0.9375rem] text-ink">Your seat has not voted.{last ? " Your approval reaches the majority; Bandsheet then starts the engine." : ""}</p>}
       {!voted && <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
         <button type="button" onClick={() => vote(yes)} disabled={!yes.canTap || busy} className="inline-flex min-h-11 cursor-pointer items-center gap-2 bg-ink px-5 font-semibold text-white transition-colors duration-[400ms] ease-gl hover:bg-indigo disabled:cursor-not-allowed disabled:opacity-40">
           {yes.phase.s === "busy" ? <Spinner className="size-4" /> : <Check className="size-4" />} Approve
@@ -109,7 +109,7 @@ function VoteButtons({ p, unit, conn, gasReady, voted, onTap }: { p: UnitProposa
         onRetry={() => vote(active)}
         onRetryPrepare={active.retryPrepare}
         className="[&_[role=alert]]:bg-white"
-        words={{ what: "a unit_vote transaction", busy: "Approve unit_vote in your wallet…", done: "Vote landed on NEAR testnet." }}
+        words={{ what: "a unit_vote transaction", busy: "Approve unit_vote in your wallet…", done: active.phase.s === "done" && active.phase.result.value === "approved" ? "Vote landed. The proposal is approved; Bandsheet starts the engine." : active.phase.s === "done" && active.phase.result.value === "rejected" ? "Vote landed. The proposal can no longer pass, so it is rejected." : "Vote landed on NEAR testnet." }}
       />
     </div>
   )

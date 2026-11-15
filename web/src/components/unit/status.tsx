@@ -11,6 +11,8 @@ const LOOK: Record<string, { label: string; cls: string }> = {
   Approved: { label: "Approved", cls: "bg-ink text-white" },
   Rejected: { label: "Rejected", cls: "bg-band text-foreground" },
   Expired: { label: "Expired", cls: "bg-band text-muted-foreground" },
+  Running: { label: "Engine running", cls: "bg-lav-mid text-indigo" },
+  Withdrawn: { label: "Withdrawn", cls: "bg-band text-muted-foreground" },
   Failed: { label: "Failed", cls: "bg-band text-[var(--gray-350)]" },
 }
 

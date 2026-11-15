@@ -5,7 +5,9 @@ import { TipProvider } from "@/components/unit/tip"
 import { UnitHeading, UnitNavGroups, UnitSidebar } from "@/components/units/unit-sidebar"
 import { UnitIdentity } from "@/components/units/unit-identity"
 import { MockBanner } from "@/components/units/mock-banner"
+import { useQueryClient } from "@tanstack/react-query"
 import { useUnitView } from "@/lib/units/hooks"
+import { useAutoRun } from "@/lib/units/run"
 import type { UnitView } from "@/lib/units"
 
 export type UnitOutlet = { unitId: number; view: UseQueryResult<UnitView> }
@@ -20,6 +22,8 @@ export default function UnitShell() {
   const { unitId: raw } = useParams()
   const unitId = parseId(raw)
   const view = useUnitView(unitId)
+  const qc = useQueryClient()
+  useAutoRun(qc, view.data)
   const { pathname } = useLocation()
   const id = unitId ?? -1
   const unit = view.data?.unit

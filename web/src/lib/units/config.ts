@@ -10,14 +10,17 @@ export const UNITS_CONTRACT: string = import.meta.env.VITE_UNITS_CONTRACT ?? ""
 export const PLANNED_UNITS_CONTRACT = "bandsheet-units-2d3f96.testnet"
 
 /** The account balance under which the server sends gas (POST /api/sponsor), and what it sends. */
-export const SPONSOR_THRESHOLD_NEAR = 0.02
+export const SPONSOR_THRESHOLD_NEAR = 0.04
 export const SPONSOR_AMOUNT_NEAR = 0.05
 
 /** Contract caps (UNITS-BRIEF "Costs"); shown in copy, enforced by the contract. */
 export const LIMITS = { unitsPerAccount: 3, releasesPerDay: 5, councilSeats: 5, synthetic: 8, k: 3, domains: 4, openProposals: 5 } as const
 
-/** Gas per call (INTERFACE.md). Propose and vote can start the OutLayer run (yield/resume) in the same call: 300 Tgas. */
-export const GAS = { create: "30000000000000", council: "30000000000000", propose: "300000000000000", vote: "300000000000000" } as const
+/**
+ * Gas per call (INTERFACE.md). Wallets must hold prepaid gas at the pessimistic price (about 10x), so a sponsored wallet
+ * can sign 30 Tgas calls only: propose and vote are 30 Tgas, and the 300 Tgas unit_run goes through POST /api/units/:id/run.
+ */
+export const GAS = { create: "30000000000000", council: "30000000000000", propose: "30000000000000", vote: "30000000000000" } as const
 
 const FLAG = "bandsheet.units.mock"
 

@@ -79,7 +79,7 @@ export function UnitQueryBuilder({ conn, unit, gasReady }: { conn: Conn; unit: U
       </div>
       {seat ? (
         <SquareButton onClick={go} disabled={!t.canTap || busy} className="w-full">
-          {busy ? <><Spinner className="size-4" /> Approve in your wallet…</> : !gasReady ? "Waiting for gas…" : t.phase.s === "preparing" ? "Getting ready…" : need === 1 ? "Propose and run the engine" : "Propose to the council"}
+          {busy ? <><Spinner className="size-4" /> Approve in your wallet…</> : !gasReady ? "Waiting for gas…" : t.phase.s === "preparing" ? "Getting ready…" : need === 1 ? "Propose and approve" : "Propose to the council"}
         </SquareButton>
       ) : (
         <p className="border-l-2 border-ink bg-white px-4 py-3 text-[0.9375rem] text-ink">Only this unit's council seats can propose. You can read every proposal and release.</p>
@@ -93,7 +93,7 @@ export function UnitQueryBuilder({ conn, unit, gasReady }: { conn: Conn; unit: U
         words={{
           what: "a unit_propose_release transaction",
           busy: "Approve unit_propose_release in your wallet…",
-          done: t.phase.s === "done" ? `Proposal #${t.phase.result.value} filed.${need === 1 ? " Your approval is the majority, so the engine starts now." : ` It needs ${need - 1} more ${need - 1 === 1 ? "approval" : "approvals"}.`}` : undefined,
+          done: t.phase.s === "done" ? `Proposal #${t.phase.result.value} filed.${need === 1 ? " Your approval is the majority, so it is approved and Bandsheet starts the engine." : ` It needs ${need - 1} more ${need - 1 === 1 ? "approval" : "approvals"}.`}` : undefined,
         }}
       />
     </section>

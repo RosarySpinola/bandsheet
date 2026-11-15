@@ -71,9 +71,12 @@ export const UnitSchema = UnitRaw.transform((u) => toUnit(u))
 
 /* ---------- proposals ---------- */
 
-export type ProposalStatus = "open" | "running" | "done" | "rejected" | "withdrawn" | "expired" | "failed"
+export type ProposalStatus = "open" | "approved" | "running" | "done" | "rejected" | "withdrawn" | "expired" | "failed"
 
-/** open → running → executed, or rejected, withdrawn, expired (open proposals expire after 7 days). */
+/**
+ * open → approved → running → executed, or rejected, withdrawn, expired (open proposals expire after 7 days).
+ * "approved" waits for POST /api/units/:id/run, which pays the 300 Tgas unit_run.
+ */
 function proposalStatus(s: string, hasRelease: boolean): ProposalStatus {
   const v = s.toLowerCase().replace(/[^a-z]/g, "")
   if (hasRelease || /released|done|executed|published|complete/.test(v)) return "done"
@@ -81,7 +84,8 @@ function proposalStatus(s: string, hasRelease: boolean): ProposalStatus {
   if (/withdrawn/.test(v)) return "withdrawn"
   if (/expired/.test(v)) return "expired"
   if (/fail|error/.test(v)) return "failed"
-  if (/approved|running|inflight|pending|engine/.test(v)) return "running"
+  if (/approved/.test(v)) return "approved"
+  if (/running|inflight|pending|engine/.test(v)) return "running"
   return "open"
 }
 
@@ -175,6 +179,18 @@ export const UnitReleaseSchema = z
 
 /* ---------- contract policy (shared engine, so the same enclave key and engine hash as the demo) ---------- */
 
+/** get_policy's outlayer is {account, source: '{"Project":{"project_id":…}}'}; pages show the project id. */
+function outlayerProjectOf(o: unknown): string | null {
+  if (typeof o === "string") return o
+  const source = (o as { source?: unknown } | null)?.source
+  if (typeof source !== "string") return null
+  try {
+    return (JSON.parse(source) as { Project?: { project_id?: string } }).Project?.project_id ?? null
+  } catch {
+    return null
+  }
+}
+
 const PolicyInner = z.object({ k: num, enclave_pubkey: z.string(), wasm_sha256: z.string(), policy_hash: z.string().optional() }).passthrough()
 export const UnitsPolicySchema = z
   .union([z.object({ policy: PolicyInner }).passthrough().transform((p) => ({ ...p.policy, outlayer: p.outlayer })), PolicyInner.extend({ outlayer: z.unknown().optional() })])
@@ -183,7 +199,7 @@ export const UnitsPolicySchema = z
     enclavePubkey: p.enclave_pubkey,
     wasmSha256: p.wasm_sha256,
     policyHash: p.policy_hash ?? null,
-    outlayer: typeof p.outlayer === "string" ? p.outlayer : null,
+    outlayer: outlayerProjectOf(p.outlayer),
   }))
 export type UnitsPolicy = z.output<typeof UnitsPolicySchema>
 
@@ -223,6 +239,9 @@ export const IssuerSchema = z.object({ domain: z.string(), selector: z.string(),
 export type IssuerResult = z.infer<typeof IssuerSchema>
 
 export const NonceSchema = z.object({ nonce: z.string(), recipient: z.string() }).passthrough()
+
+export const RunSchema = z.object({ status: z.string(), tx: TxOut.nullish(), proposal_id: num.optional() }).passthrough()
+export type RunResult = z.infer<typeof RunSchema>
 
 export const EntryReplySchema = z.object({ slot: z.string(), ct_sha256: z.string().optional(), tx: TxOut.nullish(), entry_count: num.nullish() }).passthrough()
 

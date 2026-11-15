@@ -4,7 +4,7 @@ import { view } from "@/lib/chain"
 import { rpcPost } from "@/lib/rpc"
 import { UNITS_CONTRACT } from "./config"
 import {
-  EntryReplySchema, IssuerSchema, JoinSchema, NonceSchema, SponsorSchema, SyntheticSchema, UnitOfSlotSchema, UnitProposalSchema, UnitRaw,
+  EntryReplySchema, IssuerSchema, JoinSchema, NonceSchema, RunSchema, SponsorSchema, SyntheticSchema, UnitOfSlotSchema, UnitProposalSchema, UnitRaw,
   UnitReleaseSchema, UnitViewSchema, UnitsListSchema, UnitsPolicySchema, toUnit, type Unit, type UnitView,
 } from "./schemas"
 import type { UnitsClient } from "./types"
@@ -104,4 +104,5 @@ export const chainClient: UnitsClient = {
   },
 
   stand: (body) => api("/stand", StandResponseSchema, postJson(body)),
+  run: (unitId, proposalId) => api(`/units/${unitId}/run`, RunSchema, postJson({ proposal_id: proposalId })),
 }

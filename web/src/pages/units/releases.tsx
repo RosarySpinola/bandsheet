@@ -41,7 +41,7 @@ function Ledger({ v, refreshing, refetch }: { v: UnitView; refreshing: boolean; 
   const openValues = open ?? (fromHash ? [fromHash] : newestFirst[0] ? [`r${newestFirst[0].id}`] : [])
   const published = newestFirst.reduce((s, r) => s + r.cells.length, 0)
   const withheld = newestFirst.reduce((s, r) => s + r.suppressed.length, 0)
-  const running = v.proposals.filter((p) => p.status === "running")
+  const running = v.proposals.filter((p) => p.status === "running" || p.status === "approved")
 
   return (
     <>
@@ -61,7 +61,7 @@ function Ledger({ v, refreshing, refetch }: { v: UnitView; refreshing: boolean; 
         }
       />
       {running.map((p) => (
-        <EngineRunning key={p.id} proposal={p} />
+        <EngineRunning key={p.id} proposal={p} unitId={v.unit.id} />
       ))}
       {newestFirst.length === 0 ? (
         <EmptyState

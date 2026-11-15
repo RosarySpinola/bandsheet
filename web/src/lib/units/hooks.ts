@@ -10,7 +10,7 @@ const chainRetry = { retry: 2, retryDelay: (n: number) => Math.min(1500 * 2 ** n
 export const useUnitsPolicy = () => useQuery({ queryKey: ["units", "policy"], queryFn: () => units.policy(), staleTime: 10 * 60_000, ...chainRetry })
 
 /** True while an approved proposal has no release yet: the engine is running and the page should poll. */
-export const engineRunning = (v: UnitView | undefined) => Boolean(v?.proposals.some((p) => p.status === "running"))
+export const engineRunning = (v: UnitView | undefined) => Boolean(v?.proposals.some((p) => p.status === "running" || p.status === "approved"))
 
 export function useUnitView(unitId: number | null) {
   return useQuery({

@@ -1,7 +1,7 @@
 import type { Ciphertext, Entry, UnitPurpose } from "@bandsheet/core"
 import type { Invite } from "@bandsheet/core/near"
 import type { StandResponse } from "@/lib/api"
-import type { IssuerResult, SponsorResult, SyntheticResult, Unit, UnitJoinResult, UnitsPolicy, UnitView } from "./schemas"
+import type { IssuerResult, RunResult, SponsorResult, SyntheticResult, Unit, UnitJoinResult, UnitsPolicy, UnitView } from "./schemas"
 
 /** Where a sealed entry's figure came from, as the badge shows it. */
 export type EntryKind = "dkim" | "self" | "synthetic"
@@ -44,6 +44,8 @@ export interface UnitsClient {
    */
   entry(unitId: number, body: EntryBody, meta: EntryMeta & { invite: Invite; sealed: Ciphertext }): Promise<EntryReceipt>
   stand(body: StandBody): Promise<StandResponse>
+  /** Start the engine for an approved proposal: the server sends the 300 Tgas unit_run from the sponsor. */
+  run(unitId: number, proposalId: number): Promise<RunResult>
 }
 
 /** A wallet connected through NEAR Connect (or the mock wallet). */

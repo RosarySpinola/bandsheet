@@ -14,7 +14,7 @@ export type MProposal = {
   query: { group_by: string[]; filter?: Record<string, string> }
   approvals: string[]
   rejections: string[]
-  status: "Open" | "Running" | "Released" | "Rejected" | "Withdrawn" | "Expired"
+  status: "Open" | "Approved" | "Running" | "Released" | "Rejected" | "Withdrawn" | "Expired"
   release_id: number | null
   created_at: number
   run_at?: number
@@ -118,12 +118,11 @@ export function tick(s: State, wasm: string): boolean {
   return changed
 }
 
-/** Approvals strictly more than half the council start the engine (about nine seconds in mock mode). */
+/** Approvals strictly more than half the council approve; /run then starts the engine (about nine seconds in mock mode). */
 export function settle(u: MUnit, p: MProposal): void {
   if (p.status !== "Open") return
   if (p.approvals.length * 2 > u.council.length) {
-    p.status = "Running"
-    p.run_at = Date.now() + 9000
+    p.status = "Approved"
   } else if (p.rejections.length * 2 >= u.council.length) {
     p.status = "Rejected"
   }

@@ -150,6 +150,17 @@ export const mockClient: UnitsClient = {
   },
 
   /** The answer is written by NEAR AI Cloud from the bands the server reads on chain; a mock unit has none there. */
+  run: async (id, proposalId) => {
+    await sleep(1500)
+    return withUnit(id, (u) => {
+      const p = u.proposals.find((x) => x.id === proposalId)
+      if (!p || p.status !== "Approved") throw new ApiError("That proposal is not approved, so the engine cannot run it.", "NOT_APPROVED", 409)
+      p.status = "Running"
+      p.run_at = Date.now() + 9000
+      return { status: "running", tx: { hash: fakeTx() }, proposal_id: proposalId }
+    })
+  },
+
   stand: async () => {
     await sleep(600)
     throw new ApiError("In mock mode this unit lives only in this browser, so the server has no bands of yours to answer from. Where do I stand works here once the units contract is live.", "MOCK_ONLY")
@@ -210,7 +221,7 @@ function apply(conn: Conn, call: ContractCall): unknown {
     if (p.approvals.includes(conn.accountId) || p.rejections.includes(conn.accountId)) throw new ChainRefused("This seat has already voted.", fakeTx())
     ;(a.approve ? p.approvals : p.rejections).push(conn.accountId)
     settle(u, p)
-    out = p.status === "Open" ? "open" : p.status === "Running" ? "running" : "rejected"
+    out = p.status === "Open" ? "open" : p.status === "Approved" ? "approved" : "rejected"
   }
   save(s)
   return out
