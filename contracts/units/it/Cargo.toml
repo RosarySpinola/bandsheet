@@ -1,0 +1,15 @@
+[package]
+name = "bandsheet-units-it"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Sandbox integration tests: real access keys, real cross-contract calls, mock OutLayer.
+# Run after ../build.sh and ../../bandsheet/build.sh (mock OutLayer):  cargo test --release
+[workspace]
+
+[dependencies]
+near-workspaces = "0.24"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+anyhow = "1"
