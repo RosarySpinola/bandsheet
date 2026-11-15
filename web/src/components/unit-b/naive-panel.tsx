@@ -82,6 +82,7 @@ export function NaivePanel({ from, minus, choice, run }: { from: HeroId; minus: 
                     </p>
                     <p className="mt-1 text-[0.875rem] text-muted-foreground">
                       {r.who ? `Synthetic member who joined between the releases; ${int(Math.abs(r.dn))} member apart, nothing else changed.` : "The two figures differ by exactly one member."}
+                      {r.diff < 0 && ` In this order the result is −${eur(r.revealed)}: the same salary, with the sign flipped.`}
                     </p>
                   </Step>
                 </div>

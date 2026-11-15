@@ -44,7 +44,7 @@ export default function AttackPage() {
         glyph="attack"
         eyebrow="Attack lab · synthetic demo unit"
         title="Subtract two honest tables."
-        lede="You are the attacker. Both tools answered the same two requests, before and after one reporter joined. Pick a cell and subtract."
+        lede="You are the attacker. Both tools answered the same two requests, before and after one member joined. Pick a cell and subtract."
       />
 
       <Reveal>

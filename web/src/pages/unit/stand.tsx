@@ -57,7 +57,13 @@ export default function Stand() {
             value={gross}
             onChange={(e) => setGross(e.target.value.replace(/[^\d]/g, ""))}
             invalid={tried && !grossOk}
-            hint={tried && !grossOk ? "Enter a whole number of euros, before tax." : "Before tax, for a full year."}
+            hint={
+              tried && !grossOk
+                ? gross === ""
+                  ? "Enter your gross annual pay in whole euros, before tax."
+                  : "That looks like a monthly or partial figure. Enter your pay for a full year, at least €1,000."
+                : "Before tax, for a full year."
+            }
           />
           <GlSelect label="Your grade" value={grade} onChange={setGrade} options={GRADES} invalid={tried && !grade} />
           {tried && !grade && <p className="-mt-4 text-[0.875rem] font-medium text-indigo">Choose your grade.</p>}

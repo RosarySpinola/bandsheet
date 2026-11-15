@@ -18,8 +18,11 @@ export function MobileMenu() {
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : ""
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
+    if (open) window.addEventListener("keydown", onKey)
     return () => {
       document.body.style.overflow = ""
+      window.removeEventListener("keydown", onKey)
     }
   }, [open])
 
@@ -41,6 +44,7 @@ export function MobileMenu() {
           "fixed inset-0 z-[980] flex flex-col gap-7 overflow-y-auto bg-white px-4 pt-[6.75rem] pb-8 transition-[opacity,transform,visibility] duration-500 ease-gl",
           open ? "visible translate-y-0 opacity-100" : "pointer-events-none invisible -translate-y-24 opacity-0",
         )}
+        inert={!open}
       >
         <button
           type="button"
@@ -52,7 +56,7 @@ export function MobileMenu() {
           <ChevronDown className={cn("size-7 transition-transform duration-200", product && "rotate-180")} />
         </button>
         <div className={cn("grid transition-[grid-template-rows] duration-200 ease-out", product ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
-          <ul className="overflow-hidden">
+          <ul className="overflow-hidden" inert={!product}>
             {SCREENS.map((s) => (
               <li key={s.to}>
                 <Link to={s.to} onClick={() => setOpen(false)} className="flex items-center justify-between py-2 text-lg font-semibold text-ink">
