@@ -90,10 +90,16 @@ export function Hero() {
           <p className="gl-body1 max-w-[calc(var(--gl)*24)] max-[991px]:max-w-[17rem]">
             Union pay bands that never expose one colleague
           </p>
-          <Link to="/unit/join" className="gl-cta group mt-[calc(var(--gl)*1.5)] inline-flex w-fit items-baseline gap-[calc(var(--gl)*0.5)] max-[991px]:mt-[calc(var(--gl)*0.75)]">
-            <span className="wipe group-hover:after:scale-x-100">Join your chapel</span>
-            <span aria-hidden="true" className="text-[0.8em]">↳</span>
-          </Link>
+          <div className="mt-[calc(var(--gl)*1.5)] flex flex-col gap-[calc(var(--gl)*1)] max-[991px]:mt-[calc(var(--gl)*0.75)] max-[991px]:items-center">
+            <Link to="/start" className="gl-cta group inline-flex w-fit items-baseline gap-[calc(var(--gl)*0.5)]">
+              <span className="wipe group-hover:after:scale-x-100">Start your unit</span>
+              <span aria-hidden="true" className="text-[0.8em]">↳</span>
+            </Link>
+            <Link to="/unit" className="gl-body1 group inline-flex w-fit items-baseline gap-[calc(var(--gl)*0.4)] text-ink">
+              <span className="wipe group-hover:after:scale-x-100">Explore the example chapel</span>
+              <span aria-hidden="true" className="text-[0.8em]">↳</span>
+            </Link>
+          </div>
         </div>
       </div>
     </section>

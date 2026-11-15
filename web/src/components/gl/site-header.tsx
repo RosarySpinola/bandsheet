@@ -84,9 +84,14 @@ export function SiteHeader() {
                 ),
               )}
             </nav>
-            <Link to="/unit" className="gl-nav wipe">
-              Live demo
-            </Link>
+            <div className="flex items-center gap-[calc(var(--gl)*2)]">
+              <Link to="/unit" className="gl-nav wipe">
+                Example chapel
+              </Link>
+              <Link to="/start" className="gl-nav wipe font-semibold">
+                Start your unit
+              </Link>
+            </div>
           </div>
           <MobileMenu />
         </div>
