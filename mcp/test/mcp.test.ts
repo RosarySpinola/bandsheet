@@ -104,6 +104,8 @@ describe("tools against recorded API responses", () => {
       const out = await trySubtraction(createApi(m2.url), 2, 3, "Senior");
       expect(out.text).toContain("release #2 also withheld grade=Senior");
       expect(out.text).not.toContain("release #2 published");
+      expect(out.text).toContain("not reproduced for this pair");
+      expect(out.text).not.toContain("single-field");
       const none = await trySubtraction(createApi(m2.url), 1, 2, "Nonexistent");
       expect(none.text).toContain('no cell matching "Nonexistent"');
       expect(none.text).not.toContain("not reproducible");

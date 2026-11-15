@@ -30,7 +30,9 @@ export async function verifyRelease(api: Api, releaseId: number): Promise<ToolOu
   add("requested_by_dao", r.requested_by === unit.dao, `requested by ${r.requested_by ?? "unknown"}; the unit's DAO is ${unit.dao}`);
   const want = JSON.stringify(r.query?.group_by ?? []);
   const voted = proposals.filter((p) => p.status === "Approved" && JSON.stringify(p.query?.group_by ?? []) === want);
-  add("dao_vote", voted.length > 0, voted.length ? `DAO proposal #${voted.map((p) => p.id).join(", #")} approved the same query` : "no approved DAO proposal matches this query");
+  add("dao_vote", voted.length > 0, voted.length
+    ? `approved DAO proposal(s) asking for this same query: #${voted.map((p) => p.id).join(", #")} (a release record does not name its proposal, so this matches by query)`
+    : "no approved DAO proposal matches this query");
 
   if (r.require_dkim || r.entries_verified != null) {
     const refused = (r.rejections ?? []).filter((x) => x.count > 0);
@@ -105,6 +107,8 @@ export async function trySubtraction(api: Api, a: number, b: number, cell: strin
       revealed = hit?.revealed_eur ?? null;
     } else if (bef && fa.published) {
       naiveText = "A typical tool: the synthetic demo data does not match this chain's release, so no honest reproduction is possible.";
+    } else {
+      naiveText = `A typical tool: not reproduced for this pair. The synthetic demo models one join, between releases #1 and #2; try release_a 1, release_b 2.`;
     }
   }
   lines.push(naiveText, "");
