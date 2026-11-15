@@ -8,7 +8,8 @@ import { CRYSTAL } from "./crystals"
 const LINKS = [
   { href: "/pricing", label: "Pricing" },
   { href: "/unit/how", label: "How it works" },
-  { href: "/unit", label: "Live demo" },
+  { href: "/start", label: "Start your unit" },
+  { href: "/unit", label: "Example chapel" },
 ]
 
 /** Greenlock mobile menu: two-bar burger rotating +/-135deg into an X, full-screen white panel from -6rem. */

@@ -1,4 +1,4 @@
-import { ApiError, plainError } from "@/lib/api"
+import { ApiError } from "@/lib/api"
 import { CONTRACT, view } from "@/lib/chain"
 import { LIMITS, PLANNED_UNITS_CONTRACT, SPONSOR_AMOUNT_NEAR, mockFailure } from "./config"
 import { fakeTx, load, save, settle, syntheticEntries, tick, type MProposal, type MUnit } from "./mock-state"
@@ -6,7 +6,6 @@ import { UnitViewSchema, UnitsPolicySchema, toUnit, type Unit, type UnitsPolicy 
 import { inviteHashOf } from "./invite"
 import { ChainRefused, WalletCancelled } from "./wallet-bridge"
 import { traceSignCall } from "@/lib/wallet/gesture"
-import { chainClient } from "./chain-client"
 import type { Conn, ContractCall, UnitsClient, UnitsWallet } from "./types"
 
 /** Mock mode: the same interfaces as the chain client and wallet, answered from mock-state in this browser. */
@@ -150,10 +149,10 @@ export const mockClient: UnitsClient = {
     })
   },
 
-  stand: async (body) => {
-    return chainClient.stand(body).catch((e) => {
-      throw new ApiError(`Where do I stand needs the live server (${plainError(e).title})`, plainError(e).code)
-    })
+  /** The answer is written by NEAR AI Cloud from the bands the server reads on chain; a mock unit has none there. */
+  stand: async () => {
+    await sleep(600)
+    throw new ApiError("In mock mode this unit lives only in this browser, so the server has no bands of yours to answer from. Where do I stand works here once the units contract is live.", "MOCK_ONLY")
   },
 }
 
