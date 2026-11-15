@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Mail, MailCheck } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
@@ -5,6 +6,7 @@ import { ErrorState, TxLink } from "@/components/unit"
 import type { ExtractResponse } from "@/lib/api"
 import { units, type EntryKind, type Unit } from "@/lib/units"
 import { EntryBadge, badgeNote } from "./badges"
+import { SupplyIssuerKey } from "./supply-issuer"
 
 type Preview = NonNullable<ExtractResponse["dkim_preview"]>
 
@@ -25,8 +27,12 @@ export function useUnitIssuer(unit: Unit | undefined, emlB64: string | null, pre
     staleTime: Infinity,
     retry: 1,
   })
-  const kind: EntryKind = emlB64 && listed && q.isSuccess ? "dkim" : "self"
-  return { domain, listed, issuer: q, kind }
+  // A council seat may supply the key when the listed domain has no DNS record (test domains); then it counts too.
+  const [supplied, setSupplied] = useState<{ eml: string; tx: string | null } | null>(null)
+  const eml = emlB64 ? emlText(emlB64) : null
+  const suppliedHere = Boolean(supplied && eml && supplied.eml === eml)
+  const kind: EntryKind = emlB64 && listed && (q.isSuccess || suppliedHere) ? "dkim" : "self"
+  return { domain, listed, issuer: q, kind, eml, supplied: suppliedHere ? supplied : null, setSupplied }
 }
 
 export function UnitDkimCard({ unit, email, preview, state }: { unit: Unit; email: boolean; preview?: Preview | null; state: ReturnType<typeof useUnitIssuer> }) {
@@ -72,7 +78,16 @@ export function UnitDkimCard({ unit, email, preview, state }: { unit: Unit; emai
           </span>
         </span>
       )}
-      {q.isError && <ErrorState error={q.error} title="The employer's key could not be recorded, so this entry would count as self-attested." onRetry={() => void q.refetch()} className="bg-white" />}
+      {q.isError && !state.supplied && <ErrorState error={q.error} title="The employer's key could not be recorded, so this entry would count as self-attested." onRetry={() => void q.refetch()} className="bg-white" />}
+      {q.isError && state.eml && preview.selector && !state.supplied && (
+        <SupplyIssuerKey unit={unit} domain={state.domain} selector={preview.selector} eml={state.eml} onRecorded={(r) => state.setSupplied({ eml: state.eml!, tx: r.tx?.hash ?? null })} />
+      )}
+      {state.supplied && (
+        <span className="flex flex-col gap-2 text-foreground">
+          <span className="flex flex-wrap items-center gap-2">Employer key recorded (supplied, not DNS). This entry will be <EntryBadge kind="dkim" /></span>
+          {state.supplied.tx && <span className="text-[0.875rem] text-muted-foreground">Recorded in <TxLink tx={state.supplied.tx} className="text-[0.875rem]" />.</span>}
+        </span>
+      )}
     </div>
   )
 }

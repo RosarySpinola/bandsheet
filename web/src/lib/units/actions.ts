@@ -77,6 +77,23 @@ export async function prepareSynthetic(conn: Conn, unitId: number, n: number): P
 }
 
 /**
+ * A council seat supplies the employer's DKIM key for a listed test domain that has no DNS record. The wallet signs
+ * "Bandsheet issuer <id>: <domain> <selector>"; the server checks the seat and records the key as "supplied, not DNS".
+ */
+export async function prepareSuppliedIssuer(conn: Conn, unitId: number, domain: string, selector: string, eml: string, key: string) {
+  const issued = await units.nonce("unit_issuer")
+  const msg = await unitsWallet.prepareMessage(conn, { message: unitStatement("unit_issuer", unitId, `${domain} ${selector}`), recipient: issued.recipient, nonce: issued.nonce })
+  return {
+    start: (mark: (s: "wallet" | "posting") => void) =>
+      msg.sign().then((s) => {
+        sameAccount(s, conn)
+        mark("posting")
+        return units.issuerSupplied(unitId, { eml, supplied_key: key.trim(), claim: claimOf(s, issued.nonce) })
+      }),
+  }
+}
+
+/**
  * A wallet-bound entry. Right after sealing: the posting key signs submit(ciphertext) here but does not send it, and
  * the wallet call for "Bandsheet unit <id> entry: <sha256 of the ciphertext JSON>" is made ready. On the tap the
  * wallet signs; only then does the server broadcast the posting key's transaction. A decline posts nothing.

@@ -95,6 +95,7 @@ export const chainClient: UnitsClient = {
   join: (unitId, body) => api(`/units/${unitId}/join`, JoinSchema, postJson(body)),
   synthetic: (unitId, body) => api(`/units/${unitId}/synthetic`, SyntheticSchema, postJson(body)),
   issuer: (unitId, emlText) => api(`/units/${unitId}/issuer`, IssuerSchema, postJson({ eml: emlText })),
+  issuerSupplied: (unitId, body) => api(`/units/${unitId}/issuer`, IssuerSchema, postJson(body)),
 
   unitOfSlot: async (slot) => UnitOfSlotSchema.parse((await view<unknown>(C, "unit_of_slot", { slot })) ?? null),
 

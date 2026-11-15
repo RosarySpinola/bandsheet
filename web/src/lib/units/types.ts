@@ -36,6 +36,8 @@ export interface UnitsClient {
   synthetic(unitId: number, body: SyntheticBody): Promise<SyntheticResult>
   /** The raw .eml text; the server reads d= and s= and records the key if the domain is listed. */
   issuer(unitId: number, emlText: string): Promise<IssuerResult>
+  /** A council seat supplies the employer key for a listed domain with no DNS record (recorded as "supplied, not DNS"). */
+  issuerSupplied(unitId: number, body: { eml: string; supplied_key: string; claim: UnitClaim }): Promise<IssuerResult>
   /** unit_of_slot: the unit a posting key's slot belongs to, or null. */
   unitOfSlot(slot: string): Promise<{ unitId: number; synthetic: boolean; hasEntry: boolean } | null>
   /**

@@ -120,6 +120,8 @@ export const mockClient: UnitsClient = {
     })
   },
 
+  issuerSupplied: async (id, body) => mockClient.issuer(id, body.eml),
+
   issuer: async (id, eml) => {
     await sleep(900)
     const head = eml.slice(0, 20000)
