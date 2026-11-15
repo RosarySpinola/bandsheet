@@ -106,6 +106,7 @@ export async function prepareStatement(walletId: string, purpose: Purpose, subje
     }
   }
   const wallet = await c.wallet(walletId)
+  await warmWallet(wallet)
   const params = { message: statementText(purpose, subject), recipient: CONTRACT, nonce: nonceBytes(issued.nonce), network: "testnet" as const, signerId: accountId }
   return {
     nonce: issued.nonce,
@@ -120,6 +121,16 @@ export async function prepareStatement(walletId: string, purpose: Purpose, subje
       )
     },
   }
+}
+
+/**
+ * Load a sandboxed wallet's code into NEAR Connect's cache before the tap. Meteor's is about 2 MB; fetched inside the tap,
+ * it can push the wallet's window.open past the browser's few-second allowance after a click, and Meteor then shows
+ * "Continue in Meteor Web" without opening a tab.
+ */
+export async function warmWallet(wallet: unknown): Promise<void> {
+  const executor = (wallet as { executor?: { loadCode?: () => Promise<unknown> } } | null)?.executor
+  await executor?.loadCode?.().catch(() => undefined)
 }
 
 function checked<T extends SignedClaim>(claim: T, walletId: string): T & { walletId: string } {
@@ -141,6 +152,7 @@ export async function connectVoter(): Promise<{ wallet: NearWalletBase; accountI
   const accounts = await wallet.getAccounts({ network: "testnet" })
   const accountId = accounts[0]?.accountId
   if (!accountId) throw new ApiError("The wallet returned no account.", "WALLET_NO_ACCOUNT")
+  await warmWallet(wallet)
   return { wallet, accountId }
 }
 
@@ -149,7 +161,9 @@ export async function restoreVoter(): Promise<{ wallet: NearWalletBase; accountI
   const c = await getConnector()
   try {
     const { wallet, accounts } = await c.getConnectedWallet()
-    return accounts[0] ? { wallet, accountId: accounts[0].accountId } : null
+    if (!accounts[0]) return null
+    await warmWallet(wallet)
+    return { wallet, accountId: accounts[0].accountId }
   } catch {
     return null
   }

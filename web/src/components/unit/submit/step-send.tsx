@@ -7,6 +7,7 @@ import { HashValue } from "../copy-button"
 import { AccountLink, CtaButton, CtaLink, ExtLink, SquareButton, TxLink } from "../links"
 import { ErrorState } from "../states"
 import type { SubmitFlow } from "./use-submit-flow"
+import { WebWalletTip } from "../web-wallet-tip"
 import { shortAccount } from "@/lib/wallet/identity"
 
 /** Step 4: show the sealed envelope, then sign `submit` with the member key. */
@@ -73,6 +74,7 @@ export function StepSend({ flow, policy }: { flow: SubmitFlow; policy?: Policy }
         <p className="border-l-2 border-ink bg-band px-5 py-4 text-[0.9375rem] leading-relaxed text-foreground">
           Your wallet ({shortAccount(flow.wallet.account_id)}) signs; the chapel's posting key posts it, so your account never appears next to your entry
           on chain. Bandsheet checks your wallet's signature before anything is posted; if you decline, nothing is posted.
+          <WebWalletTip className="mt-2 block" />
         </p>
       ) : (
         <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">

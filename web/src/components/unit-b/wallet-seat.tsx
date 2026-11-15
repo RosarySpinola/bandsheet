@@ -8,6 +8,7 @@ import { DAO } from "@/lib/chain"
 import { councilMembers, readProposal, voteFromWallet } from "@/lib/wallet/dao-seat"
 import { shortAccount } from "@/lib/wallet/identity"
 import { WalletCancelled, connectVoter, disconnectVoter, restoreVoter } from "@/lib/wallet/near-connect"
+import { WebWalletTip } from "@/components/unit/web-wallet-tip"
 import type { DaoProposal } from "./data"
 import { describeQuery } from "./format"
 
@@ -80,7 +81,7 @@ export function WalletSeat({ proposals }: { proposals: DaoProposal[] }) {
         <div className="flex min-w-0 flex-col gap-1">
           <h2 id="wallet-seat" className="text-[1rem] font-semibold text-ink">Hold a council seat? Vote from your own wallet.</h2>
           <p className="text-[0.9375rem] text-muted-foreground">
-            {conn ? <>Connected as <code className="font-mono text-[0.875rem]" title={conn.accountId}>{shortAccount(conn.accountId)}</code> through NEAR Connect (testnet).</> : "NEAR Connect, testnet. The seat buttons below are the demo's server-held council keys."}
+            {conn ? <>Connected as <code className="font-mono text-[0.875rem]" title={conn.accountId}>{shortAccount(conn.accountId)}</code> through NEAR Connect (testnet).</> : "NEAR Connect, testnet. Open release requests below can also be voted on with the demo's two server-held seats."}
           </p>
         </div>
         {conn ? (
@@ -107,6 +108,7 @@ export function WalletSeat({ proposals }: { proposals: DaoProposal[] }) {
       {seat === true && (
         <div className="flex flex-col gap-3">
           <p className="text-[0.9375rem] text-ink">This account holds a council seat. Open proposals:</p>
+          <WebWalletTip />
           {open.length === 0 && <p className="text-[0.9375rem] text-muted-foreground">No open proposals right now.</p>}
           {open.map((p) => {
             const busy = voting?.id === p.id

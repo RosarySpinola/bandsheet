@@ -59,7 +59,7 @@ export function SignInOptions({ onEnter }: { onEnter: () => void }) {
         )}
         {phase.s === "cancelled" && (
           <p className="border-l-2 border-ink bg-band px-5 py-3 text-[0.9375rem] text-ink">
-            Cancelled in the wallet. Nothing was signed and no key was added.
+            Cancelled. Nothing was signed and no key was added.
           </p>
         )}
         {phase.s === "error" && <ErrorState error={phase.error} title="You were not added." onRetry={reset} />}
