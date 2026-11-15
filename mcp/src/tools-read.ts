@@ -1,4 +1,4 @@
-import type { Api } from "./api.js";
+import { type Api, syntheticNote } from "./api.js";
 import { type ToolOut, cellId, cellLabel, eur, findRelease, latestPerCell, matchesCell, when } from "./format.js";
 
 export async function getBands(api: Api): Promise<ToolOut> {
@@ -9,6 +9,8 @@ export async function getBands(api: Api): Promise<ToolOut> {
   const withheld = newest.suppressed.map((s) => ({ release_id: newest.id, ...s }));
 
   const lines = [`Latest released pay bands (mean gross annual pay, EUR). Newest release is #${newest.id} (${newest.status}).`, ""];
+  const syn = syntheticNote(newest);
+  if (syn) lines.splice(1, 0, syn);
   for (const { release_id, cell } of bands) {
     const stale = release_id !== newest.id ? `  [last published in release #${release_id}]` : "";
     lines.push(`- ${cellLabel(cell.key)}: ${eur(cell.mean_eur)} (average of ${cell.n} members)${stale}`);
@@ -21,7 +23,7 @@ export async function getBands(api: Api): Promise<ToolOut> {
   }
   return {
     text: lines.join("\n"),
-    data: { newest_release: newest.id, bands: bands.map((b) => ({ ...b.cell, as_of_release: b.release_id })), withheld },
+    data: { newest_release: newest.id, bands: bands.map((b) => ({ ...b.cell, as_of_release: b.release_id })), withheld, ...(newest.counts ? { counts: newest.counts } : {}) },
   };
 }
 
@@ -31,9 +33,11 @@ export async function listReleases(api: Api): Promise<ToolOut> {
   const rows = releases.map((r) => ({
     id: r.id, status: r.status, released_cells: r.cells.length, withheld_cells: r.suppressed.length,
     group_by: r.query?.group_by ?? [], logged_at: when(r), output_sha256: r.output_sha256 ?? null,
+    ...(r.counts ? { synthetic_entries: r.counts.synthetic, dkim_verified: r.counts.dkim_verified, self_attested: r.counts.self_attested } : {}),
   }));
   const text = rows
-    .map((r) => `#${r.id}  ${r.status.toUpperCase()}  group by ${r.group_by.join("+") || "?"}  released ${r.released_cells}, withheld ${r.withheld_cells}  (${r.logged_at})`)
+    .map((r) => `#${r.id}  ${r.status.toUpperCase()}  group by ${r.group_by.join("+") || "?"}  released ${r.released_cells}, withheld ${r.withheld_cells}  (${r.logged_at})` +
+      ("synthetic_entries" in r && r.synthetic_entries ? `  [SYNTHETIC: ${r.synthetic_entries} sample-data entries]` : ""))
     .join("\n");
   return { text: `Releases logged on NEAR testnet:\n${text}`, data: { releases: rows } };
 }

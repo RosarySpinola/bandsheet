@@ -15,6 +15,9 @@ import { createKeyLookup } from "./auth/keys";
 import { createBroadcast } from "./auth/posting";
 import { loadOwnerSigner } from "./auth/owner";
 import { MemoryAuthStore } from "./auth/store";
+import { createUnitsChain } from "./units/chain";
+import { loadUnitsConfig } from "./units/config";
+import { MemoryUnitStore } from "./units/store";
 
 export function buildDeps(): Deps {
   const chainCfg = loadChainConfig();
@@ -41,6 +44,10 @@ export function buildDeps(): Deps {
     view: (contractId, method, args) => chain.view(contractId, method, args),
     // Local dev keeps sign-in state in memory (lost on restart); the deployed worker uses D1 (AUTH_DB).
     auth: { store: new MemoryAuthStore(), keys: createKeyLookup(), owner: loadOwnerSigner(), broadcast: createBroadcast(TESTNET_RPCS) },
+    units: (() => {
+      const cfg = loadUnitsConfig();
+      return { cfg, chain: createUnitsChain(cfg.contract), store: new MemoryUnitStore(), keys: createKeyLookup(), broadcast: createBroadcast(TESTNET_RPCS) };
+    })(),
   };
 }
 

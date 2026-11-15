@@ -1,4 +1,4 @@
-import type { Api, Release } from "./api.js";
+import { type Api, type Release, syntheticNote } from "./api.js";
 import { type ToolOut, cellId, cellLabel, eur, findRelease, matchesCell } from "./format.js";
 
 type Verdict = "PASS" | "FAIL" | "SKIP";
@@ -27,14 +27,30 @@ export async function verifyRelease(api: Api, releaseId: number): Promise<ToolOu
   add("no_overlap", overlap.length === 0, overlap.length ? `${overlap.length} cell(s) both published and withheld` : "no cell is both published and withheld");
   const bare = r.suppressed.filter((s) => !s.reason || !s.witness);
   add("witnesses", bare.length === 0, `${r.suppressed.length} withheld cell(s), each with a reason and witness`);
-  add("requested_by_dao", r.requested_by === unit.dao, `requested by ${r.requested_by ?? "unknown"}; the unit's DAO is ${unit.dao}`);
-  const want = JSON.stringify(r.query?.group_by ?? []);
-  const voted = proposals.filter((p) => p.status === "Approved" && JSON.stringify(p.query?.group_by ?? []) === want);
-  add("dao_vote", voted.length > 0, voted.length
-    ? `approved DAO proposal(s) asking for this same query: #${voted.map((p) => p.id).join(", #")} (a release record does not name its proposal, so this matches by query)`
-    : "no approved DAO proposal matches this query");
+  if (unit.unit_id !== undefined) {
+    // a unit: votes are in-contract, and the release names the proposal that passed
+    const council = unit.council ?? [];
+    add("requested_by_council", council.includes(r.requested_by ?? ""), `requested by ${r.requested_by ?? "unknown"}; unit ${unit.unit_id}'s council is ${council.join(", ")}`);
+    const p = proposals.find((x) => x.release_id === r.id);
+    add("council_vote", Boolean(p && ["executed", "running"].includes(p.status)), p
+      ? `in-contract proposal #${p.id} passed (more than half of the council at proposal time) and produced this release`
+      : "no passed proposal of this unit names this release");
+    if (r.counts) {
+      checks.push({
+        id: "entry_kinds", verdict: "PASS",
+        detail: `${r.counts.entries} entries: ${r.counts.dkim_verified ?? "?"} DKIM-verified, ${r.counts.self_attested ?? "?"} self-attested, ${r.counts.synthetic} synthetic (sample data)`,
+      });
+    }
+  } else {
+    add("requested_by_dao", r.requested_by === unit.dao, `requested by ${r.requested_by ?? "unknown"}; the unit's DAO is ${unit.dao}`);
+    const want = JSON.stringify(r.query?.group_by ?? []);
+    const voted = proposals.filter((p) => p.status === "Approved" && JSON.stringify(p.query?.group_by ?? []) === want);
+    add("dao_vote", voted.length > 0, voted.length
+      ? `approved DAO proposal(s) asking for this same query: #${voted.map((p) => p.id).join(", #")} (a release record does not name its proposal, so this matches by query)`
+      : "no approved DAO proposal matches this query");
+  }
 
-  if (r.require_dkim || r.entries_verified != null) {
+  if (unit.unit_id === undefined && (r.require_dkim || r.entries_verified != null)) {
     const refused = (r.rejections ?? []).filter((x) => x.count > 0);
     const total = refused.reduce((n, x) => n + x.count, 0);
     add("dkim", r.entries_verified != null && r.entries_verified >= 0,
@@ -67,8 +83,8 @@ export async function verifyRelease(api: Api, releaseId: number): Promise<ToolOu
   const failed = checks.filter((c) => c.verdict === "FAIL").length;
   const head = `Release #${releaseId}: ${failed === 0 ? "PASS" : `FAIL (${failed} check${failed > 1 ? "s" : ""})`}${checks.some((c) => c.verdict === "SKIP") ? " with skipped checks" : ""}`;
   return {
-    text: [head, ...checks.map((c) => `  ${c.verdict}  ${c.id}: ${c.detail}`)].join("\n"),
-    data: { release_id: releaseId, overall: failed === 0 ? "PASS" : "FAIL", checks },
+    text: [head, ...(syntheticNote(r) ? [syntheticNote(r)] : []), ...checks.map((c) => `  ${c.verdict}  ${c.id}: ${c.detail}`)].join("\n"),
+    data: { release_id: releaseId, overall: failed === 0 ? "PASS" : "FAIL", checks, ...(r.counts ? { counts: r.counts, synthetic: r.counts.synthetic > 0 } : {}) },
   };
 }
 

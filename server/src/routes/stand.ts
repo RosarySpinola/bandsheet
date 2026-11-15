@@ -5,7 +5,15 @@ import type { Deps } from "../deps";
 import { AppError } from "../errors";
 import { parseModelJson } from "../json";
 import { type Letter, isAcceptableLetter, replyDeadline, templateLetter } from "../letter";
+import { need, readUnit } from "../units/deps";
 import { bandSource, latestBands, readReleases } from "./releases";
+import { readUnitReleases } from "./units";
+
+async function unitReleases(deps: Deps, id: number) {
+  const u = need(deps);
+  const unit = await readUnit(u, id);
+  return { releases: await readUnitReleases(u, id, unit.releases) };
+}
 
 export const StandRequestSchema = z.object({
   gross_annual_eur: z.number().int().min(1).max(10_000_000),
@@ -16,6 +24,8 @@ export const StandRequestSchema = z.object({
   country: z.enum(["MT", "GR", "DE", "FR", "IE"]).default("MT"),
   /** Public released bands. If omitted the server reads the latest release from the contract. */
   bands: z.array(CellSchema).max(200).optional(),
+  /** A unit on the units contract (start-your-own-unit); bands are read from its releases instead of the demo chapel's. */
+  unit_id: z.number().int().min(1).max(100_000).optional(),
 });
 
 const ModelOut = z.object({
@@ -77,7 +87,7 @@ export function standRoutes(deps: Deps): Hono {
     let releaseId: string | number | undefined;
     let source: ReturnType<typeof bandSource>;
     if (!cells) {
-      const { releases } = await readReleases(deps);
+      const { releases } = req.unit_id === undefined ? await readReleases(deps) : await unitReleases(deps, req.unit_id);
       const latest = latestBands(releases);
       if (!latest) throw new AppError(422, "no released bands yet", "NO_RELEASED_BANDS");
       cells = latest.cells;
@@ -118,7 +128,7 @@ export function standRoutes(deps: Deps): Hono {
       // keep deterministic fallbacks; the UI shows `source`
     }
     return c.json({
-      position: position ?? null, answer, letter, source: letterSource, release_id: releaseId ?? null,
+      position: position ?? null, answer, letter, source: letterSource, release_id: releaseId ?? null, unit_id: req.unit_id ?? null,
       band_release_id: source?.release_id ?? null, band_withheld_in: source?.withheld_in ?? [], verified: chat.verified,
     });
   });

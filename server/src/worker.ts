@@ -16,6 +16,9 @@ import { createKeyLookup } from "./auth/keys";
 import { createBroadcast } from "./auth/posting";
 import { loadOwnerSigner } from "./auth/owner";
 import { type AuthD1, D1AuthStore } from "./auth/store";
+import { createUnitsChain } from "./units/chain";
+import { loadUnitsConfig } from "./units/config";
+import { D1UnitStore } from "./units/store";
 
 /**
  * Cloudflare worker entry (Pages Functions mount this). Bindings:
@@ -82,8 +85,16 @@ function build(env: WorkerEnv): NonNullable<typeof cached> {
     auth: env.AUTH_DB
       ? { store: new D1AuthStore(env.AUTH_DB), keys: createKeyLookup(strings.NEAR_RPC_URLS?.split(",").map((u) => u.trim())), owner: loadOwnerSigner(strings as NodeJS.ProcessEnv), broadcast: createBroadcast(strings.NEAR_RPC_URLS?.split(",").map((u) => u.trim()) ?? TESTNET_RPCS) }
       : undefined,
+    units: env.AUTH_DB ? unitsDeps(strings, env.AUTH_DB) : undefined,
   };
   return { deps, app: createApp(deps), timings };
+}
+
+/** Units share the auth D1 database (tables from deploy/migrations-auth/0002_units.sql). */
+function unitsDeps(strings: Record<string, string>, db: AuthD1): Deps["units"] {
+  const rpcs = strings.NEAR_RPC_URLS?.split(",").map((u) => u.trim()) ?? TESTNET_RPCS;
+  const cfg = loadUnitsConfig(strings as NodeJS.ProcessEnv);
+  return { cfg, chain: createUnitsChain(cfg.contract, rpcs), store: new D1UnitStore(db), keys: createKeyLookup(rpcs), broadcast: createBroadcast(rpcs) };
 }
 
 export async function handle(request: Request, env: WorkerEnv): Promise<Response> {

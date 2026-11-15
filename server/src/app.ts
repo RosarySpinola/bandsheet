@@ -11,6 +11,8 @@ import { extractRoutes } from "./routes/extract";
 import { releasesRoutes } from "./routes/releases";
 import { standRoutes } from "./routes/stand";
 import { authRoutes } from "./routes/auth";
+import { sponsorRoutes } from "./routes/sponsor";
+import { unitsRoutes } from "./routes/units";
 
 /** Nothing from a request is written anywhere except the token/cost ledger and the sign-in store (/api/auth, D1). */
 export function createApp(deps: Deps): Hono {
@@ -38,6 +40,12 @@ export function createApp(deps: Deps): Hono {
   app.use("/api/auth/nonce", rateLimit({ limit: 20 }));
   for (const path of ["/api/auth/join", "/api/auth/near-auth/sign"]) app.use(path, rateLimit({ limit: 5 }));
   app.use("/api/auth/entry", rateLimit({ limit: 10 }));
+  // Units: registrar writes spend the registrar's testnet gas; the sponsor pays out NEAR, so it is the tightest.
+  app.use("/api/units/nonce", rateLimit({ limit: 30 }));
+  for (const path of ["/api/units/:id/join", "/api/units/:id/issuer"]) app.use(path, rateLimit({ limit: 5 }));
+  app.use("/api/units/:id/synthetic", rateLimit({ limit: 3 }));
+  app.use("/api/units/:id/entry", rateLimit({ limit: 10 }));
+  app.use("/api/sponsor", rateLimit({ limit: 5 }));
 
   app.route("/api", chainRoutes(deps));
   app.route("/api", contextRoutes());
@@ -46,6 +54,8 @@ export function createApp(deps: Deps): Hono {
   app.route("/api/stand", standRoutes(deps));
   app.route("/api/releases", releasesRoutes(deps));
   app.route("/api/auth", authRoutes(deps));
+  app.route("/api/units", unitsRoutes(deps));
+  app.route("/api/sponsor", sponsorRoutes(deps));
 
   app.notFound((c) => c.json({ error: "not found", code: "NOT_FOUND" }, 404));
   app.onError((err, c) => {

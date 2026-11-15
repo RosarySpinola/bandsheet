@@ -4,6 +4,7 @@ import type { ChainPort } from "./chain/port";
 import type { Config } from "./env";
 import type { ChatRequest, VerifiedChat } from "./nearai/client";
 import type { SpendGuard } from "./spend";
+import type { UnitsDeps } from "./units/deps";
 
 export type ChatFn = (req: ChatRequest) => Promise<VerifiedChat>;
 export type ViewFn = (contractId: string, method: string, args: Record<string, unknown>) => Promise<unknown>;
@@ -18,4 +19,6 @@ export interface Deps {
   chainCfg: ChainConfig;
   /** Sign-in (NEAR Auth / NEAR Connect); undefined when the host has no auth store. */
   auth?: AuthDeps;
+  /** Start-your-own-unit (contracts/units); undefined when the host has no auth store. */
+  units?: UnitsDeps;
 }

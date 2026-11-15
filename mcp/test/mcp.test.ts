@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { type Api, createApi } from "../src/api.js";
+import { type Api, createApi, forUnit } from "../src/api.js";
 import { matchesCell } from "../src/format.js";
 import { explainRefusal, getBands, listReleases } from "../src/tools-read.js";
 import { payContext, trySubtraction, verifyRelease } from "../src/tools-verify.js";
@@ -184,5 +184,29 @@ describe("over stdio (built server, real MCP client)", () => {
     expect(unknown.isError).toBe(true);
     expect(text(unknown)).toMatch(/no release #99/);
     await expect(client.callTool({ name: "pay_context", arguments: { country: "US" } })).resolves.toMatchObject({ isError: true });
+  });
+});
+
+describe("tools scoped to a unit (unit_id)", () => {
+  it("get_bands and list_releases label synthetic entries", async () => {
+    const u = forUnit(api, 1);
+    const bands = await getBands(u);
+    expect(bands.text).toContain("SYNTHETIC: 4 of 5 entries in release #1 are synthetic colleagues (sample data), not real pay.");
+    expect(bands.text).toContain("grade=Senior: EUR 58,200 (average of 5 members)");
+    expect((bands.data.counts as { synthetic: number }).synthetic).toBe(4);
+    const list = await listReleases(u);
+    expect(list.text).toContain("[SYNTHETIC: 4 sample-data entries]");
+  });
+  it("verify_release checks the in-contract council vote instead of a DAO, and reports entry kinds", async () => {
+    const out = await verifyRelease(forUnit(api, 1), 1);
+    expect(out.text).toContain("PASS  requested_by_council");
+    expect(out.text).toContain("PASS  council_vote: in-contract proposal #1 passed");
+    expect(out.text).toContain("0 DKIM-verified, 1 self-attested, 4 synthetic (sample data)");
+    expect(out.text).toContain("SYNTHETIC: 4 of 5");
+    expect(out.data.synthetic).toBe(true);
+    expect(out.text).not.toContain("requested_by_dao");
+  });
+  it("an unknown unit is a plain error", async () => {
+    await expect(getBands(forUnit(api, 9))).rejects.toThrow(/UNIT_NOT_FOUND/);
   });
 });

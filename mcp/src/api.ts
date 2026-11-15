@@ -30,6 +30,10 @@ export interface Release {
   rejections?: { reason: string; count: number }[] | null;
   wasm_sha256?: string | null;
   require_dkim?: boolean | null;
+  /** Units contract releases ("start your own unit"). Synthetic entries are sample data and always labelled. */
+  unit_id?: number;
+  proposal_id?: number;
+  counts?: { entries: number; synthetic: number; dkim_verified: number | null; self_attested: number | null; rejected: number };
 }
 export interface Proposal {
   id: number;
@@ -38,6 +42,8 @@ export interface Proposal {
   description: string;
   /** Absent on older API versions, where every proposal was a release. */
   kind?: string;
+  /** Units: the release this proposal produced. */
+  release_id?: number | null;
 }
 export interface UnitInfo {
   unit: string;
@@ -47,6 +53,9 @@ export interface UnitInfo {
   entry_count: number;
   release_count: number;
   explorer?: { unit_url?: string };
+  /** Set when the scope is a unit on the units contract: its id and council (votes are in-contract, no DAO). */
+  unit_id?: number;
+  council?: string[];
 }
 export interface NaiveDemo {
   synthetic: boolean;
@@ -80,6 +89,16 @@ export interface Api {
   proposals(): Promise<Proposal[]>;
   naive(groupBy: string): Promise<NaiveDemo>;
   context(country: string, isco?: string): Promise<WageContext>;
+  /** GET /units/:id (start-your-own-unit). */
+  unitView?(id: number): Promise<UnitView>;
+}
+
+export interface UnitView {
+  contract: string;
+  unit: { id: number; name: string; council: string[]; members: number; synthetic_members: number; entries: number; releases: number };
+  policy: { k: number; wasm_sha256: string };
+  proposals: { id: number; status: string; query: string; release_id: number | null }[];
+  releases: Release[];
 }
 
 export function createApi(base: string = process.env.BANDSHEET_API || DEFAULT_API, fetchImpl: typeof fetch = fetch): Api {
@@ -101,5 +120,38 @@ export function createApi(base: string = process.env.BANDSHEET_API || DEFAULT_AP
     proposals: async () => (await get<{ proposals: Proposal[] }>("/dao/proposals")).proposals.filter((p) => !p.kind || p.kind === "release"),
     naive: (g) => get<NaiveDemo>(`/demo/naive?group_by=${encodeURIComponent(g)}`),
     context: (country, isco = "OC2") => get<WageContext>(`/context?country=${encodeURIComponent(country)}&isco=${encodeURIComponent(isco)}`),
+    unitView: (id) => get<UnitView>(`/units/${id}`),
   };
+}
+
+/** The same tools over one unit of the units contract instead of the demo chapel. */
+export function forUnit(api: Api, id: number): Api {
+  if (!api.unitView) throw new ApiError("This API client cannot read units.");
+  const view = api.unitView.bind(api);
+  const parseQuery = (q: string) => {
+    try {
+      return JSON.parse(q) as { group_by?: string[] };
+    } catch {
+      return null;
+    }
+  };
+  return {
+    ...api,
+    releases: async () => (await view(id)).releases,
+    unit: async () => {
+      const v = await view(id);
+      return {
+        unit: `${v.contract} unit ${id} (${v.unit.name})`, dao: "", unit_id: id, council: v.unit.council, policy: v.policy,
+        member_count: v.unit.members, entry_count: v.unit.entries, release_count: v.unit.releases,
+      };
+    },
+    proposals: async () =>
+      (await view(id)).proposals.map((p) => ({ id: p.id, status: p.status, query: parseQuery(p.query), description: `Unit ${id} proposal ${p.id}`, kind: "release", release_id: p.release_id })),
+  };
+}
+
+/** "includes 4 synthetic (sample data) entries" or "". */
+export function syntheticNote(r: Release | undefined): string {
+  const n = r?.counts?.synthetic ?? 0;
+  return n > 0 ? `SYNTHETIC: ${n} of ${r!.counts!.entries} entries in release #${r!.id} are synthetic colleagues (sample data), not real pay.` : "";
 }

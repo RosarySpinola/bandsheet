@@ -1,0 +1,163 @@
+import type { UnitPurpose } from "@bandsheet/core";
+import type { AuthD1, NonceCheck } from "../auth/store";
+import { NONCE_TTL_MS } from "../auth/store";
+
+export interface UnitMemberRow {
+  account_id: string;
+  unit_id: number;
+  member_public_key: string;
+  slot: string;
+  joined_at: number;
+  add_tx: string;
+}
+
+export interface UnitBindingRow {
+  account_id: string;
+  unit_id: number;
+  slot: string;
+  ct_sha256: string;
+  signed_at: number;
+}
+
+export interface GrantRow {
+  account_id: string;
+  ip: string;
+  tx: string;
+  granted_at: number;
+}
+
+/** Off-chain units state (D1 tables in deploy/migrations-auth/0002_units.sql). The account <-> slot link lives only here. */
+export interface UnitStore {
+  issueNonce(nonce: string, purpose: UnitPurpose, now: number): Promise<number>;
+  consumeNonce(nonce: string, purpose: UnitPurpose, now: number): Promise<NonceCheck>;
+  getMember(accountId: string, unitId: number): Promise<UnitMemberRow | null>;
+  putMember(row: UnitMemberRow): Promise<void>;
+  addBinding(row: UnitBindingRow): Promise<void>;
+  getGrant(accountId: string): Promise<GrantRow | null>;
+  grantsFromIp(ip: string, since: number): Promise<number>;
+  /** Records a grant; false when the account already had one (atomic: two requests cannot both win). */
+  putGrant(row: GrantRow): Promise<boolean>;
+  /** Fill in the transfer hash once it landed, or drop the reservation when the transfer failed. */
+  finishGrant(accountId: string, tx: string): Promise<void>;
+  dropGrant(accountId: string): Promise<void>;
+}
+
+interface NonceRow {
+  purpose: string;
+  expires_at: number;
+  consumed_at: number | null;
+}
+
+const judge = (row: NonceRow | null | undefined, purpose: string, now: number): NonceCheck => {
+  if (!row) return "unknown";
+  if (row.purpose !== purpose) return "wrong_purpose";
+  if (row.consumed_at !== null) return "used";
+  if (row.expires_at <= now) return "expired";
+  return "ok";
+};
+
+export class MemoryUnitStore implements UnitStore {
+  readonly nonces = new Map<string, NonceRow>();
+  readonly members = new Map<string, UnitMemberRow>();
+  readonly bindings: UnitBindingRow[] = [];
+  readonly grants = new Map<string, GrantRow>();
+
+  async issueNonce(nonce: string, purpose: UnitPurpose, now: number) {
+    this.nonces.set(nonce, { purpose, expires_at: now + NONCE_TTL_MS, consumed_at: null });
+    return now + NONCE_TTL_MS;
+  }
+  async consumeNonce(nonce: string, purpose: UnitPurpose, now: number) {
+    const row = this.nonces.get(nonce);
+    const v = judge(row, purpose, now);
+    if (v === "ok") row!.consumed_at = now;
+    return v;
+  }
+  async getMember(accountId: string, unitId: number) {
+    return this.members.get(`${accountId}|${unitId}`) ?? null;
+  }
+  async putMember(row: UnitMemberRow) {
+    this.members.set(`${row.account_id}|${row.unit_id}`, row);
+  }
+  async addBinding(row: UnitBindingRow) {
+    if (!this.bindings.some((b) => b.account_id === row.account_id && b.unit_id === row.unit_id && b.ct_sha256 === row.ct_sha256)) this.bindings.push(row);
+  }
+  async getGrant(accountId: string) {
+    return this.grants.get(accountId) ?? null;
+  }
+  async grantsFromIp(ip: string, since: number) {
+    return [...this.grants.values()].filter((g) => g.ip === ip && g.granted_at >= since).length;
+  }
+  async putGrant(row: GrantRow) {
+    if (this.grants.has(row.account_id)) return false;
+    this.grants.set(row.account_id, row);
+    return true;
+  }
+  async finishGrant(accountId: string, tx: string) {
+    const g = this.grants.get(accountId);
+    if (g) g.tx = tx;
+  }
+  async dropGrant(accountId: string) {
+    this.grants.delete(accountId);
+  }
+}
+
+export class D1UnitStore implements UnitStore {
+  constructor(private readonly db: AuthD1) {}
+
+  async issueNonce(nonce: string, purpose: UnitPurpose, now: number) {
+    await this.db.prepare("INSERT INTO unit_nonces (nonce, purpose, issued_at, expires_at) VALUES (?, ?, ?, ?)").bind(nonce, purpose, now, now + NONCE_TTL_MS).run();
+    return now + NONCE_TTL_MS;
+  }
+  async consumeNonce(nonce: string, purpose: UnitPurpose, now: number) {
+    const r = await this.db
+      .prepare("UPDATE unit_nonces SET consumed_at = ? WHERE nonce = ? AND purpose = ? AND consumed_at IS NULL AND expires_at > ?")
+      .bind(now, nonce, purpose, now)
+      .run();
+    if (r.meta?.changes === 1) return "ok";
+    const row = await this.db.prepare("SELECT purpose, expires_at, consumed_at FROM unit_nonces WHERE nonce = ?").bind(nonce).first<NonceRow>();
+    const v = judge(row, purpose, now);
+    return v === "ok" ? "used" : v;
+  }
+  async getMember(accountId: string, unitId: number) {
+    return this.db
+      .prepare("SELECT account_id, unit_id, member_public_key, slot, joined_at, add_tx FROM unit_members WHERE account_id = ? AND unit_id = ?")
+      .bind(accountId, unitId)
+      .first<UnitMemberRow>();
+  }
+  async putMember(m: UnitMemberRow) {
+    await this.db
+      .prepare(
+        "INSERT INTO unit_members (account_id, unit_id, member_public_key, slot, joined_at, add_tx) VALUES (?, ?, ?, ?, ?, ?) " +
+          "ON CONFLICT(account_id, unit_id) DO UPDATE SET member_public_key = excluded.member_public_key, slot = excluded.slot, " +
+          "joined_at = excluded.joined_at, add_tx = excluded.add_tx",
+      )
+      .bind(m.account_id, m.unit_id, m.member_public_key, m.slot, m.joined_at, m.add_tx)
+      .run();
+  }
+  async addBinding(b: UnitBindingRow) {
+    await this.db
+      .prepare("INSERT OR IGNORE INTO unit_bindings (account_id, unit_id, slot, ct_sha256, signed_at) VALUES (?, ?, ?, ?, ?)")
+      .bind(b.account_id, b.unit_id, b.slot, b.ct_sha256, b.signed_at)
+      .run();
+  }
+  async getGrant(accountId: string) {
+    return this.db.prepare("SELECT account_id, ip, tx, granted_at FROM sponsor_grants WHERE account_id = ?").bind(accountId).first<GrantRow>();
+  }
+  async grantsFromIp(ip: string, since: number) {
+    const r = await this.db.prepare("SELECT COUNT(*) AS n FROM sponsor_grants WHERE ip = ? AND granted_at >= ?").bind(ip, since).first<{ n: number }>();
+    return Number(r?.n ?? 0);
+  }
+  async putGrant(g: GrantRow) {
+    const r = await this.db
+      .prepare("INSERT OR IGNORE INTO sponsor_grants (account_id, ip, tx, granted_at) VALUES (?, ?, ?, ?)")
+      .bind(g.account_id, g.ip, g.tx, g.granted_at)
+      .run();
+    return r.meta?.changes === 1;
+  }
+  async finishGrant(accountId: string, tx: string) {
+    await this.db.prepare("UPDATE sponsor_grants SET tx = ? WHERE account_id = ?").bind(tx, accountId).run();
+  }
+  async dropGrant(accountId: string) {
+    await this.db.prepare("DELETE FROM sponsor_grants WHERE account_id = ?").bind(accountId).run();
+  }
+}
