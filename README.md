@@ -95,6 +95,43 @@ Council seat for a member's wallet: `scripts/seat-swap.ts <accountId>` proposes 
 adding the account (seats 1 and 2 approve each), then opens a signalling poll. The council stays at 3 seats with 2 of 3
 to pass. `scripts/seat-restore.ts <accountId>` reverses it.
 
+## Start your own unit (units contract)
+
+The demo chapel stays as the example. Anyone with a NEAR wallet can **start their own unit** on a second contract,
+[`bandsheet-units-2d3f96.testnet`](https://testnet.nearblocks.io/address/bandsheet-units-2d3f96.testnet)
+(`contracts/units/`, interface in [`contracts/units/INTERFACE.md`](contracts/units/INTERFACE.md)). The judged contract and DAO are untouched.
+
+- **The same engine.** Every unit's release calls the same OutLayer project and build (`version_key` pinned to
+  `69d5616c…3b26`) with the same enclave key. The project's `PROTECTED_ENCLAVE_SEED` is bound to the build, not to the
+  caller: a `{"op":"pubkey"}` request from a non-owner account returned the demo's key ([8U6SyAsd](https://testnet.nearblocks.io/txns/8U6SyAsdVXxoNoQ6VeUmTRBVHV9RTCimCJYc3bHuxxqr)).
+- **Council in the contract.** The creator is seat 1, and a seat is added when more than half of the council approves it (5 at most).
+  A release needs more than half of the seats it was proposed under. A wallet proposes and votes with 30 Tgas calls;
+  `POST /api/units/:id/run` then pays the 300 Tgas engine run from a sponsor account. (A 300 Tgas call needs about 0.31 NEAR free, because prepaid gas is held at the pessimistic gas price.)
+- **Members stay off chain.** Joining is a NEP-413 (or EIP-191) signature over `Bandsheet join unit <id>: <posting key>` plus the invite
+  link's secret. The registrar adds a `submit`-only posting key on the units account. The wallet-to-slot link lives only in D1.
+- **Three kinds of entry, always counted apart.** Every release records `counts: {entries, synthetic, dkim_verified, self_attested}`.
+  - **DKIM-verified:** the engine checks the employer's DKIM signature in a second request that publishes no cells (`require_dkim`, a filter that matches nobody).
+  - **Self-attested:** a PDF, an image, a hand entry or a generated payslip.
+  - **Synthetic:** up to 8 sample colleagues the council can add. They are flagged on chain and labelled everywhere.
+- **Gas sponsor.** `POST /api/sponsor` gives 0.05 testnet NEAR once to a wallet that holds less than 0.04 NEAR.
+
+Live run on testnet (15 Nov 2026, `scripts/units-e2e.ts`, through the server code, records in `scripts/units-e2e*.json`):
+
+| Step | Tx |
+|---|---|
+| Deploy and init in one transaction (init is private) | [7xYxyfzr](https://testnet.nearblocks.io/txns/7xYxyfzrkUWxsoNDzKoTtXiaeDZRGPsLZk2eFur7Jvgh), code now [3yZpbAv1](https://testnet.nearblocks.io/txns/3yZpbAv1EQzu5wTecPEZ5mKG9KFCDWbw4naieVSxFw72) |
+| Create a unit (seat 1), add seat 2 | [8enie1St](https://testnet.nearblocks.io/txns/8enie1Stx9Q4R8jr68fCs9voibbbnYL1qaBht93yiWZZ), [AdoXGbCB](https://testnet.nearblocks.io/txns/AdoXGbCBfP2KhiMc71v2EhHdzThd6s6fjJeWx7xSWBa9) |
+| Join with NEP-413, then a sealed self-attested entry | [45zXn8as](https://testnet.nearblocks.io/txns/45zXn8asMmEMyG7RLRoA83JB5UG8wMV6mBSB3akjQd1N), [4qWiq6nD](https://testnet.nearblocks.io/txns/4qWiq6nD5rZtAs1qxYXAbZhJqPq9ozjmeTdY6FdiKgRR) |
+| Employer key for `harbourcourier.example`. DNS has no record, so a council member supplied it (recorded `supplied`) | [96LorPwz](https://testnet.nearblocks.io/txns/96LorPwzRRNEQRQwktm5Z1WG7Rk7puk17QLQjab8WDzZ) |
+| Second member joins and submits the DKIM-signed payslip email | [5VZwCmqn](https://testnet.nearblocks.io/txns/5VZwCmqnXhW6KPUJYnnLZsMa8D3Z93LuNKkWTXdHePzk), [CvDzhyaa](https://testnet.nearblocks.io/txns/CvDzhyaaan6YpudhGBLyDqgtPvzhVjqWxotMv4EnVUjv) |
+| Release #1 (propose, vote): **refused**, 2 members < k=3, the honest result. Counts: 1 DKIM-verified, 1 self-attested | [5C4oidvW](https://testnet.nearblocks.io/txns/5C4oidvW7UJM2kq5rsNikAnJLwHyA3iG7NHPH9exjvf8), [7koNXZSS](https://testnet.nearblocks.io/txns/7koNXZSSFru9H24crzLXdJsgXnBjkKaZfu7FLuy7EqWF) |
+| Sponsor a fresh 0-NEAR wallet | [86orHx37](https://testnet.nearblocks.io/txns/86orHx37SkLkLgLmAG5odEUXDZMqepE2sv9eM66Nf7Qc) |
+| 4 synthetic colleagues (registrar adds flagged keys; each key submits once and deletes itself) | [GiiAoGMY](https://testnet.nearblocks.io/txns/GiiAoGMYiMbEtVDgPmykFejbJYPEEAKtnC8EcH3TNLpC), [5NqAq2GR](https://testnet.nearblocks.io/txns/5NqAq2GRaFPYP8azBX1LwMUVRH2jFQVExgaKhnwwwaGJ) … |
+| Release #3: propose and vote (30 Tgas each), then `unit_run` from the sponsor. **Released** `Senior n=6, EUR 59,233`, counts `6 entries: 1 DKIM-verified, 1 self-attested, 4 synthetic`, input hash equals the contract's | [J3ViaUEa](https://testnet.nearblocks.io/txns/J3ViaUEaPJAcBv5JRWwcv2MQSvmsz8YGBg4Uk1qsVCsF), [ExEmYWVD](https://testnet.nearblocks.io/txns/ExEmYWVD2FKzZP5BMK4Tsfp2MjB6AKq4A9uZ7KYQeWbn), [621hLNQH](https://testnet.nearblocks.io/txns/621hLNQHWdxNsZrcNEDnA3b41vHJo4Di4nvjNq2FiXYQ) |
+
+(Release #2 ran over the same 2 entries: the first try at synthetic colleagues was refused before any entry landed. That bug is fixed.)
+`pnpm verify --units` adds 4 checks of the units contract. The 19 judged checks are unchanged.
+
 ## Measured result
 
 `enclave/evaluation/results.json`, run from 100 generated join, leave and overlap attack cases
@@ -197,6 +234,7 @@ Do this, see that (routes: `/`, `/pricing`, `/unit`, `/unit/join`, `/unit/submit
 | Path | What |
 |---|---|
 | `enclave/` | Rust: `audit/` (pure release audit), `dkim/` (DKIM verifier, payslip parser), `module/` (OutLayer WASM), evaluation, proofs |
+| `contracts/units/` | Start-your-own-unit contract: many units, in-contract council votes, posting keys, synthetic colleagues, DKIM count run, caps; unit and sandbox tests |
 | `contracts/bandsheet/` | NEAR contract: members, submit, DAO-gated release and engine, DAO-trusted DKIM issuers and `require_dkim`, input-sized OutLayer deposit, ledger |
 | `packages/core/` | Shared TS: schemas, entry crypto, seed data, naive baseline, NEAR helpers |
 | `server/` | Hono API: NEAR AI Cloud client with attestation and signature verification, `.eml` extraction, `/api/context` (Eurostat), Article 7 letter, USD 2.50 spend cap, DAO and demo routes |
@@ -229,6 +267,9 @@ Do this, see that (routes: `/`, `/pricing`, `/unit`, `/unit/join`, `/unit/submit
 - NVIDIA GPU attestation tokens are decoded and checked for the nonce; their signatures are not verified against NVIDIA's JWKS.
 - OutLayer's TDX quote is captured and its attestation record is checked by `pnpm verify`, but the quote is not verified
   against Intel collateral, and the contract stores hashes rather than verifying the quote on chain.
+- Units: synthetic colleagues protect a real entry only while their values stay unknown (the server draws them at random and keeps
+  nothing). Self-attested entries are the member's word. Nothing is payable, so the caps bound the cost but do not stop squatting.
+  The units account keeps its full-access key for fixes (see `THREAT_MODEL.md`).
 - All code in this repository was written during the hackathon window (from 1 Nov 2026).
 
 ## License

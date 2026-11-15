@@ -32,6 +32,13 @@ the offline evaluation (95/100 vs 0/100); and the live API reports the same cont
 Optional: `/unit/stand` (compare your pay with the band, draft the Article 7 letter) and `mcp/README.md` (ask an AI
 assistant to "verify release 3").
 
+
+**Start your own unit (preview: https://units.bandsheet.pages.dev).** Connect a wallet and press Start your unit. A wallet with
+less than 0.04 NEAR gets 0.05 testnet NEAR once. Create the unit, share the invite link, then submit your own payslip (PDF,
+image, .eml or a generated one). One member is refused (n < k), which is the honest result. Add synthetic colleagues (labelled
+sample data) and the bands publish. Each release shows how many entries were DKIM-verified, self-attested and synthetic.
+Contract `bandsheet-units-2d3f96.testnet`, same OutLayer engine and key as the demo. Live run with every tx: README, "Start your own unit".
+
 ## 2. The 5-minute local path
 
 ```bash

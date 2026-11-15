@@ -83,3 +83,13 @@ so timing can be re-read in the browser. To tail: `wrangler pages deployment tai
 - `NearAiClient` stored bare `fetch` and called it as `this.f()`, which throws "Illegal invocation" on Workers; it now wraps it.
 - `app.ts` logs unexpected errors with `console.error` (type and message only) so `wrangler tail` shows them; responses stay `{error, code}`.
 - Propose, vote and demo submit write to testnet and were not exercised on the deployed URL.
+
+## Units preview (start your own unit)
+
+`deploy/preview-units.sh --setup` applies `deploy/migrations-auth/0002_units.sql` (new tables only: `unit_nonces`, `unit_members`,
+`unit_bindings`, `sponsor_grants`) to `bandsheet-auth`, sets the **preview** secrets `UNITS_REGISTRAR_KEY_JSON` (`keys/units-registrar.json`,
+a function-call key on `bsu-registrar-2d3f96.testnet` limited to `unit_add_member`, `unit_remove_member`, `unit_add_issuer`) and
+`SPONSOR_KEY_JSON` (`bsu-sponsor-2d3f96.testnet`, about 2 NEAR), then deploys branch `units` to https://units.bandsheet.pages.dev.
+The units contract id defaults in code (`server/src/units/config.ts`); `UNITS_CONTRACT` overrides it. The preview's `NEARAI_API_KEY`
+was set from the project `.env.local` on stdin. Before production: run `--setup`'s two `secret put` lines without `--env preview`
+(the migration is already applied), and set `VITE_UNITS_CONTRACT` for the web build.
