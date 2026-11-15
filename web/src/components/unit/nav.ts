@@ -12,8 +12,8 @@ export const OVERVIEW: NavItem = { to: "/unit", title: "Overview", kind: "overvi
 export const HOW: NavItem = { to: "/unit/how", title: "How it works", kind: "how", blurb: "The three layers: a reader, a sealed engine and a public record." }
 export const HELP: NavItem = { to: "/unit/help", title: "Help", kind: "help", blurb: "What is stored, what a refusal means, and who can ask for a release." }
 
-/** The public plans page; leaves the app shell. */
-export const PRICING: NavItem = { to: "/pricing", title: "Pricing", kind: "pricing", blurb: "Free for one chapel; federations pay per member." }
+/** Plans, inside the app shell (the public site has the same content at /pricing). */
+export const PRICING: NavItem = { to: "/unit/pricing", title: "Pricing", kind: "pricing", blurb: "Free for one chapel; federations pay per member." }
 
 /** Sidebar groups: Work, Records, Learn. */
 export const NAV_GROUPS: { label: string; items: NavItem[] }[] = [

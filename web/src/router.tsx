@@ -4,7 +4,7 @@ import { LandingPage } from "./pages/landing"
 import Root, { type RouteHandle } from "./pages/root"
 import { NotFound, RouteError, UnitNotFound } from "./pages/not-found"
 
-/* Route map is owned by the Opus owner. UI workers create the page files named here. */
+/* Route map. Keep web/src/route-paths.ts in step: the Pages Function answers 404 for any page path not listed there. */
 const AppShell = lazy(() => import("./pages/unit/app-shell"))
 const Overview = lazy(() => import("./pages/unit/overview"))
 const Submit = lazy(() => import("./pages/unit/submit"))
@@ -17,6 +17,7 @@ const Join = lazy(() => import("./pages/unit/join"))
 const How = lazy(() => import("./pages/unit/how"))
 const Help = lazy(() => import("./pages/unit/help"))
 const Pricing = lazy(() => import("./pages/pricing"))
+const UnitPricing = lazy(() => import("./pages/unit/pricing"))
 const Terms = lazy(() => import("./pages/terms"))
 const Privacy = lazy(() => import("./pages/privacy"))
 
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
           { path: "verify", element: s(<Verify />), handle: t("Verify") },
           { path: "how", element: s(<How />), handle: t("How it works") },
           { path: "help", element: s(<Help />), handle: t("Help") },
+          { path: "pricing", element: s(<UnitPricing />), handle: t("Pricing") },
           { path: "*", element: <UnitNotFound />, handle: t("Page not found") },
         ],
       },
