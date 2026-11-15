@@ -44,6 +44,7 @@ export function createApp(deps: Deps): Hono {
   app.use("/api/units/nonce", rateLimit({ limit: 30 }));
   for (const path of ["/api/units/:id/join", "/api/units/:id/issuer"]) app.use(path, rateLimit({ limit: 5 }));
   app.use("/api/units/:id/synthetic", rateLimit({ limit: 3 }));
+  app.use("/api/units/:id/run", rateLimit({ limit: 5 }));
   app.use("/api/units/:id/entry", rateLimit({ limit: 10 }));
   app.use("/api/sponsor", rateLimit({ limit: 5 }));
 

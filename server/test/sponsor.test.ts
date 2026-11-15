@@ -6,7 +6,7 @@ const BROKE = "lucia-santos.testnet";
 const IMPLICIT = "ab".repeat(32);
 
 describe("POST /api/sponsor", () => {
-  it("funds a wallet under 0.02 NEAR once with 0.05 NEAR from the sponsor account", async () => {
+  it("funds a wallet under 0.04 NEAR once with 0.05 NEAR from the sponsor account", async () => {
     const s = setupUnits({}, { balances: { [BROKE]: 10n ** 21n } });
     const r = await s.post("/sponsor", { account_id: BROKE });
     expect(r.status).toBe(200);
@@ -20,10 +20,10 @@ describe("POST /api/sponsor", () => {
     expect(s.transfers).toHaveLength(1);
   });
 
-  it("does not fund an account that already holds 0.02 NEAR or more", async () => {
-    const s = setupUnits({}, { balances: { [BROKE]: 3n * 10n ** 22n } });
+  it("does not fund an account that already holds 0.04 NEAR or more", async () => {
+    const s = setupUnits({}, { balances: { [BROKE]: 4n * 10n ** 22n } });
     const r = await s.post("/sponsor", { account_id: BROKE });
-    expect(r.body).toMatchObject({ funded: false, balance: 0.03 });
+    expect(r.body).toMatchObject({ funded: false, balance: 0.04 });
     expect(s.transfers).toHaveLength(0);
   });
 

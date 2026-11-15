@@ -133,3 +133,21 @@ describe("GET /api/units", () => {
     expect((await s.get("/units?account_id=BAD!")).status).toBe(400);
   });
 });
+
+describe("POST /api/units/:id/run", () => {
+  it("starts an approved proposal's run from the sponsor account, and refuses anything not approved", async () => {
+    const s = setupUnits();
+    const r = await s.post("/units/1/run", { proposal_id: 2 });
+    expect(r).toMatchObject({ status: 200, body: { status: "running", proposal_id: 2 } });
+    expect(s.calls[0]).toMatchObject({ signer: "bsu-sponsor-test.testnet", calls: [{ method: "unit_run", tgas: 300 }] });
+    // a run the contract refused (still approved after the send) is reported, not claimed
+    s.proposals.push({ id: 4, status: "approved" });
+    const origCall = s.chain.call.bind(s.chain);
+    s.chain.call = async (signer, cs) => ({ ...(await origCall(signer, cs.map((c) => ({ ...c, method: "noop" })))), ok: false });
+    expect((await s.post("/units/1/run", { proposal_id: 4 })).body.code).toBe("RUN_NOT_STARTED");
+    expect((await s.post("/units/1/run", { proposal_id: 2 })).body.code).toBe("NOT_APPROVED");
+    expect((await s.post("/units/1/run", { proposal_id: 3 })).body.code).toBe("NOT_APPROVED");
+    expect((await s.post("/units/1/run", { proposal_id: 7 })).body.code).toBe("PROPOSAL_NOT_FOUND");
+    expect((await s.post("/units/1/run", { proposal_id: "2" })).status).toBe(400);
+  });
+});

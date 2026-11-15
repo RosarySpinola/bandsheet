@@ -44,12 +44,12 @@ export function unitAdminRoutes(deps: Deps): Hono {
       throw readFail();
     });
     const members = makeSynthetic(b.n, policy.enclave_pubkey, b.grade);
-    const add = await sendOrFail(
-      u.chain.call(
-        registrar,
-        members.map((m) => ({ method: "unit_add_member", args: { unit_id: id, public_key: m.publicKey, invite_code: "", synthetic: true }, tgas: 25 })),
-      ),
-    );
+    // one transaction per key: a function-call access key (the registrar's) may sign only single-action transactions
+    const adds = [];
+    for (const m of members) {
+      adds.push(await sendOrFail(u.chain.call(registrar, [{ method: "unit_add_member", args: { unit_id: id, public_key: m.publicKey, invite_code: "", synthetic: true }, tgas: 30 }])));
+    }
+    const add = adds[0]!;
     const submits = await Promise.all(members.map((m) => u.chain.submitAs(m.privateKey, m.ciphertext).catch(() => null)));
     const landed = submits.filter((s) => s?.ok);
     return c.json({
@@ -59,6 +59,7 @@ export function unitAdminRoutes(deps: Deps): Hono {
       submitted: landed.length,
       synthetic_total: before + members.length,
       add_tx: txOut(u, add.hash),
+      add_txs: adds.map((a) => txOut(u, a.hash)),
       txs: landed.map((s) => txOut(u, s!.hash)),
       note: "Synthetic colleagues are sample data. They are flagged on chain and counted separately in every release.",
     });
@@ -103,6 +104,36 @@ export function unitAdminRoutes(deps: Deps): Hono {
       unit_id: id, domain: sig.domain, selector: sig.selector, source, key_sha256: createHash("sha256").update(key).digest("hex"), tx: txOut(u, tx.hash),
       note: source === "supplied" ? "Supplied by a council member, not read from DNS." : `Read from DNS: ${sig.selector}._domainkey.${sig.domain}`,
     });
+  });
+
+  /**
+   * Start the engine run of an approved proposal. A wallet votes with a cheap 30 Tgas call; the passing vote marks the
+   * proposal approved, and this route pays the 300 Tgas `unit_run` from the sponsor account. The contract only runs a
+   * proposal more than half of its council approved, so no signature is needed here.
+   */
+  app.post("/:id/run", async (c) => {
+    const u = need(deps);
+    const id = unitIdOf(c.req.param("id"));
+    const b = await body(c, z.object({ proposal_id: z.number().int().min(1).max(1_000_000) }));
+    if (!u.cfg.sponsor) throw new AppError(503, "the run relayer is not configured on this server", "SPONSOR_NOT_CONFIGURED");
+    const list = await u.chain.view<{ id: number; status: string }[]>("get_unit_proposals", { unit_id: id, from: b.proposal_id - 1, limit: 1 }).catch(() => {
+      throw readFail();
+    });
+    const p = list.find((x) => x.id === b.proposal_id);
+    if (!p) throw new AppError(404, `unit ${id} has no proposal ${b.proposal_id}`, "PROPOSAL_NOT_FOUND");
+    if (p.status !== "approved") throw new AppError(409, `proposal ${b.proposal_id} is ${p.status}; only an approved proposal runs`, "NOT_APPROVED");
+    // returns once included; whether the run started is read back from the contract (the engine itself takes a minute)
+    const sent = await u.chain.callIncluded(u.cfg.sponsor, { method: "unit_run", args: { unit_id: id, proposal_id: b.proposal_id }, tgas: 300 }).catch(() => {
+      throw new AppError(502, "NEAR testnet did not accept the transaction just now; try again", "CHAIN_WRITE");
+    });
+    let status = "approved";
+    for (let i = 0; i < 10 && status === "approved"; i++) {
+      await new Promise((r) => setTimeout(r, i === 0 ? 0 : u.pollMs ?? 1500));
+      const now = await u.chain.view<{ id: number; status: string }[]>("get_unit_proposals", { unit_id: id, from: b.proposal_id - 1, limit: 1 }).catch(() => []);
+      status = now.find((x) => x.id === b.proposal_id)?.status ?? status;
+    }
+    if (status === "approved") throw new AppError(422, "the run did not start (the unit may have a run in flight or hit its daily cap); see the transaction", "RUN_NOT_STARTED");
+    return c.json({ unit_id: id, proposal_id: b.proposal_id, status, tx: txOut(u, sent.hash), note: "The engine is running; the release lands in about a minute." });
   });
 
   return app;

@@ -7,7 +7,11 @@ import { need, nowOf, readFail, txOut } from "../units/deps";
 
 /** One-time grant, given only below the threshold; the sponsor keeps a small floor for its own gas. */
 export const GRANT = 5n * 10n ** 22n; // 0.05 NEAR
-export const BELOW = 2n * 10n ** 22n; // 0.02 NEAR
+/**
+ * 0.04 NEAR, not the 0.02 first planned: a wallet must hold prepaid gas at the pessimistic gas price (about 10x the
+ * block price on testnet), so a 30 Tgas call needs about 0.031 NEAR free. Below 0.04 a wallet cannot reliably sign one.
+ */
+export const BELOW = 4n * 10n ** 22n; // 0.04 NEAR
 const SPONSOR_FLOOR = 10n ** 23n; // 0.1 NEAR
 export const GRANTS_PER_IP_PER_DAY = 3;
 
@@ -41,7 +45,7 @@ export function sponsorRoutes(deps: Deps): Hono {
       throw readFail();
     });
     if (balance === null && /\.testnet$/.test(account)) throw new AppError(404, `${account} does not exist on testnet`, "UNKNOWN_ACCOUNT");
-    if (balance !== null && balance >= BELOW) return c.json({ funded: false, reason: "balance is already 0.02 NEAR or more", balance: near(balance) });
+    if (balance !== null && balance >= BELOW) return c.json({ funded: false, reason: "balance is already 0.04 NEAR or more", balance: near(balance) });
     if (await u.store.getGrant(account)) return c.json({ funded: false, reason: "this account was already sponsored once", balance: near(balance) });
 
     const ip = clientIp(c);

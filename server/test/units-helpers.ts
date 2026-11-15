@@ -54,8 +54,15 @@ export function unitsChain(opts: { balances?: Record<string, bigint>; failSubmit
   const releases = [{ id: 1, unit_id: 1, status: "partially_released", cells: [{ key: { grade: "Senior" }, n: 5, mean_eur: 58_000 }], suppressed: [],
     counts: { entries: 5, synthetic: 4, dkim_verified: 0, self_attested: 1, rejected: 0 } }];
 
+  const proposals = [{ id: 1, status: "executed" }, { id: 2, status: "approved" }, { id: 3, status: "open" }];
   const exec = (signer: Signer, c: UnitCall): SentTx => {
     const a = c.args as Record<string, unknown>;
+    if (c.method === "unit_run") {
+      const p = proposals.find((x) => x.id === Number(a.proposal_id));
+      if (p?.status !== "approved") return no("only an approved proposal runs");
+      p.status = "running";
+      return ok();
+    }
     if (signer.accountId !== REGISTRAR.accountId) return no("Refused: only the units registrar can do this");
     const u = units.get(Number(a.unit_id));
     if (!u) return no(`No unit ${a.unit_id}`);
@@ -87,7 +94,7 @@ export function unitsChain(opts: { balances?: Record<string, bigint>; failSubmit
     async view<T>(method: string, args: Record<string, unknown> = {}) {
       if (method === "get_unit") return (units.get(Number(args.unit_id)) ?? null) as T;
       if (method === "get_policy") return { k: 3, enclave_pubkey: ENCLAVE_PUB, wasm_sha256: "69".repeat(32), registrar: REGISTRAR.accountId } as T;
-      if (method === "get_unit_proposals") return [] as T;
+      if (method === "get_unit_proposals") return proposals.filter((p) => Number(args.unit_id) === 1).slice(Number(args.from ?? 0), Number(args.from ?? 0) + Number(args.limit ?? 50)) as T;
       if (method === "get_unit_releases") return (Number(args.unit_id) === 1 ? releases : []) as T;
       if (method === "get_units_of") return [...units.values()].filter((u) => u.council.includes(String(args.account_id))) as T;
       throw new Error(`unmocked view ${method}`);
@@ -97,6 +104,10 @@ export function unitsChain(opts: { balances?: Record<string, bigint>; failSubmit
       // a multi-action transaction is all or nothing
       const results = cs.map((c) => exec(signer, c));
       return results.find((r) => !r.ok) ?? results[results.length - 1]!;
+    },
+    async callIncluded(signer, c) {
+      const r = await chain.call(signer, [c]);
+      return { hash: r.hash };
     },
     async submitAs(key, ciphertext) {
       submits.push({ key, ciphertext });
@@ -117,7 +128,7 @@ export function unitsChain(opts: { balances?: Record<string, bigint>; failSubmit
       return balances.get(id) ?? null;
     },
   };
-  return { chain, units, slots, calls, submits, transfers, balances };
+  return { chain, units, slots, calls, submits, transfers, balances, proposals };
 }
 
 export function setupUnits(keys: Record<string, KeyStatus> = {}, opts: Parameters<typeof unitsChain>[0] & { doh?: typeof fetch; registrar?: boolean; sponsor?: boolean } = {}) {
@@ -131,7 +142,7 @@ export function setupUnits(keys: Record<string, KeyStatus> = {}, opts: Parameter
     units: {
       cfg: { contract: UNITS, registrar: opts.registrar === false ? undefined : REGISTRAR, sponsor: opts.sponsor === false ? undefined : SPONSOR,
         explorer: { tx: "https://testnet.nearblocks.io/txns/", address: "https://testnet.nearblocks.io/address/" } },
-      chain: u.chain, store, keys: lookup, doh: opts.doh, now: () => t,
+      chain: u.chain, store, keys: lookup, doh: opts.doh, now: () => t, pollMs: 0,
     },
   };
   const app = createApp(deps);

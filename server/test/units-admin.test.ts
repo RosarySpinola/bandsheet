@@ -27,9 +27,10 @@ describe("POST /api/units/:id/synthetic", () => {
     const r = await synthetic(s, 4);
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ unit_id: 1, synthetic: true, added: 4, submitted: 4, synthetic_total: 4 });
-    expect(s.calls).toHaveLength(1);
-    expect(s.calls[0]!.signer).toBe(REGISTRAR.accountId);
-    expect(s.calls[0]!.calls.every((c) => c.method === "unit_add_member" && (c.args as { synthetic: boolean }).synthetic === true)).toBe(true);
+    // one single-action transaction per key (the registrar holds a function-call key)
+    expect(s.calls).toHaveLength(4);
+    expect(s.calls.every((t) => t.signer === REGISTRAR.accountId && t.calls.length === 1)).toBe(true);
+    expect(s.calls.every((t) => t.calls[0]!.method === "unit_add_member" && (t.calls[0]!.args as { synthetic: boolean }).synthetic === true)).toBe(true);
     expect(s.submits).toHaveLength(4);
     const ct = s.submits[0]!.ciphertext as Record<string, string>;
     expect(Object.keys(ct).sort()).toEqual(["ct", "epk", "nonce"]);

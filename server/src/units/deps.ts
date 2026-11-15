@@ -19,6 +19,8 @@ export interface UnitsDeps {
   /** fetch used for DNS-over-HTTPS (tests inject one). */
   doh?: typeof fetch;
   now?: () => number;
+  /** Poll interval when reading back a just-sent transaction's effect (tests set 0). */
+  pollMs?: number;
 }
 
 /** The parts of the contract's UnitView the server reads. */
