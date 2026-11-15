@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { Link, useNavigate, useParams, useSearchParams } from "react-router"
-import { CtaButton, CtaLink, ErrorState, GlField, Shimmer } from "@/components/unit"
+import { Link, useParams, useSearchParams } from "react-router"
+import { CtaButton, CtaLink, ErrorState, GlField, Shimmer, TxLink } from "@/components/unit"
 import { EntryFrame } from "@/components/units/entry-frame"
 import { JoinButton } from "@/components/units/join-button"
+import type { Joined } from "@/lib/units/actions"
 import { WalletGate } from "@/components/units/wallet-gate"
 import { plainError } from "@/lib/api"
 import { CODE_EXAMPLE, looksLikeCode, normaliseCode } from "@/lib/units/invite"
@@ -25,7 +26,8 @@ function InviteProblem({ title, body, children }: { title: string; body: string;
 export default function JoinUnit() {
   const { unitId: raw } = useParams()
   const [params, setParams] = useSearchParams()
-  const navigate = useNavigate()
+  /** The join just made in this tab: its transaction stays on screen before the member moves on to Submit. */
+  const [joined, setJoined] = useState<Joined | null>(null)
   const unitId = raw && /^\d{1,9}$/.test(raw) ? Number(raw) : null
   const view = useUnitView(unitId)
   const key = useUnitKey(unitId ?? -1)
@@ -56,8 +58,15 @@ export default function JoinUnit() {
         <ErrorState error={view.error} title="The unit could not be read from NEAR testnet." onRetry={() => void view.refetch()} className="bg-white" />
       ) : key ? (
         <div className="flex flex-col gap-4 border-t-2 border-ink bg-white p-6">
-          <p className="text-[1.125rem] font-semibold text-ink">You're already a member of {unit?.name}.</p>
-          <p className="text-[0.9375rem] text-foreground">This browser holds your posting key for this unit (joined as {shortAccount(key.accountId)}).</p>
+          <p className="text-[1.125rem] font-semibold text-ink">{joined ? <>You're a member of {unit?.name}.</> : <>You're already a member of {unit?.name}.</>}</p>
+          {joined ? (
+            <p className="text-[0.9375rem] text-foreground">
+              Your posting key was added for {shortAccount(key.accountId)}
+              {joined.tx ? <> in <TxLink tx={joined.tx} />. It can only call submit and holds no funds.</> : "."}
+            </p>
+          ) : (
+            <p className="text-[0.9375rem] text-foreground">This browser holds your posting key for this unit (joined as {shortAccount(key.accountId)}).</p>
+          )}
           <CtaLink to={`/u/${unitId}/submit`} size="lg">Submit your payslip</CtaLink>
         </div>
       ) : !codeOk ? (
@@ -81,7 +90,7 @@ export default function JoinUnit() {
                 conn={conn}
                 unitId={unitId!}
                 code={code}
-                onJoined={() => navigate(`/u/${unitId}/submit`)}
+                onJoined={setJoined}
                 errors={{
                   INVITE_INVALID: "This invite link no longer works. The code may be mistyped, or a council seat has made a new invite link since. Ask them for the current one.",
                   ALREADY_MEMBER: "This posting key is already registered for this unit.",
