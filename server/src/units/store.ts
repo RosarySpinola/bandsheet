@@ -40,6 +40,9 @@ export interface UnitStore {
   /** Fill in the transfer hash once it landed, or drop the reservation when the transfer failed. */
   finishGrant(accountId: string, tx: string): Promise<void>;
   dropGrant(accountId: string): Promise<void>;
+  /** The unit_run transaction sent for a proposal, so the release it produced can link it. */
+  putRun(unitId: number, proposalId: number, tx: string, now: number): Promise<void>;
+  runsOf(unitId: number): Promise<{ proposal_id: number; tx: string }[]>;
 }
 
 interface NonceRow {
@@ -61,6 +64,14 @@ export class MemoryUnitStore implements UnitStore {
   readonly members = new Map<string, UnitMemberRow>();
   readonly bindings: UnitBindingRow[] = [];
   readonly grants = new Map<string, GrantRow>();
+  readonly runs: { unit_id: number; proposal_id: number; tx: string; started_at: number }[] = [];
+
+  async putRun(unitId: number, proposalId: number, tx: string, now: number) {
+    this.runs.push({ unit_id: unitId, proposal_id: proposalId, tx, started_at: now });
+  }
+  async runsOf(unitId: number) {
+    return this.runs.filter((r) => r.unit_id === unitId).map((r) => ({ proposal_id: r.proposal_id, tx: r.tx }));
+  }
 
   async issueNonce(nonce: string, purpose: UnitPurpose, now: number) {
     this.nonces.set(nonce, { purpose, expires_at: now + NONCE_TTL_MS, consumed_at: null });
@@ -159,5 +170,15 @@ export class D1UnitStore implements UnitStore {
   }
   async dropGrant(accountId: string) {
     await this.db.prepare("DELETE FROM sponsor_grants WHERE account_id = ?").bind(accountId).run();
+  }
+  async putRun(unitId: number, proposalId: number, tx: string, now: number) {
+    await this.db.prepare("INSERT OR IGNORE INTO unit_runs (unit_id, proposal_id, tx, started_at) VALUES (?, ?, ?, ?)").bind(unitId, proposalId, tx, now).run();
+  }
+  async runsOf(unitId: number) {
+    // D1 statements also have all(); the narrow AuthD1 type only declares run() and first().
+    const stmt = this.db.prepare("SELECT proposal_id, tx FROM unit_runs WHERE unit_id = ? ORDER BY started_at").bind(unitId) as unknown as {
+      all(): Promise<{ results?: { proposal_id: number; tx: string }[] }>;
+    };
+    return (await stmt.all()).results ?? [];
   }
 }

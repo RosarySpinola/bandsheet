@@ -69,6 +69,13 @@ export function unitsRoutes(deps: Deps): Hono {
     ]).catch((e) => {
       throw e instanceof AppError ? e : readFail();
     });
+    // Each release links the unit_run transaction the server sent for its proposal (stored by POST /:id/run).
+    const runs = await u.store.runsOf(id).catch(() => []);
+    const runTx = new Map(runs.map((r) => [r.proposal_id, r.tx]));
+    const linked = (releases as { proposal_id?: number }[]).map((r) => {
+      const tx = r.proposal_id !== undefined ? runTx.get(r.proposal_id) : undefined;
+      return tx ? { ...r, run_tx: { hash: tx, url: `${u.cfg.explorer.tx}${tx}` } } : r;
+    });
     const last = releases[releases.length - 1] as { counts?: unknown } | undefined;
     const { invite_code_hash: _hidden, ...shown } = unit;
     return c.json({
@@ -77,7 +84,7 @@ export function unitsRoutes(deps: Deps): Hono {
       unit: shown,
       policy: { k: policy.k, enclave_pubkey: policy.enclave_pubkey, wasm_sha256: policy.wasm_sha256 },
       proposals,
-      releases,
+      releases: linked,
       latest_bands: latestBands(releases) ?? null,
       counts: { members: unit.members, synthetic_members: unit.synthetic_members, entries: unit.entries, releases: unit.releases, latest_release: last?.counts ?? null },
       explorer: { contract_url: `${u.cfg.explorer.address}${u.cfg.contract}`, tx: u.cfg.explorer.tx },

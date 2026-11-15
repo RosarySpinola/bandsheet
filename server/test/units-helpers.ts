@@ -128,7 +128,7 @@ export function unitsChain(opts: { balances?: Record<string, bigint>; failSubmit
       return balances.get(id) ?? null;
     },
   };
-  return { chain, units, slots, calls, submits, transfers, balances, proposals };
+  return { chain, units, slots, calls, submits, transfers, balances, proposals, releases: releases as Record<string, unknown>[] };
 }
 
 export function setupUnits(keys: Record<string, KeyStatus> = {}, opts: Parameters<typeof unitsChain>[0] & { doh?: typeof fetch; registrar?: boolean; sponsor?: boolean } = {}) {

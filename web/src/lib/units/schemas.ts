@@ -169,12 +169,14 @@ export const UnitReleaseSchema = z
     const pid = num.safeParse(o.proposal_id)
     const tx = z.string().safeParse(o.tx_hash ?? o.tx)
     const proofTx = z.object({ tx: z.string() }).partial().passthrough().safeParse(o.proof)
+    // The server links the unit_run transaction that produced the release (stored when POST /run sent it).
+    const runTx = z.object({ hash: z.string() }).passthrough().safeParse(o.run_tx)
     return {
       ...r.data,
       query: parseQuery(r.data.query),
       counts: toCounts(counts.success ? counts.data : undefined),
       proposalId: pid.success ? pid.data : null,
-      txHash: tx.success ? tx.data : proofTx.success && proofTx.data.tx ? proofTx.data.tx : null,
+      txHash: runTx.success ? runTx.data.hash : tx.success ? tx.data : proofTx.success && proofTx.data.tx ? proofTx.data.tx : null,
       countNote: typeof o.count_note === "string" && o.count_note ? o.count_note : null,
     }
   })

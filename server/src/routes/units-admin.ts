@@ -5,7 +5,7 @@ import { GradeSchema } from "@bandsheet/core";
 import type { Deps } from "../deps";
 import { AppError } from "../errors";
 import { UnitClaim, verifyUnitClaim } from "../units/claim";
-import { SYNTHETIC_CAP, body, consume, need, readFail, readUnit, registrarOf, sendOrFail, txOut, unitIdOf } from "../units/deps";
+import { SYNTHETIC_CAP, body, consume, need, nowOf, readFail, readUnit, registrarOf, sendOrFail, txOut, unitIdOf } from "../units/deps";
 import { dkimSignatures, fetchDkimKey } from "../units/dkim";
 import { makeSynthetic } from "../units/synthetic";
 
@@ -126,6 +126,8 @@ export function unitAdminRoutes(deps: Deps): Hono {
     const sent = await u.chain.callIncluded(u.cfg.sponsor, { method: "unit_run", args: { unit_id: id, proposal_id: b.proposal_id }, tgas: 300 }).catch(() => {
       throw new AppError(502, "NEAR testnet did not accept the transaction just now; try again", "CHAIN_WRITE");
     });
+    // Kept so the release this run produces can link it (a missing table must not stop the run).
+    await u.store.putRun(id, b.proposal_id, sent.hash, nowOf(u)).catch(() => undefined);
     let status = "approved";
     for (let i = 0; i < 10 && status === "approved"; i++) {
       await new Promise((r) => setTimeout(r, i === 0 ? 0 : u.pollMs ?? 1500));

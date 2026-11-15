@@ -150,4 +150,14 @@ describe("POST /api/units/:id/run", () => {
     expect((await s.post("/units/1/run", { proposal_id: 7 })).body.code).toBe("PROPOSAL_NOT_FOUND");
     expect((await s.post("/units/1/run", { proposal_id: "2" })).status).toBe(400);
   });
+
+  it("keeps the unit_run transaction and links it from the release it produced", async () => {
+    const s = setupUnits();
+    const r = await s.post("/units/1/run", { proposal_id: 2 });
+    const hash = (r.body.tx as { hash: string }).hash;
+    expect(s.store.runs).toEqual([expect.objectContaining({ unit_id: 1, proposal_id: 2, tx: hash })]);
+    s.releases[0]!.proposal_id = 2;
+    const v = await s.get("/units/1");
+    expect((v.body.releases as { run_tx?: { hash: string; url: string } }[])[0]!.run_tx).toEqual({ hash, url: expect.stringContaining(hash) });
+  });
 });
