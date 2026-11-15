@@ -151,6 +151,21 @@ async fn create_join_submit_propose_vote_run_release() -> anyhow::Result<()> {
     assert_eq!(seen["policy"]["require_dkim"], false);
     let props = env.view("get_unit_proposals", json!({"unit_id": unit})).await?;
     assert_eq!(props[0]["status"], "executed");
+    // a cheap (30 Tgas) passing vote approves; anyone then starts the run with unit_run
+    env.mock.call("clear_responses").transact().await?.into_result()?;
+    env.mock.call("push_response").args_json(json!({"response": release_output(61_500)})).transact().await?.into_result()?;
+    let p2: u64 = env.alice.call(env.units.id(), "unit_propose_release").args_json(json!({"unit_id": unit, "query": r#"{"group_by":["grade"]}"#}))
+        .gas(Gas::from_tgas(30)).transact().await?.into_result()?.json()?;
+    let st: String = env.bob.call(env.units.id(), "unit_vote").args_json(json!({"unit_id": unit, "proposal_id": p2, "approve": true}))
+        .gas(Gas::from_tgas(30)).transact().await?.into_result()?.json()?;
+    assert_eq!(st, "approved");
+    env.outsider.call(env.units.id(), "unit_run").args_json(json!({"unit_id": unit, "proposal_id": p2})).gas(Gas::from_tgas(300)).transact().await?.into_result()?;
+    for _ in 0..4 {
+        env.worker.fast_forward(2).await?;
+    }
+    let r2 = env.view("get_unit_release", json!({"unit_id": unit, "release_id": 2})).await?;
+    assert_eq!(r2["cells"][0]["mean_eur"], 61_500);
+    assert_eq!(r2["requested_by"], env.bob.id().to_string());
     // voting after execution is refused
     let r = env.bob.call(env.units.id(), "unit_vote").args_json(json!({"unit_id": unit, "proposal_id": pid, "approve": false})).gas(Gas::from_tgas(300)).transact().await?;
     assert!(format!("{:?}", r.failures()).contains("voting is closed"));

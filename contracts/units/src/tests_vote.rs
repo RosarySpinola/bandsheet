@@ -158,8 +158,11 @@ fn only_one_run_at_a_time_per_unit_and_units_do_not_block_each_other() {
     let p2 = c.unit_propose_release(u1, Q.into());
     as_("bob.testnet");
     c.unit_vote(u1, p1, true);
+    // a second proposal passing while the first runs is approved, and runs later
     as_("bob.testnet");
-    panics(|| { c.unit_vote(u1, p2, true); }, "already running for this unit");
+    assert_eq!(c.unit_vote(u1, p2, true), "approved");
+    as_("anyone.testnet");
+    panics(|| c.unit_run(u1, p2), "already running for this unit");
     as_("carol.testnet");
     c.unit_propose_release(u2, Q.into());
     let r = runs();
@@ -198,8 +201,12 @@ fn a_run_needs_entries_gas_and_balance() {
     panics(|| { c.unit_propose_release(u, Q.into()); }, "no entries yet");
     add_member(&mut c, u, 1, false);
     submit_as(&mut c, 1, "only");
+    // too little gas to run now: the proposal passes and waits as "approved"; unit_run without gas is refused
     testing_env!(ctx("alice.testnet", None).prepaid_gas(Gas::from_tgas(100)).build());
-    panics(|| { c.unit_propose_release(u, Q.into()); }, "Attach 300 Tgas");
+    let ap = c.unit_propose_release(u, Q.into());
+    assert_eq!(c.get_unit_proposals(u, None, None).iter().find(|x| x.id == ap).unwrap().status, "approved");
+    testing_env!(ctx("anyone.testnet", None).prepaid_gas(Gas::from_tgas(100)).build());
+    panics(|| c.unit_run(u, ap), "Attach 300 Tgas");
     testing_env!(ctx("alice.testnet", None).account_balance(NearToken::from_millinear(400)).build());
     panics(|| { c.unit_propose_release(u, Q.into()); }, "low on storage balance");
     // one member is allowed: the engine refuses n < k, and that refusal is the honest result
@@ -411,7 +418,7 @@ fn without_gas_for_the_count_run_the_release_goes_out_alone() {
     let u = unit_with(&mut c, &["alice.testnet"], 3, 0, &["harbourcourier.example"]);
     as_(REG);
     c.unit_add_issuer(u, "harbourcourier.example".into(), "s".into(), RSA.into(), None);
-    testing_env!(ctx("alice.testnet", None).prepaid_gas(Gas::from_tgas(230)).build());
+    testing_env!(ctx("alice.testnet", None).prepaid_gas(Gas::from_tgas(260)).build());
     c.unit_propose_release(u, Q.into());
     let r = runs();
     assert_eq!(r.len(), 1);
@@ -435,4 +442,29 @@ fn an_oversized_engine_answer_is_logged_as_an_error() {
     as_("alice.testnet");
     c.unit_propose_release(u, Q.into());
     assert!(runs()[0].0["history"].is_null(), "an oversized history is never stored");
+}
+
+#[test]
+fn a_cheap_passing_vote_approves_and_anyone_starts_the_run() {
+    let mut c = fresh();
+    let u = unit_with(&mut c, &["alice.testnet", "bob.testnet"], 3, 0, &[]);
+    testing_env!(ctx("alice.testnet", None).prepaid_gas(Gas::from_tgas(30)).build());
+    let p = c.unit_propose_release(u, Q.into());
+    testing_env!(ctx("anyone.testnet", None).build());
+    panics(|| c.unit_run(u, p), "only an approved proposal runs");
+    testing_env!(ctx("bob.testnet", None).prepaid_gas(Gas::from_tgas(30)).build());
+    assert_eq!(c.unit_vote(u, p, true), "approved");
+    assert!(runs().is_empty(), "a 30 Tgas vote starts nothing");
+    assert!(get_logs().join("").contains("proposal_approved"));
+    assert_eq!(c.get_unit(u).unwrap().open_proposals, 0);
+    as_("bob.testnet");
+    panics(|| { c.unit_vote(u, p, false); }, "approved; voting is closed");
+    // anyone with 300 Tgas starts it; the release names the voter who passed it
+    as_("relayer.testnet");
+    c.unit_run(u, p);
+    assert_eq!(runs().len(), 1);
+    assert_eq!(c.get_unit(u).unwrap().in_flight.unwrap().requested_by, acct("bob.testnet"));
+    as_("relayer.testnet");
+    panics(|| c.unit_run(u, p), "is running");
+    panics(|| c.unit_run(u, 9), "No proposal 9");
 }

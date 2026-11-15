@@ -18,6 +18,8 @@ const CALLBACK_GAS: Gas = Gas::from_tgas(40);
 const RESERVE_GAS: Gas = Gas::from_tgas(30);
 const COUNT_RESERVE_GAS: Gas = Gas::from_tgas(15);
 const MIN_RUN_GAS: Gas = Gas::from_tgas(100);
+/// A passing call with at least this much gas runs the engine itself; with less the proposal waits for unit_run.
+const RUN_NOW_GAS: Gas = Gas::from_tgas(250);
 const DAY_NS: u64 = 86_400_000_000_000;
 const STALE_NS: u64 = 600_000_000_000;
 const EXPIRY_NS: u64 = 7 * DAY_NS;
@@ -108,7 +110,7 @@ impl Units {
         self.save(u);
         emit("proposal_created", &format!("{{\"unit_id\":{unit_id},\"proposal_id\":{id},\"proposer\":\"{by}\",\"query\":{}}}", p.query));
         if passes(&p) {
-            self.execute(&mut p, &by);
+            self.pass(&mut p, &by);
         }
         self.proposals.insert((unit_id, id), p);
         id
@@ -130,7 +132,7 @@ impl Units {
         }
         emit("vote_cast", &format!("{{\"unit_id\":{unit_id},\"proposal_id\":{proposal_id},\"voter\":\"{caller}\",\"approve\":{approve}}}"));
         if passes(&p) {
-            self.execute(&mut p, &caller);
+            self.pass(&mut p, &caller);
         } else if cannot_pass(&p) {
             p.status = "rejected".to_string();
             self.close(unit_id, proposal_id);
@@ -138,6 +140,17 @@ impl Units {
         let status = p.status.clone();
         self.proposals.insert((unit_id, proposal_id), p);
         status
+    }
+
+    /// Anyone: start the engine run of an approved proposal (the server does this after a cheap passing vote, so a
+    /// wallet never has to hold the gas reserve of a 300 Tgas call). Attach 300 Tgas. The release is recorded as
+    /// requested by the council member whose vote passed it.
+    pub fn unit_run(&mut self, unit_id: u32, proposal_id: u64) {
+        let mut p = self.proposals.get(&(unit_id, proposal_id)).cloned().unwrap_or_else(|| env::panic_str(&format!("No proposal {proposal_id} in unit {unit_id}")));
+        require!(p.status == "approved", format!("Proposal {proposal_id} is {}; only an approved proposal runs", p.status));
+        let by = p.approvals.last().cloned().unwrap_or_else(|| p.proposer.clone());
+        self.execute(&mut p, &by);
+        self.proposals.insert((unit_id, proposal_id), p);
     }
 
     /// The proposer withdraws an open proposal (for example when a seat is unreachable and it can never pass).
@@ -289,6 +302,19 @@ impl Units {
 }
 
 impl Units {
+    /// A proposal has passed. With enough gas attached (and no run in flight) the engine starts in this same call;
+    /// otherwise it is "approved" and `unit_run` starts it. Either way the passing vote itself always lands.
+    fn pass(&mut self, p: &mut Proposal, by: &AccountId) {
+        let idle = self.unit(p.unit_id).in_flight.is_none();
+        if idle && env::prepaid_gas() >= RUN_NOW_GAS {
+            self.execute(p, by);
+        } else {
+            p.status = "approved".to_string();
+            self.close(p.unit_id, p.id);
+            emit("proposal_approved", &format!("{{\"unit_id\":{},\"proposal_id\":{},\"by\":\"{by}\"}}", p.unit_id, p.id));
+        }
+    }
+
     fn close(&mut self, unit_id: u32, proposal_id: u64) {
         let mut u = self.unit(unit_id);
         u.open.retain(|x| *x != proposal_id);

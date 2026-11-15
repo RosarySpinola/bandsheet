@@ -105,7 +105,7 @@ pub struct Proposal {
     pub council: Vec<AccountId>,
     pub approvals: Vec<AccountId>,
     pub rejections: Vec<AccountId>,
-    /// open | running | executed | rejected | withdrawn | expired
+    /// open | approved (passed, waiting for unit_run) | running | executed | rejected | withdrawn | expired
     pub status: String,
     pub release_id: Option<u32>,
 }
