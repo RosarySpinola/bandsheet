@@ -93,6 +93,38 @@ describe("tools against recorded API responses", () => {
     expect(out.text).toContain("published grade=Chief in BOTH releases");
     expect(out.data.naive_revealed_eur).toBeNull();
   });
+  it("try_subtraction: a cell withheld in both releases is not called published; an unknown cell says so plainly", async () => {
+    const two = structuredClone(fixtures.releases);
+    const r3 = structuredClone(two.releases[1]!);
+    r3.id = 3;
+    r3.suppressed = [{ key: { grade: "Senior" }, reason: "differencing", witness: "Release #3 Senior - Release #1 Senior isolates 1 member" }];
+    two.releases.push(r3);
+    const m2 = await startMockApi({ releases: two });
+    try {
+      const out = await trySubtraction(createApi(m2.url), 2, 3, "Senior");
+      expect(out.text).toContain("release #2 also withheld grade=Senior");
+      expect(out.text).not.toContain("release #2 published");
+      const none = await trySubtraction(createApi(m2.url), 1, 2, "Nonexistent");
+      expect(none.text).toContain('no cell matching "Nonexistent"');
+      expect(none.text).not.toContain("not reproducible");
+    } finally {
+      await m2.close();
+    }
+  });
+  it("verify_release: reports DKIM verification and the recorded engine when the record has them", async () => {
+    const withDkim = structuredClone(fixtures.releases);
+    const r = withDkim.releases[1]!;
+    Object.assign(r, { require_dkim: true, entries_verified: 37, rejections: [{ reason: "dkim_bad_signature", count: 1 }], wasm_sha256: "69d5616cacc61ce82d3b412ffaf76399f8bbfb6bbd853f604283316ce4643b26" });
+    const m2 = await startMockApi({ releases: withDkim });
+    try {
+      const out = await verifyRelease(createApi(m2.url), 2);
+      expect(out.text).toContain("37 entries verified, 1 refused (dkim_bad_signature: 1)");
+      expect(out.text).toContain("engine build recorded with this release: 69d5616cacc61ce8");
+      expect(out.data.overall).toBe("PASS");
+    } finally {
+      await m2.close();
+    }
+  });
   it("pay_context: Eurostat median with year and source; API errors are readable", async () => {
     const out = await payContext(api, "mt");
     expect(out.text).toContain("Malta, Professionals (ISCO-08 OC2): median gross monthly earnings EUR 2,189");

@@ -32,12 +32,28 @@ export async function verifyRelease(api: Api, releaseId: number): Promise<ToolOu
   const voted = proposals.filter((p) => p.status === "Approved" && JSON.stringify(p.query?.group_by ?? []) === want);
   add("dao_vote", voted.length > 0, voted.length ? `DAO proposal #${voted.map((p) => p.id).join(", #")} approved the same query` : "no approved DAO proposal matches this query");
 
+  if (r.require_dkim || r.entries_verified != null) {
+    const refused = (r.rejections ?? []).filter((x) => x.count > 0);
+    const total = refused.reduce((n, x) => n + x.count, 0);
+    add("dkim", r.entries_verified != null && r.entries_verified >= 0,
+      `employer signatures ${r.require_dkim ? "required" : "checked"}: ${r.entries_verified ?? "?"} entries verified` +
+        (refused.length ? `, ${total} refused (${refused.map((x) => `${x.reason}: ${x.count}`).join(", ")}); refusals name no one` : ", none refused"));
+  }
+  if (r.wasm_sha256) {
+    const current = r.wasm_sha256 === unit.policy.wasm_sha256;
+    add("engine_recorded", HEX64.test(r.wasm_sha256),
+      `engine build recorded with this release: ${r.wasm_sha256.slice(0, 16)}... (${current ? "the build the policy pins now" : "an earlier build; the policy has moved on by DAO vote"})`);
+  } else {
+    checks.push({ id: "engine_recorded", verdict: "SKIP", detail: "this release predates per-release engine records; its OutLayer attestation by transaction hash names the build" });
+  }
+
   const att = (r.proof as { attestation?: { input_hash?: string; output_hash?: string; wasm_hash?: string } } | undefined)?.attestation;
   if (att) {
     checks.push({ id: "attestation_input", verdict: att.input_hash === r.input_sha256 ? "PASS" : "FAIL", detail: "OutLayer attestation input hash vs the record's input SHA-256" });
     checks.push({ id: "attestation_output", verdict: att.output_hash === r.output_sha256 ? "PASS" : "FAIL", detail: "OutLayer attestation output hash vs the record's output SHA-256" });
-    if (att.wasm_hash && unit.policy.wasm_sha256) {
-      checks.push({ id: "attestation_wasm", verdict: att.wasm_hash === unit.policy.wasm_sha256 ? "PASS" : "FAIL", detail: "attested enclave build vs the wasm hash pinned in the unit policy" });
+    const engine = r.wasm_sha256 ?? unit.policy.wasm_sha256;
+    if (att.wasm_hash && engine) {
+      checks.push({ id: "attestation_wasm", verdict: att.wasm_hash === engine ? "PASS" : "FAIL", detail: `attested enclave build vs the build ${r.wasm_sha256 ? "recorded with this release" : "pinned in the unit policy"}` });
     }
   } else {
     checks.push({
@@ -65,7 +81,13 @@ export async function trySubtraction(api: Api, a: number, b: number, cell: strin
   const rb = findRelease(releases, b);
   const fa = find(ra, cell);
   const fb = find(rb, cell);
-  const label = fa.published ? cellLabel(fa.published.key) : fb.published ? cellLabel(fb.published.key) : fb.withheld ? cellLabel(fb.withheld.key) : cell;
+  if (!fa.published && !fa.withheld && !fb.published && !fb.withheld) {
+    return {
+      text: `Bandsheet: no cell matching "${cell}" appears in release #${a} or #${b}. Try a grade such as Senior, or grade=Senior.`,
+      data: { release_a: a, release_b: b, cell, naive_revealed_eur: null, bandsheet_withheld: false, bandsheet_published_both: false },
+    };
+  }
+  const label = fa.published ? cellLabel(fa.published.key) : fb.published ? cellLabel(fb.published.key) : fb.withheld ? cellLabel(fb.withheld.key) : fa.withheld ? cellLabel(fa.withheld.key) : cell;
   const lines = [`Subtracting release #${a} from release #${b}, cell ${label}.`, ""];
 
   const groupBy = ra.query?.group_by ?? [];
@@ -91,11 +113,14 @@ export async function trySubtraction(api: Api, a: number, b: number, cell: strin
     const d = fb.published.n * fb.published.mean_eur - fa.published.n * fa.published.mean_eur;
     lines.push(`Bandsheet published ${label} in BOTH releases (n=${fa.published.n} then n=${fb.published.n}); the difference is ${eur(d)}${Math.abs(fb.published.n - fa.published.n) === 1 ? ", so this pair does leak one member's pay" : ", spread over several members"}.`);
   } else if (fb.withheld) {
-    lines.push(`Bandsheet: release #${a} published ${label}${fa.published ? ` (n=${fa.published.n}, mean ${eur(fa.published.mean_eur)})` : ""}; release #${b} WITHHELD it [${fb.withheld.reason}]. Witness: "${fb.withheld.witness}". Nothing to subtract, nothing revealed.`);
+    const first = fa.published
+      ? `published ${label} (n=${fa.published.n}, mean ${eur(fa.published.mean_eur)})`
+      : fa.withheld ? `also withheld ${label} [${fa.withheld.reason}]` : `has no ${label} cell`;
+    lines.push(`Bandsheet: release #${a} ${first}; release #${b} WITHHELD it [${fb.withheld.reason}]. Witness: "${fb.withheld.witness}". Nothing to subtract, nothing revealed.`);
   } else if (fa.withheld && !fb.withheld) {
     lines.push(`Bandsheet: release #${a} withheld ${label}; release #${b} ${fb.published ? "published it" : "has no such cell"}. A difference needs two published values, so there is none.`);
   } else {
-    lines.push(`Bandsheet: no cell matching "${cell}" was published in release #${a} or #${b}.`);
+    lines.push(`Bandsheet: ${label} was not published in release #${a} or #${b}, so there is nothing to subtract.`);
   }
   return { text: lines.join("\n"), data: { release_a: a, release_b: b, cell: label, naive_revealed_eur: revealed, bandsheet_withheld: Boolean(fb.withheld), bandsheet_published_both: Boolean(fa.published && fb.published) } };
 }

@@ -25,6 +25,11 @@ export interface Release {
   proof?: Record<string, unknown>;
   note?: string;
   block_timestamp?: string | number;
+  /** DKIM-era fields (absent or null on releases that predate them). */
+  entries_verified?: number | null;
+  rejections?: { reason: string; count: number }[] | null;
+  wasm_sha256?: string | null;
+  require_dkim?: boolean | null;
 }
 export interface Proposal {
   id: number;
