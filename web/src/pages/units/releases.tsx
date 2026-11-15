@@ -29,6 +29,7 @@ export function ReleaseCounts({ r }: { r: UnitRelease }) {
       <SyntheticNotice n={r.counts.synthetic} className="bg-white" />
       <span className="text-[0.8125rem] font-medium tracking-[0.02em] text-muted-foreground uppercase">Entries counted in this release</span>
       <CountsStrip counts={r.counts} compact />
+      {r.countNote && <p className="text-[0.875rem] text-muted-foreground">{r.countNote.replace(/\.?$/, ".")}</p>}
     </div>
   )
 }

@@ -79,7 +79,8 @@ export type ProposalStatus = "open" | "approved" | "running" | "done" | "rejecte
  */
 function proposalStatus(s: string, hasRelease: boolean): ProposalStatus {
   const v = s.toLowerCase().replace(/[^a-z]/g, "")
-  if (hasRelease || /released|done|executed|published|complete/.test(v)) return "done"
+  // release_id is reserved when the run starts, so only the status says the release has landed.
+  if (/released|done|executed|published|complete/.test(v) || (hasRelease && !v)) return "done"
   if (/reject/.test(v)) return "rejected"
   if (/withdrawn/.test(v)) return "withdrawn"
   if (/expired/.test(v)) return "expired"
@@ -153,7 +154,7 @@ const toCounts = (c: z.infer<typeof CountsRaw> | undefined): EntryCounts => ({
   entries: c?.entries ?? undefined,
 })
 
-export type UnitRelease = ReleaseRecord & { counts: EntryCounts; proposalId: number | null; txHash: string | null }
+export type UnitRelease = ReleaseRecord & { counts: EntryCounts; proposalId: number | null; txHash: string | null; countNote: string | null }
 
 export const UnitReleaseSchema = z
   .unknown()
@@ -174,6 +175,7 @@ export const UnitReleaseSchema = z
       counts: toCounts(counts.success ? counts.data : undefined),
       proposalId: pid.success ? pid.data : null,
       txHash: tx.success ? tx.data : proofTx.success && proofTx.data.tx ? proofTx.data.tx : null,
+      countNote: typeof o.count_note === "string" && o.count_note ? o.count_note : null,
     }
   })
 
