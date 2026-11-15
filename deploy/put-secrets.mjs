@@ -21,6 +21,12 @@ const secrets = {
   DEMO_INVITE_JSON: JSON.stringify(json("keys/invites/demo-member.json")),
   // Registrar key: a function-call key on the committee account limited to add_members / revoke_member.
   OWNER_KEY_JSON: (({ account_id, private_key }) => JSON.stringify({ account_id, private_key }))(json("keys/registrar.json")),
+  // Units: the registrar key is a function-call key limited to unit_add_member / unit_remove_member / unit_add_issuer;
+  // the sponsor is a low-value account that gives new wallets 0.05 testnet NEAR for gas.
+  UNITS_REGISTRAR_KEY_JSON: (({ account_id, private_key }) => JSON.stringify({ account_id, private_key }))(json("keys/units-registrar.json")),
+  SPONSOR_KEY_JSON: (({ account_id, private_key }) => JSON.stringify({ account_id, private_key }))(
+    json(`keys/${process.env.UNITS_SPONSOR || "bsu-sponsor-2d3f96.testnet"}.json`),
+  ),
 };
 for (const [name, value] of Object.entries(secrets)) {
   const r = spawnSync("wrangler", ["pages", "secret", "put", name, "--project-name", project], { input: value, encoding: "utf8" });

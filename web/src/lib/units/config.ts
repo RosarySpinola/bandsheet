@@ -5,7 +5,8 @@
  * Mock mode keeps every units call in this browser (no wallet, no chain, no server). It is on when no units contract
  * is configured, or when the URL carries ?mock=1; ?mock=0 turns it off for the rest of the tab.
  */
-export const UNITS_CONTRACT: string = import.meta.env.VITE_UNITS_CONTRACT ?? ""
+/** The live units contract. Build with VITE_UNITS_CONTRACT="" to run the in-browser mock instead. */
+export const UNITS_CONTRACT: string = import.meta.env.VITE_UNITS_CONTRACT ?? "bandsheet-units-2d3f96.testnet"
 /** Planned id (contracts/units/INTERFACE.md); used as the mock's contract name until the deploy lands. */
 export const PLANNED_UNITS_CONTRACT = "bandsheet-units-2d3f96.testnet"
 
