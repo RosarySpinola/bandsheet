@@ -24,11 +24,16 @@ function HeroVideo() {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
     const apply = () => {
       if (mq.matches) v.pause()
-      else void v.play().catch(() => undefined)
+      else if (document.visibilityState === "visible") void v.play().catch(() => undefined)
     }
     apply()
     mq.addEventListener("change", apply)
-    return () => mq.removeEventListener("change", apply)
+    // A page opened in a background tab can't start playback; start it when the tab is shown.
+    document.addEventListener("visibilitychange", apply)
+    return () => {
+      mq.removeEventListener("change", apply)
+      document.removeEventListener("visibilitychange", apply)
+    }
   }, [narrow])
   const art = narrow ? ART.narrow : ART.wide
   return (

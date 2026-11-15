@@ -1,24 +1,41 @@
 import { useEffect, useRef, useState, type ElementType, type ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
-/** Fires once when `amount` of the element is in view (Greenlock triggers at 15-25%). */
+/**
+ * Fires once when `amount` of the element is in view (Greenlock triggers at 15-25%), or, for an element taller than the
+ * viewport, once it covers `amount` of the viewport. Re-observes when a background tab becomes visible, since a page
+ * loaded in a hidden tab gets no intersection updates until then.
+ */
 export function useInViewOnce<T extends Element>(amount = 0.2) {
   const ref = useRef<T | null>(null)
   const [inView, setInView] = useState(false)
   useEffect(() => {
     const el = ref.current
     if (!el || inView) return
+    const seen = (e: IntersectionObserverEntry) => {
+      const rootH = e.rootBounds?.height ?? window.innerHeight
+      return e.isIntersecting && (e.intersectionRatio >= amount || e.intersectionRect.height >= rootH * amount)
+    }
     const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
+      (entries) => {
+        if (entries.some(seen)) {
           setInView(true)
           io.disconnect()
         }
       },
-      { threshold: amount },
+      { threshold: [0, 0.02, 0.05, 0.1, amount / 2, amount] },
     )
     io.observe(el)
-    return () => io.disconnect()
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return
+      io.unobserve(el)
+      io.observe(el)
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    return () => {
+      io.disconnect()
+      document.removeEventListener("visibilitychange", onVisible)
+    }
   }, [amount, inView])
   return { ref, inView }
 }
