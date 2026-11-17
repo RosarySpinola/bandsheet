@@ -109,7 +109,7 @@ function VoteButtons({ p, unit, conn, gasReady, voted, onTap }: { p: UnitProposa
         onRetry={() => vote(active)}
         onRetryPrepare={active.retryPrepare}
         className="[&_[role=alert]]:bg-white"
-        words={{ what: "a unit_vote transaction", busy: "Approve unit_vote in your wallet…", done: active.phase.s === "done" && active.phase.result.value === "approved" ? "Vote landed. The proposal is approved; Bandsheet starts the engine." : active.phase.s === "done" && active.phase.result.value === "rejected" ? "Vote landed. The proposal can no longer pass, so it is rejected." : "Vote landed on NEAR testnet." }}
+        words={{ what: "a unit_vote transaction", busy: "Approve unit_vote in your wallet…", late: "Your vote landed after all: your wallet approved it after this page stopped waiting.", done: active.phase.s === "done" && active.phase.result.value === "approved" ? "Vote landed. The proposal is approved; Bandsheet starts the engine." : active.phase.s === "done" && active.phase.result.value === "rejected" ? "Vote landed. The proposal can no longer pass, so it is rejected." : "Vote landed on NEAR testnet." }}
       />
     </div>
   )

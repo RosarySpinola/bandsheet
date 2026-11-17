@@ -93,6 +93,7 @@ export function UnitQueryBuilder({ conn, unit, gasReady }: { conn: Conn; unit: U
         words={{
           what: "a unit_propose_release transaction",
           busy: "Approve unit_propose_release in your wallet…",
+          late: t.phase.s === "done" ? `Proposal #${t.phase.result.value} was filed after all: your wallet approved it after this page stopped waiting.` : undefined,
           done: t.phase.s === "done" ? `Proposal #${t.phase.result.value} filed.${need === 1 ? " Your approval is the majority, so it is approved and Bandsheet starts the engine." : ` It needs ${need - 1} more ${need - 1 === 1 ? "approval" : "approvals"}.`}` : undefined,
         }}
       />

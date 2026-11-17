@@ -18,7 +18,20 @@ export function failureKind(error: unknown): "chain" | "rpc" | "other" {
   return "other"
 }
 
-type Words = { busy?: string; posting?: string; done?: ReactNode; what?: string; errors?: Record<string, ReactNode> }
+type Words = { busy?: string; posting?: string; done?: ReactNode; what?: string; errors?: Record<string, ReactNode>; late?: ReactNode }
+
+/** Shown while a declined or unanswered transaction is checked on chain, and after a minute with nothing landed. */
+function LateCheck({ checking, checked }: { checking?: boolean; checked?: boolean }) {
+  if (checking)
+    return (
+      <span className="flex items-center gap-2 text-foreground">
+        <Spinner className="size-3.5" /> Checking NEAR testnet for a minute, in case your wallet approved it after all.
+      </span>
+    )
+  if (checked)
+    return <span className="text-foreground">Nothing landed on NEAR testnet in the minute after. If you approve it in your wallet later, it still counts; reload this page to see it.</span>
+  return null
+}
 
 /**
  * The life of one wallet action, in place under its button: getting ready, approve in the wallet, landing, landed with
@@ -63,7 +76,8 @@ export function TxState<R>({ phase, words = {}, tx, onRetry, onRetryPrepare, cla
             <Check className="size-4" strokeWidth={2.5} />
           </span>
           <span className="flex flex-col gap-1">
-            <span className="font-semibold">{words.done ?? "Landed on NEAR testnet."}</span>
+            <span className="font-semibold">{phase.late ? (words.late ?? "It landed after all: your wallet approved it after this page stopped waiting.") : (words.done ?? "Landed on NEAR testnet.")}</span>
+            {phase.late && words.late && words.done && <span className="text-foreground">{words.done}</span>}
             {tx ? (
               <span className="text-foreground">
                 Transaction <TxLink tx={tx} className="text-[0.9375rem]" /> {isMock() && <span className="text-muted-foreground">(mock hash, not on chain)</span>}
@@ -74,15 +88,27 @@ export function TxState<R>({ phase, words = {}, tx, onRetry, onRetryPrepare, cla
       )}
       {phase.s === "rejected" && (
         <div className={cn(line, "flex-col border-ink bg-band text-ink")}>
-          <span className="font-semibold">You declined in your wallet. Nothing was signed or sent.</span>
-          {onRetry && (
+          <span className="font-semibold">
+            {phase.checking || phase.checked ? "Your wallet reported a decline." : "You declined in your wallet. Nothing was signed or sent."}
+          </span>
+          <LateCheck checking={phase.checking} checked={phase.checked} />
+          {onRetry && !phase.checking && (
             <button type="button" onClick={onRetry} className="wipe w-fit cursor-pointer font-semibold">
               Try again
             </button>
           )}
         </div>
       )}
-      {phase.s === "error" && <TxError error={phase.error} onRetry={onRetry} what={what} titles={words.errors} />}
+      {phase.s === "error" && (
+        <>
+          <TxError error={phase.error} onRetry={phase.checking ? undefined : onRetry} what={what} titles={words.errors} />
+          {(phase.checking || phase.checked) && (
+            <p className={cn(line, "border-border")}>
+              <LateCheck checking={phase.checking} checked={phase.checked} />
+            </p>
+          )}
+        </>
+      )}
       {phase.s === "unprepared" && <ErrorState error={phase.error} title="Your wallet could not be made ready for this." onRetry={onRetryPrepare} />}
     </div>
   )

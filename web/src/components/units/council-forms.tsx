@@ -132,7 +132,7 @@ export function RotateInvite({ conn, unit, onNew }: { conn: Conn; unit: Unit; on
         {busy ? <Spinner className="size-4" /> : <RefreshCw className="size-4" />} {busy ? "Approve in your wallet…" : "New invite link"}
       </SquareButton>
       <p className="text-[0.875rem] text-muted-foreground">The old link stops working. Everyone who already joined stays a member.</p>
-      <TxState phase={t.phase} tx={t.phase.s === "done" ? t.phase.result.tx : null} onRetry={go} onRetryPrepare={t.retryPrepare} words={{ what: "a unit_rotate_invite transaction", busy: "Approve unit_rotate_invite in your wallet…", done: "New invite link made. Copy it above; it is shown once." }} />
+      <TxState phase={t.phase} tx={t.phase.s === "done" ? t.phase.result.tx : null} onRetry={go} onRetryPrepare={t.retryPrepare} words={{ what: "a unit_rotate_invite transaction", busy: "Approve unit_rotate_invite in your wallet…", done: "New invite link made. Copy it above; it is shown once.", late: "The new invite link landed after all. Copy it above; it is shown once." }} />
     </div>
   )
 }

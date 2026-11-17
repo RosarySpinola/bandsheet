@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/api"
 import { GAS } from "./config"
 import { units, unitsWallet } from "./index"
 import { makeInvite, rememberInvite, sha256Hex } from "./invite"
+import { findTx, inviteIs, proposalSince, unitWithInvite, voteOn } from "./late"
 import { writeUnitKey } from "./keys"
 import type { Prepared } from "./use-tap"
 import { claimOf, type Conn, type EntryMeta, type EntryReceipt, type SignedMessage, type TxResult } from "./types"
@@ -14,7 +15,8 @@ import { claimOf, type Conn, type EntryMeta, type EntryReceipt, type SignedMessa
  * messages (EIP-191 for an Ethereum wallet). Shapes follow contracts/units/INTERFACE.md.
  */
 
-export type Landed<T> = { tx: string | null; value: T }
+/** `late`: the wallet reported a decline (or lost touch) but the chain shows it landed; `tx` then comes from nearblocks. */
+export type Landed<T> = { tx: string | null; value: T; late?: boolean }
 
 const asNumber = (v: unknown, what: string): number => {
   const n = typeof v === "number" ? v : typeof v === "string" && /^\d+$/.test(v) ? Number(v) : NaN
@@ -22,6 +24,8 @@ const asNumber = (v: unknown, what: string): number => {
   return n
 }
 const landed = <T>(r: TxResult, value: T): Landed<T> => ({ tx: r.hash, value })
+/** A landing found by reading the chain after the wallet said no: look up its transaction, best effort. */
+const landedLate = async <T>(conn: Conn, method: string, since: number, value: T): Promise<Landed<T>> => ({ tx: await findTx(conn.accountId, method, since), value, late: true })
 
 function sameAccount(s: SignedMessage, conn: Conn): void {
   if (s.accountId !== conn.accountId) throw new ApiError(`The wallet signed as ${s.accountId}, not ${conn.accountId}. Nothing was sent.`, "WRONG_ACCOUNT")
@@ -30,15 +34,25 @@ function sameAccount(s: SignedMessage, conn: Conn): void {
 export type Created = { unitId: number; code: string }
 
 export async function prepareCreate(conn: Conn, name: string, domains: string[]): Promise<Prepared<Landed<Created>>> {
+  // The secret stays in this closure (memory only) until the outcome is known; only its hash goes on chain.
   const invite = makeInvite()
   const call = await unitsWallet.prepareCall(conn, { method: "create_unit", args: { name, invite_code_hash: invite.hash, dkim_domains: domains }, gas: GAS.create })
+  let since = 0
   return {
-    start: () =>
-      call.send().then((r) => {
+    start: () => {
+      since = Date.now()
+      return call.send().then((r) => {
         const unitId = asNumber(r.value, "unit id")
         rememberInvite(unitId, invite.secret)
         return landed(r, { unitId, code: invite.secret })
-      }),
+      })
+    },
+    late: async () => {
+      const unitId = await unitWithInvite(conn.accountId, invite.hash)
+      if (unitId === null) return null
+      rememberInvite(unitId, invite.secret)
+      return landedLate(conn, "create_unit", since, { unitId, code: invite.secret })
+    },
   }
 }
 
@@ -126,14 +140,35 @@ export function queryText(q: Query): string {
 
 /** On a one-seat council the proposal passes and the engine runs in this same call. */
 export async function preparePropose(conn: Conn, unitId: number, query: Query): Promise<Prepared<Landed<number>>> {
-  const call = await unitsWallet.prepareCall(conn, { method: "unit_propose_release", args: { unit_id: unitId, query: queryText(query) }, gas: GAS.propose })
-  return { start: () => call.send().then((r) => landed(r, asNumber(r.value, "proposal id"))) }
+  const text = queryText(query)
+  const call = await unitsWallet.prepareCall(conn, { method: "unit_propose_release", args: { unit_id: unitId, query: text }, gas: GAS.propose })
+  let since = 0
+  return {
+    start: () => {
+      since = Date.now()
+      return call.send().then((r) => landed(r, asNumber(r.value, "proposal id")))
+    },
+    late: async () => {
+      const id = await proposalSince(unitId, conn.accountId, text, since)
+      return id === null ? null : landedLate(conn, "unit_propose_release", since, id)
+    },
+  }
 }
 
 /** Returns the proposal's status after the vote: "open", "running" or "rejected". */
 export async function prepareVote(conn: Conn, unitId: number, proposalId: number, approve: boolean): Promise<Prepared<Landed<string | null>>> {
   const call = await unitsWallet.prepareCall(conn, { method: "unit_vote", args: { unit_id: unitId, proposal_id: proposalId, approve }, gas: GAS.vote })
-  return { start: () => call.send().then((r) => landed(r, typeof r.value === "string" ? r.value : null)) }
+  let since = 0
+  return {
+    start: () => {
+      since = Date.now()
+      return call.send().then((r) => landed(r, typeof r.value === "string" ? r.value : null))
+    },
+    late: async () => {
+      const status = await voteOn(unitId, proposalId, conn.accountId, approve)
+      return status === null ? null : landedLate(conn, "unit_vote", since, status)
+    },
+  }
 }
 
 /**
@@ -155,12 +190,20 @@ export async function prepareWithdraw(conn: Conn, unitId: number, proposalId: nu
 export async function prepareRotateInvite(conn: Conn, unitId: number): Promise<Prepared<Landed<string>>> {
   const invite = makeInvite()
   const call = await unitsWallet.prepareCall(conn, { method: "unit_rotate_invite", args: { unit_id: unitId, invite_code_hash: invite.hash }, gas: GAS.council })
+  let since = 0
   return {
-    start: () =>
-      call.send().then((r) => {
+    start: () => {
+      since = Date.now()
+      return call.send().then((r) => {
         rememberInvite(unitId, invite.secret)
         return landed(r, invite.secret)
-      }),
+      })
+    },
+    late: async () => {
+      if (!(await inviteIs(unitId, invite.hash))) return null
+      rememberInvite(unitId, invite.secret)
+      return landedLate(conn, "unit_rotate_invite", since, invite.secret)
+    },
   }
 }
 

@@ -8,7 +8,7 @@ import { CreateForm } from "@/components/units/create-form"
 import { InviteReveal } from "@/components/units/invite-reveal"
 import { JoinButton } from "@/components/units/join-button"
 import { ReadyWallet } from "@/components/units/wallet-gate"
-import { TxLink } from "@/components/unit/links"
+import { AccountLink, TxLink } from "@/components/unit/links"
 import { LIMITS, isMock, type Conn, type Unit } from "@/lib/units"
 import type { Created, Landed } from "@/lib/units/actions"
 import { useMyUnits } from "@/lib/units/hooks"
@@ -59,9 +59,12 @@ function CreatedStep({ conn, created }: { conn: Conn; created: Landed<Created> }
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2 border-t-2 border-ink pt-5">
-        <p className="font-serif text-[2rem] leading-tight text-ink">Unit #{unitId} is yours.</p>
+        <p className="font-serif text-[2rem] leading-tight text-ink">{created.late ? <>Your unit was created after all: #{unitId}.</> : <>Unit #{unitId} is yours.</>}</p>
+        {created.late && (
+          <p className="text-[0.9375rem] leading-relaxed text-foreground">Your wallet reported a decline, but the units contract shows the unit, so your approval landed after this page had stopped waiting.</p>
+        )}
         <p className="text-[0.9375rem] leading-relaxed text-foreground">
-          You hold council seat 1. {created.tx && <>create_unit landed: <TxLink tx={created.tx} className="text-[0.9375rem]" />{isMock() && " (mock)"}.</>}
+          You hold council seat 1. {created.tx ? <>create_unit landed: <TxLink tx={created.tx} className="text-[0.9375rem]" />{isMock() && " (mock)"}.</> : created.late && <>Its transaction is under your account on <AccountLink id={conn.accountId} className="text-[0.9375rem]" />.</>}
         </p>
       </div>
       <InviteReveal unitId={unitId} code={code} />
