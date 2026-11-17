@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 const SLIDES = [
   {
     title: "Read inside a TEE.",
-    body: "A member drops in the payslip email their payroll sent. NEAR AI Cloud reads it inside a TEE. Its attestation is checked first with a fresh nonce (Intel TDX and NVIDIA), then the signed answer is verified. Nothing is stored.",
+    body: "A member drops in a payslip: the email their payroll sent, a PDF or an image. NEAR AI Cloud reads it inside a TEE. Its attestation is checked first with a fresh nonce (Intel TDX and NVIDIA), then the signed answer is verified. Nothing is stored.",
   },
   {
     title: "Sealed in the browser.",
@@ -12,11 +12,11 @@ const SLIDES = [
   },
   {
     title: "Released only by vote.",
-    body: "Nobody can query the box on a whim. Every table is a Sputnik DAO proposal, and two of the three council seats must approve it before the engine ever sees the request.",
+    body: "Nobody can query the box on a whim. Every table is a proposal. Your own unit's council votes on it in the units contract, more than half to pass; the example chapel uses a Sputnik DAO, two of three seats. Only a passed vote reaches the engine.",
   },
   {
     title: "Checked before it is published.",
-    body: "The enclave checks the employer's DKIM signature against a key the DAO trusts, replays every earlier release and solves the attacker's equations. A refused cell and its witness are written to NEAR.",
+    body: "The enclave checks the employer's DKIM signature against a key recorded on NEAR, replays every earlier release and solves the attacker's equations. A refused cell and its witness are written to NEAR.",
   },
   {
     title: "Useful beyond the box.",

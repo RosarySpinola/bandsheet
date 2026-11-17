@@ -40,7 +40,7 @@ export const SCREEN_SLIDES: ScreenSlide[] = [
     cta: "Open the chapel vote",
     title: "Asked for, then voted",
     steps: [
-      { head: "Every table is a proposal", body: "Filed on the chapel's Sputnik DAO, in public." },
+      { head: "Every table is a proposal", body: "In the example chapel, filed on its Sputnik DAO, in public." },
       { head: "Two of three seats approve", body: "Council seats vote from their own wallets." },
       { head: "Only a passed vote reaches the engine", body: "The same DAO decides which employer keys to trust." },
     ],

@@ -31,7 +31,7 @@ export function ExploreList() {
     <section className="gl-section bg-white">
       <div className="gl-container">
         <Reveal>
-          <h2 className="gl-h1 mb-[calc(var(--gl)*6)] max-[991px]:mb-6">Explore the demo unit</h2>
+          <h2 className="gl-h1 mb-[calc(var(--gl)*6)] max-[991px]:mb-6">Explore the example chapel</h2>
         </Reveal>
         <ul ref={listRef} className="flex flex-col">
           {SCREENS.map((s, k) => {

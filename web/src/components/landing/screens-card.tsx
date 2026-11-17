@@ -24,7 +24,7 @@ export function ScreensCard() {
   const step = (d: number) => setI((n) => (n + d + SLIDES.length) % SLIDES.length)
 
   return (
-    <section className="gl-section bg-band" aria-roledescription="carousel" aria-label="The demo unit">
+    <section className="gl-section bg-band" aria-roledescription="carousel" aria-label="The example chapel">
       <div className="gl-container">
         <Reveal>
           <div

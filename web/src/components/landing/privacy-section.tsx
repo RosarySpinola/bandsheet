@@ -11,7 +11,7 @@ const BLOCKS = [
   },
   {
     title: "Not a forger",
-    body: "Payslips arrive as the employer's own payroll email. The chapel votes to trust the employer's DKIM key on NEAR, and the engine checks every signature inside the enclave. Change one digit and the entry is refused.",
+    body: "A payroll email carries the employer's DKIM signature. The employer's signing key is recorded on NEAR, and the engine checks every signature inside the enclave. Change one digit and the signature fails. In your own unit, a payslip without one is badged self-attested.",
   },
   {
     title: "Not the attacker",

@@ -26,7 +26,7 @@ export const SCREENS: ScreenLink[] = [
     to: "/unit/vote",
     title: "Chapel vote",
     kind: "vote",
-    blurb: "Releases are asked for by Sputnik DAO proposal. Members vote; only a passed vote reaches the engine.",
+    blurb: "Releases are asked for by Sputnik DAO proposal. Council seats vote; only a passed vote reaches the engine.",
   },
   {
     to: "/unit/stand",
