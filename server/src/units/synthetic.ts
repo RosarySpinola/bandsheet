@@ -26,13 +26,22 @@ export interface SyntheticMember {
   publicKey: string;
   slot: string;
   ciphertext: ReturnType<typeof encryptUnitEntry>;
+  /** The sealed fields. The synthetic route never returns or stores them; only the attack lab's one colleague is shown. */
+  entry: UnitEntry;
 }
 
 /**
  * n fresh posting keys and their sealed entries. Pay is random within the grade's range and exists only inside the
- * sealed ciphertext: it is never logged, stored or returned, so nobody can subtract it from a published band.
+ * sealed ciphertext for the synthetic route: it is never logged, stored or returned, so nobody can subtract it from a
+ * published band. `fix` pins gender or site (the attack lab puts its one colleague in a chosen cell).
  */
-export function makeSynthetic(n: number, enclavePubkey: string, grade?: Grade, now = Date.now()): SyntheticMember[] {
+export function makeSynthetic(
+  n: number,
+  enclavePubkey: string,
+  grade?: Grade,
+  now = Date.now(),
+  fix: { gender?: UnitEntry["gender"]; site?: UnitEntry["site"] } = {},
+): SyntheticMember[] {
   const pub = parseEnclavePublicKey(enclavePubkey);
   return syntheticGrades(n, grade).map((g) => {
     const k = generateMemberKey();
@@ -41,10 +50,10 @@ export function makeSynthetic(n: number, enclavePubkey: string, grade?: Grade, n
       slot: k.slot,
       gross_annual_eur: Math.round(randomInt(lo, hi) / 100) * 100,
       grade: g,
-      gender: randomInt(2) === 0 ? "F" : "M",
-      site: randomInt(2) === 0 ? "City" : "Port",
+      gender: fix.gender ?? (randomInt(2) === 0 ? "F" : "M"),
+      site: fix.site ?? (randomInt(2) === 0 ? "City" : "Port"),
       submitted_at: Math.floor(now / 1000),
     };
-    return { privateKey: k.privateKey, publicKey: k.publicKey, slot: k.slot, ciphertext: encryptUnitEntry(pub, entry) };
+    return { privateKey: k.privateKey, publicKey: k.publicKey, slot: k.slot, ciphertext: encryptUnitEntry(pub, entry), entry };
   });
 }

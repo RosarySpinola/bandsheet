@@ -19,6 +19,23 @@ export interface UnitBindingRow {
   signed_at: number;
 }
 
+/** One attack-lab change (deploy/migrations-auth/0004_unit_attacks.sql). The figure is a synthetic sample, never a member's. */
+export interface AttackRow {
+  unit_id: number;
+  started_at: number;
+  account_id: string;
+  release_id: number;
+  query: string;
+  cell: Record<string, string>;
+  action: "add" | "remove";
+  public_key: string;
+  grade: string;
+  gender: string;
+  site: string;
+  gross_annual_eur: number;
+  txs: string[];
+}
+
 export interface GrantRow {
   account_id: string;
   ip: string;
@@ -43,6 +60,9 @@ export interface UnitStore {
   /** The unit_run transaction sent for a proposal, so the release it produced can link it. */
   putRun(unitId: number, proposalId: number, tx: string, now: number): Promise<void>;
   runsOf(unitId: number): Promise<{ proposal_id: number; tx: string }[]>;
+  putAttack(row: AttackRow): Promise<void>;
+  /** Newest first, at most 20. */
+  attacksOf(unitId: number): Promise<AttackRow[]>;
 }
 
 interface NonceRow {
@@ -71,6 +91,13 @@ export class MemoryUnitStore implements UnitStore {
   }
   async runsOf(unitId: number) {
     return this.runs.filter((r) => r.unit_id === unitId).map((r) => ({ proposal_id: r.proposal_id, tx: r.tx }));
+  }
+  readonly attacks: AttackRow[] = [];
+  async putAttack(row: AttackRow) {
+    this.attacks.push(row);
+  }
+  async attacksOf(unitId: number) {
+    return this.attacks.filter((a) => a.unit_id === unitId).sort((a, b) => b.started_at - a.started_at).slice(0, 20);
   }
 
   async issueNonce(nonce: string, purpose: UnitPurpose, now: number) {
@@ -180,5 +207,21 @@ export class D1UnitStore implements UnitStore {
       all(): Promise<{ results?: { proposal_id: number; tx: string }[] }>;
     };
     return (await stmt.all()).results ?? [];
+  }
+  async putAttack(a: AttackRow) {
+    await this.db
+      .prepare(
+        "INSERT INTO unit_attacks (unit_id, started_at, account_id, release_id, query, cell, action, public_key, grade, gender, site, gross_annual_eur, txs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .bind(a.unit_id, a.started_at, a.account_id, a.release_id, a.query, JSON.stringify(a.cell), a.action, a.public_key, a.grade, a.gender, a.site, a.gross_annual_eur, JSON.stringify(a.txs))
+      .run();
+  }
+  async attacksOf(unitId: number) {
+    type Raw = Omit<AttackRow, "cell" | "txs"> & { cell: string; txs: string };
+    const stmt = this.db.prepare("SELECT * FROM unit_attacks WHERE unit_id = ? ORDER BY started_at DESC LIMIT 20").bind(unitId) as unknown as {
+      all(): Promise<{ results?: Raw[] }>;
+    };
+    const rows = (await stmt.all()).results ?? [];
+    return rows.map((x) => ({ ...x, cell: JSON.parse(x.cell) as Record<string, string>, txs: JSON.parse(x.txs) as string[] }));
   }
 }

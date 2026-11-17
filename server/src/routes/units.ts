@@ -9,6 +9,7 @@ import { ACCOUNT, ED25519, UnitClaim, verifyUnitClaim } from "../units/claim";
 import { type UnitsDeps, body, consume, need, nowOf, readFail, readUnit, registrarOf, sendOrFail, txOut, unitIdOf } from "../units/deps";
 import { latestBands } from "./releases";
 import { unitAdminRoutes } from "./units-admin";
+import { unitAttackRoutes } from "./units-attack";
 
 const JoinBody = UnitClaim.extend({ member_public_key: ED25519, invite_code: z.string().min(8).max(128) });
 const EntryBody = UnitClaim.extend({ signed_tx: z.string().regex(/^[A-Za-z0-9+/=]+$/).max(24_000) });
@@ -145,5 +146,6 @@ export function unitsRoutes(deps: Deps): Hono {
   });
 
   app.route("/", unitAdminRoutes(deps));
+  app.route("/", unitAttackRoutes(deps));
   return app;
 }

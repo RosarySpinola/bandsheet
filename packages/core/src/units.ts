@@ -42,6 +42,16 @@ export function unitStatement(purpose: UnitPurpose, unitId: number, subject: str
   }
 }
 
+/** A published cell's key, the fields in a fixed order: {grade, gender, site} → "Senior F City". */
+export type CellKey = { grade?: string; gender?: string; site?: string };
+export const cellKeyText = (k: CellKey): string => [k.grade, k.gender, k.site].filter(Boolean).join(" ");
+
+/**
+ * The attack lab's council statement (signed as a unit_synthetic message): one synthetic colleague is added to (or
+ * taken from) this cell of this release, so the same table can be asked for again. "attack release 1: Senior".
+ */
+export const attackSubject = (releaseId: number, cell: CellKey): string => `attack release ${releaseId}: ${cellKeyText(cell)}`;
+
 /** A unit entry may carry the employer's payslip email (raw .eml, base64) so the engine can count it as DKIM-verified. */
 export const UnitEntrySchema = EntrySchema.extend({ eml_b64: z.string().max(360_000).optional() });
 export type UnitEntry = z.infer<typeof UnitEntrySchema>;
