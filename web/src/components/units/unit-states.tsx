@@ -4,6 +4,19 @@ import { plainError } from "@/lib/api"
 import { LIMITS, type Unit } from "@/lib/units"
 import { plural } from "@/lib/format"
 
+type ViewLike = { isPending: boolean; isError: boolean; error: unknown; data?: unknown }
+export type UnitReadState = "loading" | "ready" | "missing" | "unreadable"
+
+/** Missing (no such unit, a 404) and unreadable (the read failed: 5xx, network, rate limit) are told apart everywhere. */
+export function unitReadState(unitId: number | null, view: ViewLike): UnitReadState {
+  if (unitId === null || (view.isError && plainError(view.error).code === "UNIT_NOT_FOUND")) return "missing"
+  if (view.data) return "ready"
+  return view.isError ? "unreadable" : "loading"
+}
+
+/** Heading and document title for a unit that is not there to show. */
+export const UNIT_STATE_TITLE: Partial<Record<UnitReadState, string>> = { missing: "Unit not found", unreadable: "Couldn't read this unit" }
+
 /** Loading, missing and unreadable units: the three ways a /u/:unitId page can fail to have a unit. */
 export function UnitGate({ view, children }: { view: { isPending: boolean; isError: boolean; error: unknown; refetch: () => unknown; data?: { unit: Unit } }; children: React.ReactNode }) {
   if (view.isPending)

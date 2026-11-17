@@ -5,16 +5,18 @@ import { BandsTable } from "@/components/unit/overview/bands-table"
 import { CountsStrip, SyntheticNotice } from "@/components/units/badges"
 import { Membership } from "@/components/units/membership"
 import { SyntheticPanel } from "@/components/units/synthetic-panel"
-import { TooFewState, UnitGate } from "@/components/units/unit-states"
+import { TooFewState, UNIT_STATE_TITLE, UnitGate, unitReadState } from "@/components/units/unit-states"
 import { int, plural } from "@/lib/format"
 import { LIMITS, units, type UnitView } from "@/lib/units"
 import { describeQuery, asQuery } from "@/components/unit-b/format"
 import { useUnitOutlet } from "./shell"
 
 export default function UnitOverview() {
-  const { view } = useUnitOutlet()
+  const { unitId, view } = useUnitOutlet()
+  const failed = UNIT_STATE_TITLE[unitReadState(unitId < 0 ? null : unitId, view)]
   return (
     <Page>
+      {failed && <PageHeader glyph="overview" eyebrow={unitId < 0 ? "Your own unit" : `Unit #${unitId} · your own unit on NEAR testnet`} title={failed} />}
       <UnitGate view={view}>{view.data && <Body v={view.data} />}</UnitGate>
     </Page>
   )

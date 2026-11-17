@@ -5,6 +5,8 @@ import { TipProvider } from "@/components/unit/tip"
 import { UnitHeading, UnitNavGroups, UnitSidebar } from "@/components/units/unit-sidebar"
 import { UnitIdentity } from "@/components/units/unit-identity"
 import { MockBanner } from "@/components/units/mock-banner"
+import { UNIT_STATE_TITLE, unitReadState } from "@/components/units/unit-states"
+import { useTitleOverride } from "@/pages/root"
 import { useQueryClient } from "@tanstack/react-query"
 import { useUnitView } from "@/lib/units/hooks"
 import { useAutoRun } from "@/lib/units/run"
@@ -27,14 +29,17 @@ export default function UnitShell() {
   const { pathname } = useLocation()
   const id = unitId ?? -1
   const unit = view.data?.unit
+  const state = unitReadState(unitId, view)
+  const retry = () => void view.refetch()
+  useTitleOverride(UNIT_STATE_TITLE[state])
 
   return (
     <TipProvider>
       <div className="flex min-h-dvh bg-white">
-        <UnitSidebar unitId={id} unit={unit} loading={view.isPending && unitId !== null} />
+        <UnitSidebar unitId={id} unit={unit} state={state} onRetry={retry} />
         <div className="flex min-w-0 flex-1 flex-col">
           <MobileNav
-            tag={<UnitHeading unit={unit} loading={view.isPending && unitId !== null} />}
+            tag={<UnitHeading unit={unit} state={state} onRetry={retry} />}
             nav={(close) => <UnitNavGroups unitId={id} size="lg" onNavigate={close} />}
             identity={<UnitIdentity unit={unit} className="bg-band" />}
           />

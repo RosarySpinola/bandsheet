@@ -6,6 +6,7 @@ import type { Unit } from "@/lib/units"
 import { unitActive, unitNav } from "./nav"
 import { UnitIdentity } from "./unit-identity"
 import { UnitTag } from "./unit-tag"
+import { UNIT_STATE_TITLE, type UnitReadState } from "./unit-states"
 
 export function UnitNavGroups({ unitId, size = "md", onNavigate }: { unitId: number; size?: "md" | "lg"; onNavigate?: () => void }) {
   const { pathname } = useLocation()
@@ -23,18 +24,27 @@ export function UnitNavGroups({ unitId, size = "md", onNavigate }: { unitId: num
   )
 }
 
-/** The unit's name over its tag: the first thing in the sidebar after the wordmark. */
-export function UnitHeading({ unit, loading }: { unit?: Unit; loading?: boolean }) {
+/** The unit's name over its tag: the first thing in the sidebar after the wordmark. Missing and unreadable read differently. */
+export function UnitHeading({ unit, state, onRetry }: { unit?: Unit; state: UnitReadState; onRetry?: () => void }) {
   return (
     <div className="flex flex-col gap-3">
-      {loading ? <Shimmer className="h-7 w-40 bg-white" /> : <p className="font-serif text-[1.375rem] leading-tight font-medium break-words text-ink">{unit?.name ?? "Unit not found"}</p>}
+      {state === "loading" ? (
+        <Shimmer className="h-7 w-40 bg-white" />
+      ) : (
+        <p className="font-serif text-[1.375rem] leading-tight font-medium break-words text-ink">{unit?.name ?? UNIT_STATE_TITLE[state] ?? "Your unit"}</p>
+      )}
+      {state === "unreadable" && onRetry && (
+        <button type="button" onClick={onRetry} className="wipe w-fit cursor-pointer text-[0.9375rem] font-semibold text-ink">
+          Try again
+        </button>
+      )}
       <UnitTag synthetic={unit?.synthetic} />
     </div>
   )
 }
 
 /** Full-height band sidebar (≥1024px), the same frame as the demo chapel's. */
-export function UnitSidebar({ unitId, unit, loading }: { unitId: number; unit?: Unit; loading?: boolean }) {
+export function UnitSidebar({ unitId, unit, state, onRetry }: { unitId: number; unit?: Unit; state: UnitReadState; onRetry?: () => void }) {
   return (
     <div className="hidden w-[17.5rem] shrink-0 bg-band lg:block xl:w-[19rem]">
       <aside className="sticky top-0 flex h-dvh flex-col gap-8 overflow-y-auto px-6 py-7">
@@ -42,7 +52,7 @@ export function UnitSidebar({ unitId, unit, loading }: { unitId: number; unit?: 
           <Link to="/" className="font-serif text-[2rem] leading-none font-medium text-ink [font-variation-settings:'opsz'_72]">
             Bandsheet
           </Link>
-          <UnitHeading unit={unit} loading={loading} />
+          <UnitHeading unit={unit} state={state} onRetry={onRetry} />
         </div>
         <UnitNavGroups unitId={unitId} />
         <div className="mt-auto">
