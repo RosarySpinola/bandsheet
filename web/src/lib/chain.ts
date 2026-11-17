@@ -17,6 +17,8 @@ export const explorer = {
   tx: (hash: string) => `https://testnet.nearblocks.io/txns/${hash}`,
   account: (id: string) => `https://testnet.nearblocks.io/address/${id}`,
   attestation: (hash: string) => `https://testnet-api.outlayer.ai/attestations/by-tx/${hash}`,
+  /** One OutLayer request's attestation (a transaction can carry more than one request). */
+  attestationOf: (requestId: number) => `https://testnet-api.outlayer.ai/attestations/by-request/${requestId}`,
   dao: (id: string = DAO) => `https://testnet.nearblocks.io/address/${id}`,
 }
 

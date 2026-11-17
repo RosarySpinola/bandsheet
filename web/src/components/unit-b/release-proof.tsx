@@ -22,10 +22,11 @@ function CheckLine({ ok, children }: { ok: boolean | null; children: string }) {
 
 /** Proof column: tx, OutLayer attestation (fetched and compared), sha256 of input and output, engine WASM. */
 export function ReleaseProof({ release, tx, contract = CONTRACT }: { release: ReleaseRecord; tx?: string; contract?: string }) {
-  const att = useAttestation(tx)
-  const recorded = extras(release).wasm
   const input = release.input_sha256 ?? release.input_hash
   const output = release.output_sha256 ?? release.output_hash
+  const att = useAttestation(tx, output ?? undefined)
+  const recorded = extras(release).wasm
+  const rid = att.data?.request_id
   const attested = att.data?.executed_wasm_sha256 ?? att.data?.wasm_hash
   const wasm = recorded ?? attested
   // Compare against the build this record names (engines change by DAO vote); older records name none.
@@ -39,7 +40,7 @@ export function ReleaseProof({ release, tx, contract = CONTRACT }: { release: Re
         {tx ? <TxLink tx={tx} /> : <AccountLink id={contract} />}
       </Row>
       <Row label="OutLayer attestation">
-        {tx ? <ExtLink href={explorer.attestation(tx)}>View attestation</ExtLink> : <span className="text-muted-foreground">No tx on file for this record</span>}
+        {tx ? <ExtLink href={rid !== undefined ? explorer.attestationOf(rid) : explorer.attestation(tx)}>View attestation</ExtLink> : <span className="text-muted-foreground">No tx on file for this record</span>}
       </Row>
       <Row label="Input sha256">{input ? <HashValue value={input} /> : <span className="text-muted-foreground">not recorded</span>}</Row>
       <Row label="Output sha256">{output ? <HashValue value={output} /> : <span className="text-muted-foreground">not recorded</span>}</Row>

@@ -66,9 +66,9 @@ export function ReleaseItem({ release, step, tx, badge, extra, requester, contra
                   {describeQuery(q)}
                 </h3>
                 <p className="text-[0.9375rem] text-muted-foreground">
-                  Requested by {requester ?? requesterLabel(release.requested_by)} ·{plural(release.cells.length, "cell")} published
+                  Requested by {requester ?? requesterLabel(release.requested_by)} · {plural(release.cells.length, "cell")} published
                   {withheld > 0 && ` · ${withheld} withheld`}
-                  {x.entriesVerified !== null && ` · ${x.entriesVerified} payslips verified`}
+                  {x.entriesVerified !== null && ` · ${plural(x.entriesVerified, "payslip")} verified`}
                   {x.rejections.length > 0 && ` · ${x.rejections.reduce((n, r) => n + r.count, 0)} refused`}
                 </p>
               </div>

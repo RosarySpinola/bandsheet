@@ -19,6 +19,7 @@ export function useReleaseTxs(): Record<number, string> {
 const AttestationSchema = z
   .object({
     transaction_hash: z.string(),
+    request_id: z.number().optional(),
     executed_wasm_sha256: z.string().optional(),
     wasm_hash: z.string().optional(),
     input_hash: z.string().optional(),
@@ -29,17 +30,33 @@ const AttestationSchema = z
   .passthrough()
 export type Attestation = z.infer<typeof AttestationSchema>
 
-/** OutLayer's TEE attestation for the tx that ran the engine (public endpoint, CORS open). */
-export function useAttestation(tx: string | undefined) {
+async function attestationAt(path: string): Promise<Attestation> {
+  const res = await fetch(`https://testnet-api.outlayer.ai/attestations/${path}`)
+  if (!res.ok) throw new ApiError("OutLayer has no attestation for this transaction.", "NOT_FOUND", res.status)
+  return AttestationSchema.parse(await res.json())
+}
+
+/**
+ * OutLayer's TEE attestation for the tx that ran the engine (public endpoint, CORS open). by-tx answers with one
+ * request only, the last. A unit's run sends two in one transaction (the release, then the DKIM count), so when the
+ * record's `output` hash is given and by-tx names the other request, the neighbouring request ids are read and the one
+ * from this same transaction with this output is used. Nothing is assumed: both fields must match.
+ */
+export function useAttestation(tx: string | undefined, output?: string) {
   return useQuery({
-    queryKey: ["outlayer", "attestation", tx],
+    queryKey: ["outlayer", "attestation", tx, output ?? null],
     enabled: Boolean(tx),
     staleTime: Infinity,
     retry: 1,
     queryFn: async () => {
-      const res = await fetch(`https://testnet-api.outlayer.ai/attestations/by-tx/${tx}`)
-      if (!res.ok) throw new ApiError("OutLayer has no attestation for this transaction.", "NOT_FOUND", res.status)
-      return AttestationSchema.parse(await res.json())
+      const first = await attestationAt(`by-tx/${tx}`)
+      const rid = first.request_id
+      if (!output || first.output_hash === output || rid === undefined) return first
+      for (const id of [rid - 1, rid + 1, rid - 2]) {
+        const a = await attestationAt(`by-request/${id}`).catch(() => null)
+        if (a && a.transaction_hash === tx && a.output_hash === output) return a
+      }
+      return first
     },
   })
 }
