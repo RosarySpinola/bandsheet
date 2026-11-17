@@ -34,13 +34,14 @@ export function attackStage(v: UnitView, attacks: Attack[], fresh: boolean): Att
   const base = latest && v.releases.find((r) => r.id === latest.release_id)
   const cell = base?.cells.find((c) => sameKey(c.key, latest!.cell))
   if (!fresh && latest && base && cell) {
-    const after = ns(latest.started_at) * 1_000_000n - 120_000_000_000n
+    // Only a request filed after the change counts (a few seconds of clock skew at most), never the base release's own.
+    const after = ns(latest.started_at) * 1_000_000n - 5_000_000_000n
     const asked = [...v.proposals]
       .sort((a, b) => a.id - b.id)
-      .filter((p) => p.proposer && sameQuery(JSON.stringify(p.query ?? {}), latest.query) && ns(p.createdAt) >= after)
+      .filter((p) => p.id !== base.proposalId && p.proposer && sameQuery(JSON.stringify(p.query ?? {}), latest.query) && ns(p.createdAt) >= after)
     const live = asked.find((p) => !["rejected", "withdrawn", "expired", "failed"].includes(p.status))
     if (!live) return { s: "propose", attack: latest, base, cell, refused: asked.at(-1) }
-    const release = v.releases.find((r) => r.proposalId === live.id)
+    const release = v.releases.find((r) => r.proposalId === live.id && r.id > base.id)
     if (release) return { s: "result", attack: latest, base, cell, proposal: live, release }
     return { s: "vote", attack: latest, base, cell, proposal: live }
   }
