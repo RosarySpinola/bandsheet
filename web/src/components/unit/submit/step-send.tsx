@@ -1,7 +1,7 @@
 import { Lock } from "lucide-react"
 import { plainError } from "@/lib/api"
 import { explorer, type Policy } from "@/lib/chain"
-import { int, shortHash } from "@/lib/format"
+import { int, plural, shortHash } from "@/lib/format"
 import { Fact } from "../page-header"
 import { HashValue } from "../copy-button"
 import { AccountLink, CtaButton, CtaLink, ExtLink, SquareButton, TxLink } from "../links"
@@ -107,8 +107,8 @@ export function StepDone({ flow }: { flow: SubmitFlow }) {
           Resubmitting replaces your entry; the count stays the same.
           {r.count !== null &&
             (same
-              ? ` The unit still holds ${int(r.count)} entries, because your slot already had one and this replaced it.`
-              : ` The unit now holds ${int(r.count)} entries.`)}
+              ? ` The unit still holds ${plural(r.count, "entry", "entries")}, because your slot already had one and this replaced it.`
+              : ` The unit now holds ${plural(r.count, "entry", "entries")}.`)}
         </p>
         {scope.doneNote}
       </div>

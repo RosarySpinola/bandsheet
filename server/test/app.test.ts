@@ -145,6 +145,12 @@ describe("POST /api/stand", () => {
     expect(body.answer).toMatch(/could not publish/);
     expect(body.source).toBe("fallback");
   });
+  it("names the member's own unit, never the chapel, when the question is about a unit", async () => {
+    const { app, calls } = makeApp("not json");
+    const body = await (await post(app, { gross_annual_eur: 50000, grade: "Chief", bands: BANDS, unit_id: 4 })).json();
+    expect(body.answer).toMatch(/^Your unit could not publish/);
+    expect(String(calls[0]!.messages[0]!.content)).toContain("say your unit could not publish");
+  });
   it("reads the latest released bands from the contract when none are sent", async () => {
     const view = vi.fn(async () => [
       { id: 1, status: "released", cells: BANDS, suppressed: [] },

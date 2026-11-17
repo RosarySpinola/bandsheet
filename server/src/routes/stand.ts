@@ -55,10 +55,11 @@ export function positionFor(grade: string, eur: number, cells: readonly Cell[]):
   };
 }
 
-const SYSTEM = [
+/** The system prompt, naming who pooled the bands ("the chapel" or "your unit") in the words the answer should use. */
+const systemFor = (pool: string) => [
   "You are a private pay-transparency assistant for a union member. You get JSON facts and reply with ONLY a JSON object.",
   'Keys: "answer" (plain language, at most 110 words, second person, no jargon; use only the numbers in the facts and say',
-  'that bands are averages of n members; if position is null say the chapel could not publish that band safely) and',
+  `that bands are averages of n members; if position is null say ${pool} could not publish that band safely) and`,
   '"letter" ({subject, body}) a polite Article 7 pay-information request under Directive (EU) 2023/970 asking the employer for',
   "the member's individual pay level, the average pay levels broken down by sex for workers doing the same work or work of equal",
   "value, and the criteria used to set pay, asking for a reply within facts.reply_deadline and citing facts.law. Use bracketed",
@@ -68,9 +69,9 @@ const SYSTEM = [
   "because publishing it again would have exposed a colleague. Do not call it the latest release when it is not.",
 ].join(" ");
 
-function fallbackAnswer(p: Position | undefined): string {
+function fallbackAnswer(p: Position | undefined, pool: string): string {
   if (!p) {
-    return "The chapel could not publish a safe average for your grade in the latest release, so there is no band to compare with. The pay-information request below asks your employer for the numbers directly.";
+    return `${pool[0]!.toUpperCase()}${pool.slice(1)} could not publish a safe average for your grade in the latest release, so there is no band to compare with. The pay-information request below asks your employer for the numbers directly.`;
   }
   const dir = p.relation === "near" ? "about the same as" : p.relation === "below" ? "below" : "above";
   return `Your gross annual pay of EUR ${p.your_eur.toLocaleString("en-IE")} is ${dir} the ${p.grade} average of EUR ${p.band_mean_eur.toLocaleString("en-IE")} (${p.delta_pct > 0 ? "+" : ""}${p.delta_pct}%, an average of ${p.band_n} members).`;
@@ -95,6 +96,8 @@ export function standRoutes(deps: Deps): Hono {
       source = bandSource(releases, req.grade);
     }
     const position = positionFor(req.grade, req.gross_annual_eur, cells);
+    /** Who pooled the bands: the demo chapel, or the member's own unit (so the answer never calls a unit "the chapel"). */
+    const pool = req.unit_id === undefined ? "the chapel" : "your unit";
     const facts = {
       member: { grade: req.grade, gender: req.gender ?? null, site: req.site ?? null, gross_annual_eur: req.gross_annual_eur },
       position: position ?? null,
@@ -105,16 +108,17 @@ export function standRoutes(deps: Deps): Hono {
       band_withheld_in: source?.withheld_in ?? [],
     };
     const content = JSON.stringify(facts);
+    const system = systemFor(pool);
     const chat = await deps.chat({
       model: deps.config.textModel,
-      messages: [{ role: "system", content: SYSTEM }, { role: "user", content }],
+      messages: [{ role: "system", content: system }, { role: "user", content }],
       max_tokens: 1800,
       temperature: 0.2,
       reasoning_effort: "low",
-      estimatedInputTokens: Math.ceil((SYSTEM.length + content.length) / 2.5) + 200,
+      estimatedInputTokens: Math.ceil((system.length + content.length) / 2.5) + 200,
     });
 
-    let answer = fallbackAnswer(position);
+    let answer = fallbackAnswer(position, pool);
     let letter: Letter = templateLetter(req.grade, req.country);
     let letterSource: "model" | "fallback" = "fallback";
     try {
