@@ -61,7 +61,7 @@ function Body({ v }: { v: UnitView }) {
         <ol className="flex flex-col">
           <VerifyItem n={6} title="Council" value={<span className="flex flex-col gap-1">{unit.council.map((s) => <AccountLink key={s} id={s} className="text-[0.9375rem]" />)}</span>} proves={`A release runs only when more than half of these ${plural(unit.council.length, "seat")} approve it, each from its own wallet.`} command={unitCmd} />
           <VerifyItem n={7} title="Entries" value={<span>{plural(unit.entries, "sealed entry", "sealed entries")}, of which {unit.synthetic} synthetic</span>} proves="Synthetic entries were added by the council and are flagged synthetic on chain, so a release can always say how many of its figures are sample data." command={unitCmd} />
-          <VerifyItem n={8} title="Employer domains" value={unit.dkimDomains.length ? <code className="font-mono text-[0.9375rem]">{unit.dkimDomains.join(", ")}</code> : <span className="text-muted-foreground">none listed</span>} proves="Only a payroll email signed by one of these domains can count as DKIM-verified; the engine checks the signature against the key the registrar recorded." command={unitCmd} />
+          <VerifyItem n={8} title="Employer domains" value={unit.dkimDomains.length ? <EmployerKeys unit={unit} /> : <span className="text-muted-foreground">none listed</span>} proves="Only a payroll email signed by one of these domains can count as DKIM-verified; the engine checks the signature against the key the registrar recorded." command={unitCmd} />
         </ol>
       </Section>
 
@@ -84,5 +84,20 @@ function Body({ v }: { v: UnitView }) {
         )}
       </Section>
     </>
+  )
+}
+
+/** The listed domains and each employer key recorded on the unit, with where it came from (DNS or a council seat). */
+function EmployerKeys({ unit }: { unit: UnitView["unit"] }) {
+  return (
+    <span className="flex flex-col gap-1.5">
+      <code className="font-mono text-[0.9375rem]">{unit.dkimDomains.join(", ")}</code>
+      {unit.issuers.map((k) => (
+        <span key={`${k.domain}:${k.selector}`} className="flex flex-wrap items-center gap-x-1.5 text-[0.875rem] text-foreground">
+          Key {k.selector}._domainkey.{k.domain}: {k.source === "supplied" ? "supplied by a council seat, not DNS" : "read from DNS"}
+          {k.key_sha256 && <> · sha256 <HashValue value={k.key_sha256} /></>}
+        </span>
+      ))}
+    </span>
   )
 }
