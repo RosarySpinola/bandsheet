@@ -47,17 +47,24 @@ function Body({ v }: { v: UnitView }) {
     e.preventDefault()
     setTried(true)
     const b = body()
-    if (b) ask.mutate(b)
+    if (b) return ask.mutate(b)
+    // Take the member to the first field that needs them; the errors below say what is missing.
+    document.getElementById(grossOk ? "sel-your-grade" : "fld-your-gross-annual-pay")?.focus()
   }
+  const missing = [!grossOk && "enter your gross annual pay", !grade && "choose your grade"].filter(Boolean).join(" and ")
 
   return (
     <div className="grid grid-cols-1 gap-12 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] xl:gap-16">
       <form onSubmit={submit} className="flex flex-col gap-7 self-start" noValidate>
         <GlField label="Your gross annual pay" prefix="€" inputMode="numeric" placeholder="52000" value={gross} onChange={(e) => setGross(e.target.value.replace(/[^\d]/g, ""))} invalid={tried && !grossOk} hint={tried && !grossOk ? "Enter your full-year gross in whole euros, at least €1,000." : "Before tax, for a full year."} />
-        <GlSelect label="Your grade" value={grade} onChange={setGrade} options={GRADES} invalid={tried && !grade} />
+        <div className="flex flex-col gap-2">
+          <GlSelect label="Your grade" value={grade} onChange={setGrade} options={GRADES} invalid={tried && !grade} />
+          {tried && !grade && <p className="text-[0.875rem] font-medium text-indigo">Choose your grade.</p>}
+        </div>
         <GlSelect label="Country, for the Eurostat context" value={country} onChange={(c) => setCountry(c as StandBody["country"])} options={COUNTRIES} />
         <div className="flex flex-col gap-3">
           <SquareButton type="submit" disabled={ask.isPending} className="w-full sm:w-fit">{ask.isPending ? "Asking privately…" : "Ask privately"}</SquareButton>
+          {tried && missing && <p role="alert" className="text-[0.9375rem] font-medium text-indigo">To ask, {missing}.</p>}
           <p className="text-[0.9375rem] font-medium text-ink">Your figure is not stored.</p>
           <p className="text-[0.875rem] leading-relaxed text-muted-foreground">It goes to an attested model with your unit's public bands, and the reply comes back to this page only.</p>
         </div>
