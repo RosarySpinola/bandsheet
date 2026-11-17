@@ -7,7 +7,7 @@ import { CRYSTAL } from "./crystals"
 
 const LINKS = [
   { href: "/pricing", label: "Pricing" },
-  { href: "/unit/how", label: "How it works" },
+  { href: "/how", label: "How it works" },
   { href: "/start", label: "Start your unit" },
   { href: "/unit", label: "Example chapel" },
 ]

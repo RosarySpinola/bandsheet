@@ -22,7 +22,10 @@ export function SiteFooter() {
           <span>NEAR testnet · synthetic Harbour Courier chapel</span>
           <div className="flex flex-wrap gap-x-[calc(var(--gl)*1.5)] gap-y-1 max-[991px]:gap-x-5">
             <Link to="/unit" className={LINK}>
-              Live demo
+              Example chapel
+            </Link>
+            <Link to="/how" className={LINK}>
+              How it works
             </Link>
             <Link to="/pricing" className={LINK}>
               Pricing

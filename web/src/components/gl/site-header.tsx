@@ -7,11 +7,12 @@ import { MobileMenu } from "./mobile-menu"
 
 const NAV_LINKS = [
   { href: "/pricing", label: "Pricing" },
-  { href: "/unit/how", label: "How it works" },
+  { href: "/how", label: "How it works" },
+  { href: "/unit", label: "Example chapel" },
   { href: "https://github.com/RosarySpinola/bandsheet", label: "GitHub", external: true },
 ]
 
-/** Greenlock header: logo left, links from the page's centre line, demo link right; transparent over the hero. */
+/** Greenlock header: logo left, plain text links centred on the page's centre line, the CTA right; transparent over the hero. Never wraps (nowrap; menu below 992px). */
 export function SiteHeader() {
   const { pathname } = useLocation()
   const overHero = pathname === "/"
@@ -54,45 +55,38 @@ export function SiteHeader() {
           solid || panel ? "bg-white" : "bg-transparent",
         )}
       >
-        <div className="gl-container flex h-[52px] items-center justify-between min-[992px]:grid min-[992px]:h-auto min-[992px]:grid-cols-2 min-[992px]:gap-x-[calc(var(--gl)*2.25)] min-[992px]:py-[calc(var(--gl)*1.4)]">
-          <Link to="/" className="relative z-[990] w-fit pt-[calc(var(--gl)*0.35)] font-serif text-[calc(var(--gl)*2.15)] leading-none font-medium tracking-[-0.01em] text-ink max-[991px]:text-[1.6rem]">
+        <div className="gl-container flex h-[52px] items-center justify-between min-[992px]:grid min-[992px]:h-auto min-[992px]:grid-cols-[1fr_auto_1fr] min-[992px]:gap-x-[calc(var(--gl)*2)] min-[992px]:py-[calc(var(--gl)*1.4)]">
+          <Link to="/" className="relative z-[990] w-fit pt-[calc(var(--gl)*0.35)] font-serif text-[calc(var(--gl)*2.15)] leading-none font-medium tracking-[-0.01em] whitespace-nowrap text-ink max-[991px]:text-[1.6rem]">
             Bandsheet
           </Link>
-          <div className="hidden items-center justify-between min-[992px]:flex">
-            <nav className="flex items-center gap-[calc(var(--gl)*2)]" aria-label="Primary">
-              <button
-                type="button"
-                className="gl-nav wipe cursor-pointer"
-                data-active={panel}
-                onMouseEnter={open}
-                onMouseLeave={close}
-                onFocus={open}
-                onBlur={close}
-                aria-expanded={panel}
-              >
-                Product
-              </button>
-              {NAV_LINKS.map((l) =>
-                l.external ? (
-                  <a key={l.href} href={l.href} className="gl-nav wipe" target="_blank" rel="noreferrer">
-                    {l.label}
-                  </a>
-                ) : (
-                  <Link key={l.href} to={l.href} className="gl-nav wipe" data-active={pathname === l.href}>
-                    {l.label}
-                  </Link>
-                ),
-              )}
-            </nav>
-            <div className="flex items-center gap-[calc(var(--gl)*2)]">
-              <Link to="/unit" className="gl-nav wipe">
-                Example chapel
-              </Link>
-              <Link to="/start" className="gl-nav wipe font-semibold">
-                Start your unit
-              </Link>
-            </div>
-          </div>
+          <nav className="hidden items-center gap-[calc(var(--gl)*2.25)] whitespace-nowrap min-[992px]:flex" aria-label="Primary">
+            <button
+              type="button"
+              className="gl-nav wipe cursor-pointer"
+              data-active={panel}
+              onMouseEnter={open}
+              onMouseLeave={close}
+              onFocus={open}
+              onBlur={close}
+              aria-expanded={panel}
+            >
+              Product
+            </button>
+            {NAV_LINKS.map((l) =>
+              l.external ? (
+                <a key={l.href} href={l.href} className="gl-nav wipe" target="_blank" rel="noreferrer">
+                  {l.label}
+                </a>
+              ) : (
+                <Link key={l.href} to={l.href} className="gl-nav wipe" data-active={pathname === l.href}>
+                  {l.label}
+                </Link>
+              ),
+            )}
+          </nav>
+          <Link to="/start" className="gl-nav wipe hidden justify-self-end font-semibold whitespace-nowrap text-ink min-[992px]:block">
+            Start your unit
+          </Link>
           <MobileMenu />
         </div>
       </header>

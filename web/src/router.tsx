@@ -17,6 +17,7 @@ const Join = lazy(() => import("./pages/unit/join"))
 const How = lazy(() => import("./pages/unit/how"))
 const Help = lazy(() => import("./pages/unit/help"))
 const Pricing = lazy(() => import("./pages/pricing"))
+const HowPage = lazy(() => import("./pages/how"))
 const UnitPricing = lazy(() => import("./pages/unit/pricing"))
 const Terms = lazy(() => import("./pages/terms"))
 const Privacy = lazy(() => import("./pages/privacy"))
@@ -45,8 +46,9 @@ export const router = createBrowserRouter([
       { path: "/pricing", element: s(<Pricing />), handle: t("Pricing") },
       { path: "/terms", element: s(<Terms />), handle: t("Terms") },
       { path: "/privacy", element: s(<Privacy />), handle: t("Privacy") },
-      { path: "/how", element: <Navigate to="/unit/how" replace /> },
-      { path: "/signin", element: <Navigate to="/unit/join" replace /> },
+      { path: "/how", element: s(<HowPage />), handle: t("How it works") },
+      /* Signing in starts at /start: connect a wallet to start a unit, or explore the example chapel. */
+      { path: "/signin", element: <Navigate to="/start" replace /> },
       { path: "/unit/join", element: s(<Join />), handle: t("Join your chapel") },
       {
         path: "/unit",
