@@ -24,6 +24,7 @@ export const UnitRaw = z
     entries: num.optional(),
     synthetic_count: num.optional(),
     synthetic_members: num.optional(),
+    synthetic_added: num.optional(),
     synthetic: num.optional(),
     threshold: num.optional(),
     in_flight: z.unknown().optional(),
@@ -45,6 +46,8 @@ export type Unit = {
   members: number
   entries: number
   synthetic: number
+  /** Synthetic colleagues ever added (the cap counts these, removals included). */
+  syntheticAdded: number
   releases: number
   createdAt: string | number | null
   issuers: { domain: string; selector: string; source?: string; key_sha256?: string }[]
@@ -61,6 +64,7 @@ export const toUnit = (u: z.infer<typeof UnitRaw>, fallbackId = 0): Unit => ({
   members: u.member_count ?? u.members ?? 0,
   entries: u.entry_count ?? u.entries ?? 0,
   synthetic: u.synthetic_members ?? u.synthetic_count ?? u.synthetic ?? 0,
+  syntheticAdded: u.synthetic_added ?? u.synthetic_members ?? u.synthetic_count ?? u.synthetic ?? 0,
   releases: u.release_count ?? u.releases ?? 0,
   createdAt: u.created_at ?? null,
   issuers: u.issuers,
@@ -256,3 +260,23 @@ export const UnitOfSlotSchema = z
   .transform((s) => (s ? { unitId: s.unit_id, synthetic: s.synthetic, hasEntry: s.has_entry } : null))
 
 export const UnitsListSchema = z.object({ units: z.array(UnitRaw) }).transform((v) => v.units.map((u) => toUnit(u)))
+
+/* ---------- the attack lab on a unit (POST /api/units/:id/attack-prep, GET /api/units/:id/attacks) ---------- */
+
+/** The one synthetic colleague the lab added or took away: sample data the server generated, so its figure can be shown. */
+const Colleague = z.object({ grade: z.string(), gender: z.string(), site: z.string(), gross_annual_eur: num, synthetic: z.literal(true) }).passthrough()
+export const AttackSchema = z
+  .object({
+    started_at: num,
+    action: z.enum(["add", "remove"]),
+    release_id: num,
+    query: z.string(),
+    cell: z.record(z.string(), z.string()),
+    colleague: Colleague,
+    txs: z.array(TxOut).default([]),
+  })
+  .passthrough()
+export type Attack = z.infer<typeof AttackSchema>
+export const AttackPrepSchema = AttackSchema.extend({ cell: z.object({ key: z.record(z.string(), z.string()), n: num, mean_eur: num }), expected_n: num })
+export type AttackPrep = z.infer<typeof AttackPrepSchema>
+export const AttacksSchema = z.object({ attacks: z.array(AttackSchema).catch([]) }).transform((v) => v.attacks)

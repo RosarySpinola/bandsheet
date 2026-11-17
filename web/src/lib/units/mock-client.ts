@@ -106,6 +106,11 @@ export const mockClient: UnitsClient = {
     })
   },
 
+  attackPrep: async () => {
+    throw new ApiError("The attack lab runs on the live units contract, not in mock mode.", "MOCK_UNSUPPORTED", 409)
+  },
+  attacks: async () => [],
+
   synthetic: async (id, body) => {
     await sleep(3200)
     return withUnit(id, (u) => {

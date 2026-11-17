@@ -18,7 +18,8 @@ export function useUnitView(unitId: number | null) {
     queryFn: () => units.view(unitId!),
     enabled: unitId !== null && Number.isInteger(unitId) && unitId >= 0,
     staleTime: 10_000,
-    refetchInterval: (q) => (engineRunning(q.state.data) ? 5000 : false),
+    // Fast while the engine runs; slower while a proposal waits on another seat's vote, so this page sees it land.
+    refetchInterval: (q) => (engineRunning(q.state.data) ? 5000 : q.state.data?.proposals.some((p) => p.status === "open") ? 15_000 : false),
     retry: (n, e) => (e as { code?: string })?.code !== "UNIT_NOT_FOUND" && n < 2,
   })
 }

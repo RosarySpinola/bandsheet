@@ -1,7 +1,7 @@
 import type { Ciphertext, Entry, UnitPurpose } from "@bandsheet/core"
 import type { Invite } from "@bandsheet/core/near"
 import type { StandResponse } from "@/lib/api"
-import type { IssuerResult, RunResult, SponsorResult, SyntheticResult, Unit, UnitJoinResult, UnitsPolicy, UnitView } from "./schemas"
+import type { Attack, AttackPrep, IssuerResult, RunResult, SponsorResult, SyntheticResult, Unit, UnitJoinResult, UnitsPolicy, UnitView } from "./schemas"
 
 /** Where a sealed entry's figure came from, as the badge shows it. */
 export type EntryKind = "dkim" | "self" | "synthetic"
@@ -15,6 +15,8 @@ export type UnitClaim = { scheme: "nep413" | "eip191"; account_id: string; publi
 export type JoinBody = UnitClaim & { member_public_key: string; invite_code: string }
 export type SyntheticBody = UnitClaim & { n: number; grade?: Entry["grade"] }
 export type EntryBody = UnitClaim & { signed_tx: string }
+/** The attack lab: change one published cell of `release_id` by one synthetic colleague. */
+export type AttackBody = UnitClaim & { release_id: number; cell: Record<string, string> }
 
 export type StandBody = { gross_annual_eur: number; grade: Entry["grade"]; country: "MT" | "GR" | "DE" | "FR" | "IE"; unit_id: number }
 
@@ -48,6 +50,10 @@ export interface UnitsClient {
   stand(body: StandBody): Promise<StandResponse>
   /** Start the engine for an approved proposal: the server sends the 300 Tgas unit_run from the sponsor. */
   run(unitId: number, proposalId: number): Promise<RunResult>
+  /** Council-signed: one synthetic colleague in or out of a published cell, so the same table can be asked again. */
+  attackPrep(unitId: number, body: AttackBody): Promise<AttackPrep>
+  /** The lab's changes on this unit, newest first. */
+  attacks(unitId: number): Promise<Attack[]>
 }
 
 /** A wallet connected through NEAR Connect (or the mock wallet). */

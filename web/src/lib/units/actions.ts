@@ -1,4 +1,4 @@
-import { unitStatement, type Ciphertext } from "@bandsheet/core"
+import { attackSubject, unitStatement, type Ciphertext } from "@bandsheet/core"
 import type { Invite } from "@bandsheet/core/near"
 import { ApiError } from "@/lib/api"
 import { GAS } from "./config"
@@ -6,6 +6,7 @@ import { units, unitsWallet } from "./index"
 import { makeInvite, rememberInvite, sha256Hex } from "./invite"
 import { findTx, inviteIs, proposalSince, unitWithInvite, voteOn } from "./late"
 import { writeUnitKey } from "./keys"
+import type { AttackPrep } from "./schemas"
 import type { Prepared } from "./use-tap"
 import { claimOf, type Conn, type EntryMeta, type EntryReceipt, type SignedMessage, type TxResult } from "./types"
 
@@ -86,6 +87,23 @@ export async function prepareSynthetic(conn: Conn, unitId: number, n: number): P
         mark("posting")
         const out = await units.synthetic(unitId, { ...claimOf(s, issued.nonce), n })
         return { added: out.added, txs: out.txs.map((t) => t.hash) }
+      }),
+  }
+}
+
+/**
+ * The attack lab's first tap: the council signs "Bandsheet synthetic <id>: attack release <r>: <cell>" and the server
+ * changes that published cell by one synthetic colleague (sample data whose figure it generated).
+ */
+export async function prepareAttackPrep(conn: Conn, unitId: number, releaseId: number, cell: Record<string, string>): Promise<Prepared<AttackPrep>> {
+  const issued = await units.nonce("unit_synthetic")
+  const msg = await unitsWallet.prepareMessage(conn, { message: unitStatement("unit_synthetic", unitId, attackSubject(releaseId, cell)), recipient: issued.recipient, nonce: issued.nonce })
+  return {
+    start: (mark) =>
+      msg.sign().then(async (s) => {
+        sameAccount(s, conn)
+        mark("posting")
+        return units.attackPrep(unitId, { ...claimOf(s, issued.nonce), release_id: releaseId, cell })
       }),
   }
 }

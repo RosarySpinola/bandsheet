@@ -1,6 +1,6 @@
 import type { NavItem } from "@/components/unit/nav"
 
-/** A judge's own unit: the demo shell's screens, scoped to /u/:unitId, plus Invite. No attack lab or pricing. */
+/** A judge's own unit: the demo shell's screens, scoped to /u/:unitId, plus Invite and its own attack lab. No pricing. */
 export function unitNav(unitId: number): { label: string; items: NavItem[] }[] {
   const base = `/u/${unitId}`
   return [
@@ -17,6 +17,7 @@ export function unitNav(unitId: number): { label: string; items: NavItem[] }[] {
       items: [
         { to: `${base}/releases`, title: "Release ledger", kind: "ledger", blurb: "Every release and refusal." },
         { to: `${base}/vote`, title: "Council vote", kind: "vote", blurb: "Propose a release and vote it from your wallet." },
+        { to: `${base}/attack`, title: "Attack lab", kind: "attack", blurb: "Change one group by one synthetic colleague, then subtract." },
       ],
     },
     {

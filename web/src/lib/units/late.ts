@@ -25,18 +25,19 @@ export async function watchLate<R>(check: () => Promise<R | null>, alive: () => 
 type NbTx = { transaction_hash?: string; receiver_account_id?: string; block_timestamp?: string; actions?: { method?: string | null }[] }
 
 /**
- * The account's call to `method` on the units contract since `sinceMs`, from nearblocks' public API, so a late landing
- * still shows its transaction. Best effort: the indexer can lag a few seconds, so it asks up to three times.
+ * The account's first call to `method` on the units contract since `sinceMs`, from nearblocks' public API, so a late
+ * landing (or an attack-lab step) still shows its transaction. Best effort: the indexer can lag a few seconds, so it asks up to three times.
  */
 export async function findTx(accountId: string, method: string, sinceMs: number): Promise<string | null> {
   const since = BigInt(Math.floor(sinceMs - 120_000)) * 1_000_000n
   for (let i = 0; i < 3; i++) {
     try {
-      const res = await fetch(`https://api-testnet.nearblocks.io/v1/account/${encodeURIComponent(accountId)}/txns-only?per_page=10`)
+      const res = await fetch(`https://api-testnet.nearblocks.io/v1/account/${encodeURIComponent(accountId)}/txns-only?per_page=25`)
       const body = res.ok ? ((await res.json()) as { txns?: NbTx[] }) : {}
-      const hit = body.txns?.find(
-        (t) => t.receiver_account_id === UNITS_CONTRACT && t.actions?.some((a) => a.method === method) && t.block_timestamp !== undefined && BigInt(t.block_timestamp) >= since,
-      )
+      // Newest first: the earliest match after `since` is the one this action sent.
+      const hit = body.txns
+        ?.filter((t) => t.receiver_account_id === UNITS_CONTRACT && t.actions?.some((a) => a.method === method) && t.block_timestamp !== undefined && BigInt(t.block_timestamp) >= since)
+        .at(-1)
       if (hit?.transaction_hash) return hit.transaction_hash
     } catch {
       // indexer unreachable: try again, then go without the link
@@ -70,8 +71,9 @@ export async function inviteIs(unitId: number, inviteHash: string): Promise<bool
 export function sameQuery(stored: string, sent: string): boolean {
   try {
     const pick = (t: string) => {
-      const q = JSON.parse(t) as { group_by?: unknown; filter?: unknown; stat?: unknown }
-      return JSON.stringify([q.group_by ?? null, q.filter ?? null, q.stat ?? "mean"])
+      const q = JSON.parse(t) as { group_by?: unknown; filter?: Record<string, unknown> | null; stat?: unknown }
+      const filter = q.filter && Object.keys(q.filter).length ? q.filter : null
+      return JSON.stringify([q.group_by ?? null, filter, q.stat ?? "mean"])
     }
     return pick(stored) === pick(sent)
   } catch {

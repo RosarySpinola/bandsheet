@@ -32,6 +32,7 @@ const UReleases = lazy(() => import("./pages/units/releases"))
 const UVote = lazy(() => import("./pages/units/vote"))
 const UVerify = lazy(() => import("./pages/units/verify"))
 const UStand = lazy(() => import("./pages/units/stand"))
+const UAttack = lazy(() => import("./pages/units/attack"))
 
 const s = (node: ReactNode) => <Suspense fallback={null}>{node}</Suspense>
 /** Document title for a route: "<title> · Bandsheet" (set by Root). */
@@ -84,6 +85,7 @@ export const router = createBrowserRouter([
           { path: "vote", element: s(<UVote />), handle: t("Council vote") },
           { path: "verify", element: s(<UVerify />), handle: t("Verify") },
           { path: "stand", element: s(<UStand />), handle: t("Where do I stand") },
+          { path: "attack", element: s(<UAttack />), handle: t("Attack lab") },
           { path: "*", element: <UnitNotFound />, handle: t("Page not found") },
         ],
       },
